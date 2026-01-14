@@ -1,0 +1,9 @@
+export const KIOSK_STATES = {
+    IDLE: "IDLE",
+    SCANNED: "SCANNED",
+    SELECT_LOCKER: "SELECT_LOCKER",
+    PAYMENT: "PAYMENT",
+    ACTIVE: "ACTIVE",
+    DONE: "DONE",
+    ERROR: "ERROR",
+};
