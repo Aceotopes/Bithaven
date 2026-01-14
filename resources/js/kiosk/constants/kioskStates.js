@@ -6,4 +6,6 @@ export const KIOSK_STATES = {
     ACTIVE: "ACTIVE",
     DONE: "DONE",
     ERROR: "ERROR",
+    MAIN: "MAIN",
+    PROCESSING: "PROCESSING",
 };

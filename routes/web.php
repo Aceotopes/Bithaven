@@ -8,4 +8,4 @@ Route::get('/', function () {
 
 
 route::view('/kiosk', 'kiosk');
-route::view('/admin', 'kiosk');
+route::view('/admin', 'admin');
