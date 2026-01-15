@@ -16,6 +16,16 @@ defineProps({
         type: Boolean,
         required: true,
     },
+    countdown: {
+        type: Number,
+    },
+    showAction: {
+        type: Boolean,
+    },
+    actionLabel: {
+        type: String,
+        default: "Continue",
+    },
 });
 
 defineEmits(["close"]);
@@ -67,22 +77,6 @@ defineEmits(["close"]);
                         </svg>
 
                         <!-- Error Icon -->
-                        <!-- <svg
-                            v-else
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-20 h-20 text-rose-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v4m0 4h.01M12 5a7 7 0 100 14 7 7 0 000-14z"
-                            />
-                        </svg> -->
-
                         <svg
                             v-if="type === 'error'"
                             xmlns="http://www.w3.org/2000/svg"
@@ -133,6 +127,16 @@ defineEmits(["close"]);
                             in the system.
                         </span>
                     </p>
+                    <p
+                        v-if="countdown !== null"
+                        class="mt-6 text-xl text-gray-500"
+                    >
+                        Redirecting in
+                        <span class="font-semibold text-gray-800">
+                            {{ countdown }}
+                        </span>
+                        seconds…
+                    </p>
 
                     <!-- Secondary Instruction -->
                     <p
@@ -162,6 +166,13 @@ defineEmits(["close"]);
                     @click="$emit('close')"
                 >
                     Try Again
+                </button>
+                <button
+                    v-if="showAction"
+                    class="mt-10 w-full py-6 text-2xl font-semibold rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg shadow-green-500/40 transition-transform duration-150 active:scale-95"
+                    @click="$emit('action')"
+                >
+                    {{ actionLabel }}
                 </button>
             </div>
         </div>
