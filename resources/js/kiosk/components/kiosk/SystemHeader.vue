@@ -41,7 +41,7 @@ onMounted(() => {
             <p
                 class="mt-1 text-[12px] tracking-[0.25em] text-gray-500 uppercase"
             >
-                Computer Engineering System
+                A SAFE HAVEN FOR BELONGINGS, TIED TO COMPUTER BITS.
             </p>
         </div>
 
