@@ -28,7 +28,7 @@ defineProps({
     },
 });
 
-defineEmits(["close"]);
+defineEmits(["close", "action"]);
 </script>
 
 <template>
