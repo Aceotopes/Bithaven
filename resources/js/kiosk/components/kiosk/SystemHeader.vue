@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 
 const time = ref("");
+const emit = defineEmits(["end-session"]);
 
 function updateTime() {
     const now = new Date();
@@ -45,14 +46,28 @@ onMounted(() => {
             </p>
         </div>
 
-        <!-- Time -->
-        <div class="ml-auto text-right">
-            <p class="text-[22px] font-medium text-gray-800">
-                {{ time }}
-            </p>
-            <p class="text-xs tracking-wide text-gray-500 uppercase">
-                System Time
-            </p>
+        <!-- Time + End Session-->
+        <div class="ml-auto flex items-center gap-6">
+            <!-- Time -->
+            <div class="text-right">
+                <p class="text-[22px] font-medium text-gray-800">
+                    {{ time }}
+                </p>
+                <p class="text-xs tracking-wide text-gray-500 uppercase">
+                    System Time
+                </p>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-px h-10 bg-black/10"></div>
+
+            <!-- End Session -->
+            <button
+                class="px-5 py-2.5 rounded-xl border border-black/10 bg-white/70 backdrop-blur text-gray-600 text-[15px] font-semibold transition hover:bg-white hover:text-gray-800 active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
+                @click.stop="emit('end-session')"
+            >
+                End Session
+            </button>
         </div>
     </header>
 </template>
