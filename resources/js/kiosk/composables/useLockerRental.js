@@ -1,7 +1,10 @@
+import { useTimer } from "./useTimer";
+
 /**
  * useLockerRental
  * ----------------
  * Handles locker rental lifecycle logic.
+ * Rental lifecycle + expiry handling.
  *
  * Owns:
  * - rental state transitions
@@ -14,6 +17,8 @@
  * - UI state
  */
 export function useLockerRental(state) {
+    const { start, stop } = useTimer();
+
     /**
      * Rent a locker to the active student.
      * Legal only when:
@@ -24,14 +29,25 @@ export function useLockerRental(state) {
         if (!state.student) return;
         if (state.rentalState !== "NO_RENTAL") return;
 
+        const now = Date.now();
+        const endTime = now + durationMs;
+
         state.locker = {
             number: lockerNumber,
-            startTime: Date.now(),
-            endTime: null, // will be set when timers are introduced
-            timeRemaining: null,
+            startTime: now,
+            endTime,
+            timeRemaining: formatDuration(durationMs),
         };
 
         state.rentalState = "ACTIVE_RENTAL";
+
+        start(
+            endTime,
+            (remaining) => {
+                state.locker.timeRemaining = formatDuration(remaining);
+            },
+            expireRental
+        );
     }
 
     /**
@@ -41,12 +57,35 @@ export function useLockerRental(state) {
     function endRental() {
         if (state.rentalState !== "ACTIVE_RENTAL") return;
 
+        stop();
         state.locker = null;
         state.rentalState = "NO_RENTAL";
+    }
+
+    function expireRental() {
+        stop();
+
+        if (state.locker) {
+            state.locker.timeRemaining = "00:00:00";
+        }
+
+        state.rentalState = "EXPIRED_RENTAL";
     }
 
     return {
         rentLocker,
         endRental,
     };
+}
+
+/* --------------------
+ * Utilities
+ * -------------------- */
+function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
 }
