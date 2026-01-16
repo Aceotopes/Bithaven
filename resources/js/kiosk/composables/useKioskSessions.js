@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-
+import { KIOSK_STATES } from "../constants/kioskStates";
 /**
  * useKioskSession
  * ----------------
@@ -11,6 +11,8 @@ import { reactive } from "vue";
 
 export function useKioskSession() {
     const state = reactive({
+        kioskState: KIOSK_STATES.IDLE, // IDLE | ACTIVE_SESSION
+
         // Student session
         student: null,
 
@@ -33,6 +35,7 @@ export function useKioskSession() {
      * This is a full reset.
      */
     function clearSession() {
+        state.kioskState = KIOSK_STATES.IDLE;
         state.student = null;
         state.rentalState = "NO_RENTAL";
         state.locker = null;

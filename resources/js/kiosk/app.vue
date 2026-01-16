@@ -9,7 +9,7 @@ import MainScreen from "./screens/MainScreen.vue";
 const currentState = ref(KIOSK_STATES.IDLE);
 
 function goToMain() {
-    currentState.value = KIOSK_STATES.MAIN;
+    currentState.value = KIOSK_STATES.STUDENT_DASHBOARD;
 }
 </script>
 
@@ -21,7 +21,9 @@ function goToMain() {
         />
         <!-- <SelectLockerScreen v-if="currentState === KIOSK_STATES.SELECT_LOCKER" />                  temporarily commented out for testing -->
 
-        <MainScreen v-else-if="currentState === KIOSK_STATES.MAIN" />
+        <MainScreen
+            v-else-if="currentState === KIOSK_STATES.STUDENT_DASHBOARD"
+        />
 
         <!-- temporary debug control                                                                    temporarily commented out for testing -->
         <!-- <button
