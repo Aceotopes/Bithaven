@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import idleVideo from "@/kiosk/assets/idle/BithavenIdleLoop.mp4";
 import StatusPopup from "../components/kiosk/StatusPopup.vue";
 
-const emit = defineEmits(["next"]); // emitted when user taps to proceed
+const emit = defineEmits(["start-scan"]); // emitted when user taps to proceed
 const loaded = ref(false); // fade in effect on mount
 const showPopup = ref(false); // popup visibility
 const popupType = ref("success"); // success or error
@@ -51,7 +51,7 @@ function startCountdown() {
 function proceed() {
     clearInterval(countdownTimer);
     showPopup.value = false;
-    emit("next");
+    emit("start-scan");
 }
 
 onBeforeMount(() => {
@@ -61,7 +61,7 @@ onBeforeMount(() => {
 
 <template>
     <div
-        class="relative w-full h-full bg-black transition-opacity duration-700"
+        class="fixed inset-0 w-screen h-screen bg-black transition-opacity duration-700"
         :class="loaded ? 'opacity-100' : 'opacity-0'"
         @click="!showPopup && handleIdleTap()"
     >
