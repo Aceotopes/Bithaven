@@ -5,6 +5,7 @@ import { useKioskSession } from "./composables/useKioskSessions";
 
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
+import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 // import LockerSelectScreen from './screens/LockerSelectScreen.vue' //                             temporarily commented out for testing
 
 const flow = useKioskFlow(); // kiosk flow state manager
@@ -68,16 +69,16 @@ function handleRentLocker() {
             @start-scan="handleStartScan"
         />
 
-        <!-- ======================= next to do  (priority)======================= -->
-        <!-- <SelectLockerScreen v-if="currentState === KIOSK_STATES.SELECT_LOCKER" />                  temporarily commented out for testing -->
-
         <MainScreen
             v-else-if="flow.kioskState.value === KIOSK_STATES.STUDENT_DASHBOARD"
             :student="session.state.student"
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
         />
-        <!-- ===================================================================== -->
+
+        <LockerSelectScreen
+            v-else-if="flow.kioskState.value === KIOSK_STATES.LOCKER_SELECT"
+        />
     </transition>
 </template>
 
