@@ -5,6 +5,7 @@
 // props or store data when backend exists.
 // ----------------------------------------
 
+//mock student data
 const student = {
     name: "Ace Argee F. Vizcarra", // ← DB-ready
     studentNumber: "22-150570", // ← DB-ready

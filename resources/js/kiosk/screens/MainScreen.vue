@@ -29,6 +29,9 @@ function confirmEndSession() {
     // emit reset / go back to idle
 }
 // ========================================================================
+defineProps({
+    student: Object, // student data object
+});
 </script>
 
 <template>

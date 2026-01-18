@@ -61,7 +61,7 @@ onBeforeMount(() => {
 
 <template>
     <div
-        class="fixed inset-0 w-screen h-screen bg-black transition-opacity duration-700"
+        class="relative w-full h-full bg-black transition-opacity duration-700"
         :class="loaded ? 'opacity-100' : 'opacity-0'"
         @click="!showPopup && handleIdleTap()"
     >
