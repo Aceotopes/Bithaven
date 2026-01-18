@@ -1,10 +1,13 @@
 <script setup>
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
-import LockerSelectionPanel from "../components/kiosk/LockerSelectionPanel.vue";
-// UI-only screen
-// Logic will be wired later
+import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
 
-const emit = defineEmits(["back", "confirm"]);
+const props = defineProps({
+    locker: Number,
+    duration: Number,
+});
+
+const emit = defineEmits(["cancel"]);
 </script>
 
 <template>
@@ -16,24 +19,18 @@ const emit = defineEmits(["back", "confirm"]);
             <div
                 class="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[720px] bg-emerald-400/20 rounded-full blur-3xl"
             />
-
             <div
                 class="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px), linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:48px_48px]"
             />
         </div>
 
-        <!-- System Header -->
         <SystemHeader />
 
-        <!-- Main Content -->
-        <main
-            class="relative z-10 max-w-[1000px] mx-auto px-12 pt-10 space-y-10"
-        >
-            <!-- Screen Title and Instruction -->
-
-            <LockerSelectionPanel
-                @back="$emit('back')"
-                @confirm="$emit('confirm', $event)"
+        <main class="relative z-10 px-12 pt-10">
+            <PaymentPanel
+                :locker="locker"
+                :duration="duration"
+                @cancel="emit('cancel')"
             />
         </main>
     </div>

@@ -1,10 +1,14 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 // UI-only panel
 // Logic, state, and emits will be wired later
-
+const emit = defineEmits(["back", "confirm"]);
 const selectedLocker = ref(null);
 const selectedDuration = ref(null);
+
+const isReadyToConfirm = computed(() => {
+    return selectedLocker.value !== null && selectedDuration.value !== null;
+});
 </script>
 
 <template>
@@ -131,13 +135,26 @@ const selectedDuration = ref(null);
         <!-- ========================= -->
         <div class="mt-12 flex gap-6">
             <button
-                class="flex-1 h-20 rounded-2xl bg-gray-200 text-gray-700 text-[22px] font-semibold"
+                class="flex-1 h-20 rounded-2xl bg-gray-200 text-gray-700 text-[22px] font-semibold transition active:scale-[0.97]"
+                @click="emit('back')"
             >
                 Back
             </button>
 
             <button
-                class="flex-1 h-20 rounded-2xl bg-emerald-600 text-white text-[22px] font-semibold shadow-lg"
+                class="flex-1 h-20 rounded-2xl text-[22px] font-semibold transition"
+                :class="
+                    isReadyToConfirm
+                        ? 'bg-emerald-600 text-white active:scale-[0.97]'
+                        : 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                "
+                :disabled="!isReadyToConfirm"
+                @click="
+                    emit('confirm', {
+                        locker: selectedLocker,
+                        duration: selectedDuration,
+                    })
+                "
             >
                 Confirm Selection
             </button>
