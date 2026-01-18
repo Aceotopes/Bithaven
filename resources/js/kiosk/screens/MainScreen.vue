@@ -1,14 +1,12 @@
 <script setup>
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
-import StudentInfoCard from "../components/kiosk/StudentInfoCard.vue";
 import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 
 // ===================== UI State Logic (TEMP) =====================
 import { computed, ref } from "vue";
 // TEMP: match this to LockerStatusCard for UI testing
-const rentalStatus = ref("NO_RENTAL");
-// 'NO_RENTAL' | 'ACTIVE_RENTAL' | 'EXPIRED_RENTAL'
+const rentalStatus = ref("NO_RENTAL"); // 'NO_RENTAL' | 'ACTIVE_RENTAL' | 'EXPIRED_RENTAL'
 
 // Button state logic (UI-only)
 const canRent = computed(() => rentalStatus.value === "NO_RENTAL");
@@ -29,6 +27,9 @@ function confirmEndSession() {
     // emit reset / go back to idle
 }
 // ========================================================================
+
+const emit = defineEmits(["end-session", "rent-locker"]);
+
 defineProps({
     student: Object, // student data object
 });
@@ -59,7 +60,7 @@ defineProps({
             class="relative z-10 max-w-[920px] mx-auto px-12 pt-10 space-y-10"
         >
             <!-- <StudentInfoCard /> -->
-            <StudentInfoCardV2 />
+            <StudentInfoCardV2 :student="student" />
 
             <!-- Locker Status state -->
             <LockerStatusCard />
@@ -95,6 +96,7 @@ defineProps({
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canRent"
+                        @click="emit('rent-locker')"
                     >
                         Rent Locker
                     </button>
@@ -157,7 +159,7 @@ defineProps({
 
                         <button
                             class="px-6 py-3 rounded-xl bg-gray-800 text-white text-[18px] font-semibold hover:bg-black transition"
-                            @click="confirmEndSession"
+                            @click="emit('end-session')"
                         >
                             End Session
                         </button>

@@ -7,7 +7,7 @@ import { ref } from "vue";
 // 'NO_RENTAL'
 // 'ACTIVE_RENTAL'
 // 'EXPIRED_RENTAL'
-const rentalStatus = ref("EXPIRED_RENTAL");
+const rentalStatus = ref("NO_RENTAL");
 
 // Mock data (UI only)
 const locker = {

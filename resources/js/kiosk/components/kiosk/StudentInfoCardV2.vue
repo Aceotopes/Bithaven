@@ -6,12 +6,10 @@
 // ----------------------------------------
 
 //mock student data
-const student = {
-    name: "Ace Argee F. Vizcarra", // ← DB-ready
-    studentNumber: "22-150570", // ← DB-ready
-    yearLevel: "4th Year", // ← DB-ready
-    department: "Computer Engineering", // ← DB-ready
-};
+
+defineProps({
+    student: Object,
+});
 </script>
 
 <template>
@@ -45,7 +43,7 @@ const student = {
             <!-- Student Details -->
             <div>
                 <p class="text-[30px] font-semibold text-gray-900">
-                    {{ student.name }}
+                    {{ student.fullName }}
                 </p>
 
                 <p class="mt-2 font-mono text-[18px] text-gray-600">

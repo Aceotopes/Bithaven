@@ -7,23 +7,36 @@ import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 // import LockerSelectScreen from './screens/LockerSelectScreen.vue' //                             temporarily commented out for testing
 
-const flow = useKioskFlow();
-const session = useKioskSession();
+const flow = useKioskFlow(); // kiosk flow state manager
+const session = useKioskSession(); // kiosk session state manager
 
 // ===================== mock student data for testing =====================
 const mockStudent = {
-    id: "22-150570",
-    fullName: "Juan Dela Cruz",
-    yearLevel: "3rd Year",
+    studentNumber: "22-150570",
+    fullName: "Ace Argee F. Vizcarra",
+    yearLevel: "IV",
     department: "Computer Engineering",
     photo: null, // placeholder
 };
+// ========================================================================
 
+// ===================== session start handler =====================
 function handleStartScan() {
     session.startSession(mockStudent);
     console.log("Session started with student:", session.state.student);
     // handler for starting scan from idle screen
     flow.goToStudentDashboard();
+}
+// ================================================================
+
+function handlEndSession() {
+    session.clearSession();
+    console.log("Session ended.");
+    flow.goToIdle();
+}
+
+function handleRentLocker() {
+    flow.goToLockerSelect();
 }
 
 // ===================== debugging info for checkpoint 10 =====================
@@ -61,6 +74,8 @@ function handleStartScan() {
         <MainScreen
             v-else-if="flow.kioskState.value === KIOSK_STATES.STUDENT_DASHBOARD"
             :student="session.state.student"
+            @end-session="handlEndSession"
+            @rent-locker="handleRentLocker"
         />
         <!-- ===================================================================== -->
     </transition>
