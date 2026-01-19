@@ -26,9 +26,7 @@ const emit = defineEmits(["back", "confirm"]);
         <SystemHeader />
 
         <!-- Main Content -->
-        <main
-            class="relative z-10 max-w-[1000px] mx-auto px-12 pt-10 space-y-10"
-        >
+        <main class="relative z-10 w-full px-16 pt-12">
             <!-- Screen Title and Instruction -->
 
             <LockerSelectionPanel
