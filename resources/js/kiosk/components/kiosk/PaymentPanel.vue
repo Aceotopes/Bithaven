@@ -1,7 +1,10 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 
-const emit = defineEmits(["cancel"]);
+/* =============================
+   PROPS & EMITS
+============================= */
+const emit = defineEmits(["cancel", "complete"]);
 
 const props = defineProps({
     locker: Number,
@@ -9,30 +12,72 @@ const props = defineProps({
 });
 
 /* =============================
-   TEMP UI STATE (SIMULATION)
+   BASE STATE
 ============================= */
 const pricePerHour = 5; // mock pricing
-const amountDue = computed(() => props.duration * pricePerHour);
 const insertedAmount = ref(0);
+const hasCompleted = ref(false);
+const successCountdown = ref(3);
+let countdownTimer = null;
 
 /* =============================
-   PROGRESS CALCULATIONS
+   COMPUTED VALUES
 ============================= */
-const progressRatio = computed(() =>
-    Math.min(insertedAmount.value / amountDue.value, 1)
-);
+const amountDue = computed(() => {
+    if (!props.duration) return 0;
+    return props.duration * pricePerHour;
+});
+
+const isPaid = computed(() => {
+    if (amountDue.value === 0) return false;
+    return insertedAmount.value >= amountDue.value;
+});
+
+const progressRatio = computed(() => {
+    if (amountDue.value === 0) return 0;
+    return Math.min(insertedAmount.value / amountDue.value, 1);
+});
 
 const remainingAmount = computed(() =>
     Math.max(amountDue.value - insertedAmount.value, 0)
 );
 
 /* =============================
-   COIN HANDLER (TEMP)
+   WATCHERS
+============================= */
+watch(isPaid, (paid) => {
+    if (!paid || hasCompleted.value) return;
+
+    hasCompleted.value = true;
+    successCountdown.value = 3;
+
+    countdownTimer = setInterval(() => {
+        successCountdown.value--;
+
+        if (successCountdown.value === 0) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            emit("complete");
+        }
+    }, 1000);
+});
+
+/* =============================
+   METHODS
 ============================= */
 function insertCoin(value) {
-    if (insertedAmount.value + value > amountDue.value) return;
     insertedAmount.value += value;
 }
+
+/* =============================
+   CLEANUP
+============================= */
+onBeforeUnmount(() => {
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+});
 </script>
 
 <template>
@@ -193,22 +238,30 @@ function insertCoin(value) {
         <!-- SUCCESS OVERLAY -->
         <!-- ========================= -->
         <div
-            v-if="progressRatio === 1"
-            class="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-[24px]"
+            v-if="isPaid"
+            class="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-[24px]"
         >
-            <div class="text-center animate-scale-in">
+            <div class="text-center animate-scale-in max-w-[520px]">
                 <div
-                    class="mx-auto mb-6 w-32 h-32 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-5xl"
+                    class="mx-auto mb-6 w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-5xl"
                 >
                     ✓
                 </div>
 
-                <p class="text-[48px] font-semibold text-gray-900">
-                    Payment Complete
+                <p class="text-[30px] font-semibold text-gray-900">
+                    Payment Successful
                 </p>
 
-                <p class="mt-3 text-[20px] text-gray-600">
-                    Preparing your locker…
+                <p class="mt-4 text-[20px] text-gray-600 leading-relaxed">
+                    Your locker is now being prepared and will open shortly.
+                </p>
+
+                <p class="mt-6 text-[18px] text-gray-500">
+                    Returning to the start screen in
+                    <span class="font-mono font-semibold text-gray-800">
+                        {{ successCountdown }}
+                    </span>
+                    second<span v-if="successCountdown !== 1">s</span>.
                 </p>
             </div>
         </div>

@@ -70,6 +70,17 @@ function handlePaymentCancel() {
     flow.goToLockerSelect();
 }
 
+function handlePaymentComplete() {
+    // Clear pending intent
+    pendingRental.value = {
+        locker: null,
+        duration: null,
+    };
+
+    // End kiosk interaction
+    flow.goToIdle();
+}
+
 // ===================== debugging info for checkpoint 10 =====================
 // console.log("kioskState:", flow.kioskState, typeof flow.kioskState);
 // console.log("IDLE:", KIOSK_STATES.IDLE, typeof KIOSK_STATES.IDLE);
@@ -117,6 +128,7 @@ function handlePaymentCancel() {
             :locker="pendingRental.locker"
             :duration="pendingRental.duration"
             @cancel="handlePaymentCancel"
+            @complete="handlePaymentComplete"
         />
     </transition>
 </template>

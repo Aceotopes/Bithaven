@@ -7,7 +7,7 @@ const props = defineProps({
     duration: Number,
 });
 
-const emit = defineEmits(["cancel"]);
+const emit = defineEmits(["cancel", "complete"]);
 </script>
 
 <template>
@@ -31,6 +31,7 @@ const emit = defineEmits(["cancel"]);
                 :locker="locker"
                 :duration="duration"
                 @cancel="emit('cancel')"
+                @complete="emit('complete')"
             />
         </main>
     </div>
