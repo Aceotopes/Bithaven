@@ -16,7 +16,7 @@ import { useTimer } from "./useTimer";
  * - penalties
  * - UI state
  */
-export function useLockerRental(state) {
+export function useLockerRental(state, onExpire) {
     const { start, stop } = useTimer();
 
     /**
@@ -25,11 +25,12 @@ export function useLockerRental(state) {
      * - a session exists
      * - no active rental exists
      */
-    function rentLocker(lockerNumber) {
+    function rentLocker(lockerNumber, durationHours) {
         if (!state.student) return;
         if (state.rentalState !== "NO_RENTAL") return;
 
         const now = Date.now();
+        const durationMs = durationHours * 60 * 60 * 1000;
         const endTime = now + durationMs;
 
         state.locker = {
@@ -70,6 +71,8 @@ export function useLockerRental(state) {
         }
 
         state.rentalState = "EXPIRED_RENTAL";
+
+        onExpire?.(); // apply penalty
     }
 
     return {

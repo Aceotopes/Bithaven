@@ -9,19 +9,7 @@ import { KIOSK_STATES } from "../constants/kioskStates";
  * UI MUST NOT duplicate this state.
  */
 
-export function useKioskSession() {
-    const state = reactive({
-        kioskState: KIOSK_STATES.IDLE, // IDLE | ACTIVE_SESSION
-
-        // Student session
-        student: null,
-
-        // Rental placeholders (logic added later)
-        rentalState: "NO_RENTAL", // NO_RENTAL | ACTIVE_RENTAL | EXPIRED_RENTAL
-        locker: null,
-        penalty: null,
-    });
-
+export function useKioskSession(state) {
     /**
      * Start a new student session.
      * Called after ID tap (mocked for now).

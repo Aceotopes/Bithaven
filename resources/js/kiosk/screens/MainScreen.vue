@@ -3,35 +3,55 @@ import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 
-// ===================== UI State Logic (TEMP) =====================
-import { computed, ref } from "vue";
-// TEMP: match this to LockerStatusCard for UI testing
-const rentalStatus = ref("NO_RENTAL"); // 'NO_RENTAL' | 'ACTIVE_RENTAL' | 'EXPIRED_RENTAL'
-
-// Button state logic (UI-only)
-const canRent = computed(() => rentalStatus.value === "NO_RENTAL");
-const canEnd = computed(() => rentalStatus.value === "ACTIVE_RENTAL");
-const canPay = computed(() => rentalStatus.value === "EXPIRED_RENTAL");
-// =================================================================
-
 // ===================== End Session Modal Logic (TEMP) =====================
-const showEndSessionConfirm = ref(false);
+// const showEndSessionConfirm = ref(false);            commented out to fix unused var warning
 
-function cancelEndSession() {
-    showEndSessionConfirm.value = false;
-}
+// function cancelEndSession() {                        commented out to fix unused var warning
+//     showEndSessionConfirm.value = false;
+// }
 
-function confirmEndSession() {
-    showEndSessionConfirm.value = false;
-    // TEMP: logic will be added later
-    // emit reset / go back to idle
-}
+//function confirmEndSession() {                        commented out to fix unused var warning
+//  showEndSessionConfirm.value = false;
+// TEMP: logic will be added later
+// emit reset / go back to idle
+//}
 // ========================================================================
 
 const emit = defineEmits(["end-session", "rent-locker"]);
 
 defineProps({
-    student: Object, // student data object
+    student: {
+        type: Object,
+        required: true,
+    },
+    rentalState: {
+        type: String,
+        required: true,
+    },
+    locker: {
+        type: Object,
+        default: null,
+    },
+    penalty: {
+        type: Object,
+        default: null,
+    },
+    canRent: {
+        type: Boolean,
+        required: true,
+    },
+    canEndRental: {
+        type: Boolean,
+        required: true,
+    },
+    canSettlePenalty: {
+        type: Boolean,
+        required: true,
+    },
+    canEndSession: {
+        type: Boolean,
+        required: true,
+    },
 });
 </script>
 
@@ -63,7 +83,11 @@ defineProps({
             <StudentInfoCardV2 :student="student" />
 
             <!-- Locker Status state -->
-            <LockerStatusCard />
+            <LockerStatusCard
+                :rentalState="rentalState"
+                :locker="locker"
+                :penalty="penalty"
+            />
 
             <!-- Action Buttons -->
             <section
@@ -105,11 +129,11 @@ defineProps({
                     <button
                         class="h-20 rounded-2xl text-[22px] font-semibold transition border"
                         :class="
-                            canEnd
+                            canEndRental
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
-                        :disabled="!canEnd"
+                        :disabled="!canEndRental"
                     >
                         End Rental
                     </button>
@@ -118,11 +142,11 @@ defineProps({
                     <button
                         class="h-20 rounded-2xl text-[22px] font-semibold transition border"
                         :class="
-                            canPay
+                            canSettlePenalty
                                 ? 'bg-amber-600 text-white border-amber-600'
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
-                        :disabled="!canPay"
+                        :disabled="!canSettlePenalty"
                     >
                         Settle Penalty
                     </button>
@@ -130,25 +154,25 @@ defineProps({
             </section>
 
             <!-- End Session Confirmation -->
-            <div
+            <!-- <div
                 v-if="showEndSessionConfirm"
                 class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center"
             >
                 <div
                     class="w-[520px] bg-white rounded-2xl border border-black/10 shadow-[0_30px_80px_rgba(0,0,0,0.25)] px-10 py-8 text-center"
                 >
-                    <!-- Title -->
+                    Title
                     <p class="text-[26px] font-semibold text-gray-900">
                         End Current Session?
                     </p>
 
-                    <!-- Message -->
+                    Message
                     <p class="mt-4 text-[18px] text-gray-600 leading-relaxed">
                         This will cancel the current session and return the
                         kiosk to the start screen. No actions will be saved.
                     </p>
 
-                    <!-- Actions -->
+                    Actions
                     <div class="mt-8 flex justify-center gap-6">
                         <button
                             class="px-6 py-3 rounded-xl bg-gray-200 text-gray-700 text-[18px] font-semibold hover:bg-gray-300 transition"
@@ -165,7 +189,7 @@ defineProps({
                         </button>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </main>
     </div>
 </template>

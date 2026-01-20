@@ -1,22 +1,47 @@
 <script setup>
-import { ref } from "vue";
+//import { ref } from "vue";
 // TEMP UI STATE (change this manually for now)
 // isPaymentRequired = true if rental expired and penalty must be paid for logic later
 // --------------------------------------------
 
+// ============ Mock data (UI only) =======================
 // 'NO_RENTAL'
 // 'ACTIVE_RENTAL'
 // 'EXPIRED_RENTAL'
-const rentalStatus = ref("NO_RENTAL");
 
-// Mock data (UI only)
-const locker = {
-    number: "023",
-    timeRemaining: "01:42:18",
-    startTime: "01:30 PM",
-    endTime: "03:30 PM",
-    penaltyAmount: "₱50.00",
-};
+// const rentalStatus = ref("NO_RENTAL");
+// const locker = {
+//     number: "023",
+//     timeRemaining: "01:42:18",
+//     startTime: "01:30 PM",
+//     endTime: "03:30 PM",
+//     penaltyAmount: "₱50.00",
+// };
+// ========================================================
+
+defineProps({
+    rentalState: {
+        type: String,
+        required: true,
+    },
+    locker: {
+        type: Object,
+        default: null,
+    },
+    penalty: {
+        type: Object,
+        default: null,
+    },
+});
+
+function formatTime(timestamp) {
+    if (!timestamp) return "—";
+
+    return new Date(timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
 </script>
 
 <template>
@@ -26,7 +51,7 @@ const locker = {
         <!-- =========================-->
         <!--    NO ACTIVE RENTAL STATE   -->
         <!-- ========================= -->
-        <template v-if="rentalStatus === 'NO_RENTAL'">
+        <template v-if="rentalState === 'NO_RENTAL'">
             <div class="flex justify-between items-center">
                 <p
                     class="text-[18px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
@@ -66,7 +91,7 @@ const locker = {
         <!-- ============================= -->
         <!--    ACTIVE RENTAL STATE -->
         <!-- ============================= -->
-        <template v-else-if="rentalStatus === 'ACTIVE_RENTAL'">
+        <template v-else-if="rentalState === 'ACTIVE_RENTAL'">
             <div class="flex justify-between items-center">
                 <p
                     class="text-[18px] tracking-[0.4em] uppercase text-emerald-600 font-semibold"
@@ -77,7 +102,7 @@ const locker = {
                 <p class="text-[18px] tracking-wide text-gray-600">
                     Locker
                     <span class="font-mono font-semibold text-gray-900">
-                        {{ locker.number }}
+                        {{ locker?.number }}
                     </span>
                 </p>
             </div>
@@ -90,7 +115,7 @@ const locker = {
                 <p
                     class="font-mono text-[96px] tracking-[0.25em] text-emerald-600"
                 >
-                    {{ locker.timeRemaining }}
+                    {{ locker?.timeRemaining }}
                 </p>
 
                 <p class="mt-2 text-[18px] text-gray-500 tracking-wide">
@@ -107,7 +132,7 @@ const locker = {
                         Start Time
                     </p>
                     <p class="mt-2 font-mono text-[22px] text-gray-900">
-                        {{ locker.startTime }}
+                        {{ formatTime(locker?.startTime) }}
                     </p>
                 </div>
 
@@ -116,7 +141,7 @@ const locker = {
                         End Time
                     </p>
                     <p class="mt-2 font-mono text-[22px] text-gray-900">
-                        {{ locker.endTime }}
+                        {{ formatTime(locker?.endTime) }}
                     </p>
                 </div>
             </div>
@@ -125,7 +150,7 @@ const locker = {
         <!-- ============================= -->
         <!-- EXPIRED / PENALTY STATE -->
         <!-- ============================= -->
-        <template v-else-if="rentalStatus === 'EXPIRED_RENTAL'">
+        <template v-else-if="rentalState === 'EXPIRED_RENTAL'">
             <!-- Top System Strip -->
             <div class="flex justify-between items-center">
                 <p
@@ -137,7 +162,7 @@ const locker = {
                 <p class="text-[18px] tracking-wide text-gray-600">
                     Locker
                     <span class="font-mono font-semibold text-gray-900">
-                        {{ locker.number }}
+                        {{ locker?.number }}
                     </span>
                 </p>
             </div>
@@ -174,7 +199,7 @@ const locker = {
                     <p
                         class="mt-2 font-mono text-[26px] text-amber-700 font-semibold"
                     >
-                        {{ locker.penaltyAmount }}
+                        {{ locker?.penaltyAmount }}
                     </p>
                 </div>
 

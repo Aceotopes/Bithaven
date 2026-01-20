@@ -2,6 +2,10 @@
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
 import { useKioskSession } from "./composables/useKioskSessions";
+import { useLockerRental } from "./composables/useLockerRental";
+import { usePenalty } from "./composables/usePenalty";
+import { useKioskActions } from "./composables/useKioskActions";
+import { reactive } from "vue";
 
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
@@ -11,8 +15,21 @@ import PaymentScreen from "./screens/PaymentScreen.vue";
 
 import { ref } from "vue";
 
+const kioskState = reactive({
+    student: null, // logged-in student
+    rentalState: "NO_RENTAL", // NO_RENTAL | ACTIVE_RENTAL | EXPIRED_RENTAL
+    locker: null, // active locker info
+    penalty: null, // penalty info if expired
+});
+
 const flow = useKioskFlow(); // kiosk flow state manager
-const session = useKioskSession(); // kiosk session state manager
+const session = useKioskSession(kioskState); // kiosk session state manager
+const penalty = usePenalty(kioskState); // penalty manager
+const actions = useKioskActions(kioskState); // kiosk action handlers
+
+const rental = useLockerRental(kioskState, () => {
+    penalty.applyPenalty();
+}); // locker rental manager
 
 const pendingRental = ref({
     locker: null,
@@ -71,13 +88,20 @@ function handlePaymentCancel() {
 }
 
 function handlePaymentComplete() {
-    // Clear pending intent
+    const { locker, duration } = pendingRental.value;
+
+    if (!locker || !duration) return;
+
+    // Register rental officially
+    rental.rentLocker(locker, duration);
+
+    // Clear UI intent
     pendingRental.value = {
         locker: null,
         duration: null,
     };
 
-    // End kiosk interaction
+    // Return kiosk to idle
     flow.goToIdle();
 }
 
@@ -112,7 +136,14 @@ function handlePaymentComplete() {
 
         <MainScreen
             v-else-if="flow.kioskState.value === KIOSK_STATES.STUDENT_DASHBOARD"
-            :student="session.state.student"
+            :student="kioskState.student"
+            :rentalState="kioskState.rentalState"
+            :locker="kioskState.locker"
+            :penalty="kioskState.penalty"
+            :canRent="actions.canRent.value"
+            :canEndRental="actions.canEndRental.value"
+            :canSettlePenalty="actions.canSettlePenalty.value"
+            :canEndSession="actions.canEndSession.value"
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
         />
