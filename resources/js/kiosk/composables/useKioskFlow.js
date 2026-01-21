@@ -9,41 +9,41 @@ import { KIOSK_STATES } from "@/kiosk/constants/kioskStates";
  */
 const kioskState = ref(KIOSK_STATES.IDLE);
 
-export function useKioskFlow() {
+export function useKioskFlow(state) {
     function goToIdle() {
-        kioskState.value = KIOSK_STATES.IDLE;
+        state.kioskState = KIOSK_STATES.IDLE;
     }
 
     function goToScan() {
-        kioskState.value = KIOSK_STATES.SCAN;
+        state.kioskState = KIOSK_STATES.SCAN;
     }
 
     function goToStudentDashboard() {
-        kioskState.value = KIOSK_STATES.STUDENT_DASHBOARD;
+        state.kioskState = KIOSK_STATES.STUDENT_DASHBOARD;
     }
 
     function goToLockerSelect() {
-        kioskState.value = KIOSK_STATES.LOCKER_SELECT;
+        state.kioskState = KIOSK_STATES.LOCKER_SELECT;
     }
 
     function goToPayment() {
-        kioskState.value = KIOSK_STATES.PAYMENT;
+        state.kioskState = KIOSK_STATES.PAYMENT;
     }
 
     function goToProcessing() {
-        kioskState.value = KIOSK_STATES.PROCESSING;
+        state.kioskState = KIOSK_STATES.PROCESSING;
     }
 
     function goToActiveSession() {
-        kioskState.value = KIOSK_STATES.ACTIVE_SESSION;
+        state.kioskState = KIOSK_STATES.ACTIVE_SESSION;
     }
 
     function goToDone() {
-        kioskState.value = KIOSK_STATES.DONE;
+        state.kioskState = KIOSK_STATES.DONE;
     }
 
     function goToError() {
-        kioskState.value = KIOSK_STATES.ERROR;
+        state.kioskState = KIOSK_STATES.ERROR;
     }
 
     return {

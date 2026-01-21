@@ -5,7 +5,7 @@ import { useKioskSession } from "./composables/useKioskSessions";
 import { useLockerRental } from "./composables/useLockerRental";
 import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
-import { reactive } from "vue";
+import { ref, reactive } from "vue";
 
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
@@ -13,24 +13,27 @@ import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
 // import LockerSelectScreen from './screens/LockerSelectScreen.vue' //                             temporarily commented out for testing
 
-import { ref } from "vue";
+//const kioskState = reactive({
+//student: null,                  // logged-in student
+// rentalState: "NO_RENTAL",       // NO_RENTAL | ACTIVE_RENTAL | EXPIRED_RENTAL
+//locker: null,                   // active locker info
+// penalty: null,                  // penalty info if expired
+//});
 
-const kioskState = reactive({
-    student: null, // logged-in student
-    rentalState: "NO_RENTAL", // NO_RENTAL | ACTIVE_RENTAL | EXPIRED_RENTAL
-    locker: null, // active locker info
-    penalty: null, // penalty info if expired
+const session = useKioskSession(); // kiosk session state manager
+
+const flow = useKioskFlow(session.state); // kiosk flow state manager
+const penalty = usePenalty(session.state); // penalty manager
+const actions = useKioskActions(session.state); // kiosk action handlers
+const isEndingRental = ref(false);
+const endCountdown = ref(3);
+let endTimer = null;
+
+const rental = useLockerRental(session.state, {
+    onExpire: () => {
+        penalty.applyPenalty();
+    },
 });
-
-const flow = useKioskFlow(); // kiosk flow state manager
-const session = useKioskSession(kioskState); // kiosk session state manager
-const penalty = usePenalty(kioskState); // penalty manager
-const actions = useKioskActions(kioskState); // kiosk action handlers
-
-const rental = useLockerRental(kioskState, () => {
-    penalty.applyPenalty();
-}); // locker rental manager
-
 const pendingRental = ref({
     locker: null,
     duration: null,
@@ -105,6 +108,24 @@ function handlePaymentComplete() {
     flow.goToIdle();
 }
 
+function handleEndRental() {
+    rental.endRental();
+
+    // Show success overlay
+    isEndingRental.value = true;
+    endCountdown.value = 3;
+
+    endTimer = setInterval(() => {
+        endCountdown.value--;
+
+        if (endCountdown.value === 0) {
+            clearInterval(endTimer);
+            isEndingRental.value = false;
+            flow.goToIdle();
+        }
+    }, 1000);
+}
+
 // ===================== debugging info for checkpoint 10 =====================
 // console.log("kioskState:", flow.kioskState, typeof flow.kioskState);
 // console.log("IDLE:", KIOSK_STATES.IDLE, typeof KIOSK_STATES.IDLE);
@@ -127,35 +148,43 @@ function handlePaymentComplete() {
             equal: {{ flow.kioskState.value === KIOSK_STATES.IDLE }}
         </div> -->
     <!-- ========================================================== -->
-
+    <div class="fixed top-2 left-2 bg-black text-white px-3 py-1 z-50">
+        {{ session.state.kioskState }}
+    </div>
     <transition name="fade" mode="out-in">
         <IdleScreen
-            v-if="flow.kioskState.value === KIOSK_STATES.IDLE"
+            v-if="session.state.kioskState === KIOSK_STATES.IDLE"
             @start-scan="handleStartScan"
         />
 
         <MainScreen
-            v-else-if="flow.kioskState.value === KIOSK_STATES.STUDENT_DASHBOARD"
-            :student="kioskState.student"
-            :rentalState="kioskState.rentalState"
-            :locker="kioskState.locker"
-            :penalty="kioskState.penalty"
+            v-else-if="
+                session.state.kioskState === KIOSK_STATES.STUDENT_DASHBOARD
+            "
+            :student="session.state.student"
+            :rentalState="session.state.rentalState"
+            :locker="session.state.locker"
+            :penalty="session.state.penalty"
+            :penaltyAmount="penalty.penaltyAmount.value"
             :canRent="actions.canRent.value"
             :canEndRental="actions.canEndRental.value"
             :canSettlePenalty="actions.canSettlePenalty.value"
             :canEndSession="actions.canEndSession.value"
+            :isEndingRental="isEndingRental"
+            :endCountdown="endCountdown"
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
+            @end-rental="handleEndRental"
         />
 
         <LockerSelectScreen
-            v-else-if="flow.kioskState.value === KIOSK_STATES.LOCKER_SELECT"
+            v-else-if="session.state.kioskState === KIOSK_STATES.LOCKER_SELECT"
             @back="handleLockerSelectBack"
             @confirm="handleLockerSelectConfirm"
         />
 
         <PaymentScreen
-            v-else-if="flow.kioskState.value === KIOSK_STATES.PAYMENT"
+            v-else-if="session.state.kioskState === KIOSK_STATES.PAYMENT"
             :locker="pendingRental.locker"
             :duration="pendingRental.duration"
             @cancel="handlePaymentCancel"

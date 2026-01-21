@@ -32,6 +32,10 @@ defineProps({
         type: Object,
         default: null,
     },
+    penaltyAmount: {
+        type: Number,
+        required: true,
+    },
 });
 
 function formatTime(timestamp) {
@@ -102,7 +106,7 @@ function formatTime(timestamp) {
                 <p class="text-[18px] tracking-wide text-gray-600">
                     Locker
                     <span class="font-mono font-semibold text-gray-900">
-                        {{ locker?.number }}
+                        #{{ locker?.number }}
                     </span>
                 </p>
             </div>
@@ -199,7 +203,7 @@ function formatTime(timestamp) {
                     <p
                         class="mt-2 font-mono text-[26px] text-amber-700 font-semibold"
                     >
-                        {{ locker?.penaltyAmount }}
+                        ₱ {{ penaltyAmount }}
                     </p>
                 </div>
 

@@ -9,25 +9,28 @@ import { KIOSK_STATES } from "../constants/kioskStates";
  * UI MUST NOT duplicate this state.
  */
 
-export function useKioskSession(state) {
-    /**
-     * Start a new student session.
-     * Called after ID tap (mocked for now).
-     */
+export function useKioskSession() {
+    const state = reactive({
+        kioskState: KIOSK_STATES.IDLE,
+
+        // Student session
+        student: null,
+
+        // Rental lifecycle
+        rentalState: "NO_RENTAL", // NO_RENTAL | ACTIVE_RENTAL | EXPIRED_RENTAL
+        locker: null,
+
+        // Penalty lifecycle
+        penalty: null,
+    });
+
     function startSession(studentData) {
         state.student = studentData;
     }
 
-    /**
-     * Clear the current session.
-     * This is a full reset.
-     */
     function clearSession() {
-        state.kioskState = KIOSK_STATES.IDLE;
         state.student = null;
-        state.rentalState = "NO_RENTAL";
-        state.locker = null;
-        state.penalty = null;
+        // IMPORTANT: DO NOT touch rental or penalty here
     }
 
     return {

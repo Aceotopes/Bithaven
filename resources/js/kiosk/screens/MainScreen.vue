@@ -2,6 +2,8 @@
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
+import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
+import { ref } from "vue";
 
 // ===================== End Session Modal Logic (TEMP) =====================
 // const showEndSessionConfirm = ref(false);            commented out to fix unused var warning
@@ -17,7 +19,8 @@ import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 //}
 // ========================================================================
 
-const emit = defineEmits(["end-session", "rent-locker"]);
+const emit = defineEmits(["end-session", "rent-locker", "end-rental"]);
+const showEndRentalConfirm = ref(false);
 
 defineProps({
     student: {
@@ -50,6 +53,16 @@ defineProps({
     },
     canEndSession: {
         type: Boolean,
+        required: true,
+    },
+    isEndingRental: {
+        type: Boolean,
+    },
+    endCountdown: {
+        type: Number,
+    },
+    penaltyAmount: {
+        type: Number,
         required: true,
     },
 });
@@ -87,6 +100,7 @@ defineProps({
                 :rentalState="rentalState"
                 :locker="locker"
                 :penalty="penalty"
+                :penaltyAmount="penaltyAmount"
             />
 
             <!-- Action Buttons -->
@@ -134,6 +148,7 @@ defineProps({
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canEndRental"
+                        @click="showEndRentalConfirm = true"
                     >
                         End Rental
                     </button>
@@ -152,6 +167,13 @@ defineProps({
                     </button>
                 </div>
             </section>
+
+            <EndRentalConfirmModal
+                :show="showEndRentalConfirm"
+                :lockerNumber="locker?.number"
+                @cancel="showEndRentalConfirm = false"
+                @confirm="emit('end-rental')"
+            />
 
             <!-- End Session Confirmation -->
             <!-- <div
@@ -191,5 +213,40 @@ defineProps({
                 </div>
             </div> -->
         </main>
+        <div
+            v-if="isEndingRental"
+            class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        >
+            <!-- CONTAINER -->
+            <div
+                class="w-[620px] bg-white rounded-[32px] border border-black/10 shadow-[0_40px_100px_rgba(0,0,0,0.35)] px-14 py-12 text-center"
+            >
+                <!-- SUCCESS ICON -->
+                <div
+                    class="mx-auto mb-8 w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-[48px]"
+                >
+                    ✓
+                </div>
+
+                <!-- PRIMARY MESSAGE -->
+                <p class="text-[36px] font-semibold text-gray-900">
+                    Rental Ended
+                </p>
+
+                <!-- SECONDARY MESSAGE -->
+                <p class="mt-4 text-[22px] text-gray-600">
+                    Locker access has been released successfully.
+                </p>
+
+                <!-- COUNTDOWN -->
+                <div class="mt-8 text-[20px] text-gray-500">
+                    Returning to start screen in
+                    <span class="font-mono font-semibold text-gray-900">
+                        {{ endCountdown }}
+                    </span>
+                    seconds
+                </div>
+            </div>
+        </div>
     </div>
 </template>
