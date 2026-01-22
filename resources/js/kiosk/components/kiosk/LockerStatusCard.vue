@@ -1,4 +1,5 @@
 <script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 //import { ref } from "vue";
 // TEMP UI STATE (change this manually for now)
 // isPaymentRequired = true if rental expired and penalty must be paid for logic later
@@ -19,7 +20,7 @@
 // };
 // ========================================================
 
-defineProps({
+const props = defineProps({
     rentalState: {
         type: String,
         required: true,
@@ -38,6 +39,9 @@ defineProps({
     },
 });
 
+const now = ref(Date.now());
+let tickTimer = null;
+
 function formatTime(timestamp) {
     if (!timestamp) return "—";
 
@@ -46,6 +50,40 @@ function formatTime(timestamp) {
         minute: "2-digit",
     });
 }
+
+onMounted(() => {
+    tickTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 1000);
+});
+
+onBeforeUnmount(() => {
+    if (tickTimer) {
+        clearInterval(tickTimer);
+        tickTimer = null;
+    }
+});
+
+const exceededMs = computed(() => {
+    if (!props.locker || typeof props.locker.endTime !== "number") {
+        return 0;
+    }
+
+    return Math.max(0, now.value - props.locker.endTime);
+});
+
+function formatDuration(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
+}
+
+const exceededTimeFormatted = computed(() => {
+    return formatDuration(exceededMs.value);
+});
 </script>
 
 <template>
@@ -187,10 +225,30 @@ function formatTime(timestamp) {
                     Rental Time Exceeded
                 </p>
 
+                <!-- TIMER -->
+                <div class="mt-8 text-center">
+                    <!-- TIMER VALUE -->
+                    <p
+                        class="font-mono text-[96px] tracking-[0.25em] text-amber-600"
+                    >
+                        {{ exceededTimeFormatted }}
+                    </p>
+
+                    <!-- LABEL -->
+                    <p class="mt-2 text-[18px] text-gray-500 tracking-wide">
+                        Exceeded Time
+                    </p>
+                </div>
+
                 <p class="mt-4 text-[20px] text-gray-600 max-w-[620px] mx-auto">
-                    Your locker rental has exceeded the allowed time. A penalty
-                    has been applied and must be settled before the locker can
-                    be unlocked.
+                    Your locker rental has gone beyond the allotted time. A
+                    penalty is now active and must be settled to unlock the
+                    locker.
+                </p>
+
+                <p class="mt-2 text-[18px] text-gray-500 max-w-[620px] mx-auto">
+                    The penalty amount will continue to increase until payment
+                    is completed.
                 </p>
             </div>
 

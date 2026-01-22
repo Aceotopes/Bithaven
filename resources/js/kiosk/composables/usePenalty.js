@@ -1,4 +1,4 @@
-import { computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 /**
  * usePenalty
@@ -16,6 +16,23 @@ import { computed } from "vue";
  * - payments (mock only)
  */
 export function usePenalty(state) {
+    const now = ref(Date.now());
+    let timer = null;
+
+    function startPenaltyClock() {
+        if (timer) return;
+
+        timer = setInterval(() => {
+            now.value = Date.now();
+        }, 1000); // 1 second resolution
+    }
+
+    function stopPenaltyClock() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    }
     /**
      * Apply penalty when rental expires.
      * Called ONCE at expiry.
@@ -27,6 +44,7 @@ export function usePenalty(state) {
             startedAt: Date.now(), // when penalty started
             isPaid: false,
         };
+        startPenaltyClock();
     }
 
     /**
@@ -39,6 +57,7 @@ export function usePenalty(state) {
             state.penalty.isPaid
         )
             return;
+        stopPenaltyClock();
 
         state.penalty.isPaid = true;
 
@@ -60,7 +79,7 @@ export function usePenalty(state) {
             return 0;
         }
 
-        const exceededMs = Date.now() - state.locker.endTime;
+        const exceededMs = now.value - state.locker.endTime;
 
         if (exceededMs <= 0) return 0;
 
@@ -81,15 +100,18 @@ export function usePenalty(state) {
     function getPenaltySnapshot() {
         if (!state.penalty || !state.locker) return null;
 
-        const exceededMs = Math.max(0, Date.now() - state.locker.endTime);
+        // Freeze exceeded time ONCE
+        const exceededMs = Date.now() - state.locker.endTime;
+
+        const amount = calculatePenalty(exceededMs);
 
         return {
-            exceededDuration: formatExceededTime(exceededMs),
+            amount,
+            exceededDuration: formatDuration(exceededMs),
             breakdown: buildPenaltyBreakdown(exceededMs),
-            amount: calculatePenalty(exceededMs),
+            frozenAt: Date.now(),
         };
     }
-
     return {
         applyPenalty,
         settlePenalty,
@@ -109,7 +131,7 @@ function calculatePenalty(exceededMs) {
     let penalty = 5; // base penalty on expiry
 
     // every additional 30 minutes → +5
-    const halfHours = Math.floor(exceededMinutes / 30);
+    const halfHours = Math.floor(exceededMinutes / 1);
     penalty += halfHours * 5;
 
     // every full hour → +10
@@ -117,15 +139,6 @@ function calculatePenalty(exceededMs) {
     penalty += fullHours * 10;
 
     return penalty;
-}
-
-function formatExceededTime(ms) {
-    const minutes = Math.floor(ms / 60000);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    if (hours === 0) return `${minutes} minute/s`;
-    return `${hours}h ${remainingMinutes}m`;
 }
 
 function buildPenaltyBreakdown(ms) {
@@ -145,4 +158,21 @@ function buildPenaltyBreakdown(ms) {
     }
 
     return breakdown;
+}
+function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    }
+
+    if (minutes > 0) {
+        return `${minutes}m ${seconds}s`;
+    }
+
+    return `${seconds}s`;
 }
