@@ -19,7 +19,12 @@ import { ref } from "vue";
 //}
 // ========================================================================
 
-const emit = defineEmits(["end-session", "rent-locker", "end-rental"]);
+const emit = defineEmits([
+    "end-session",
+    "rent-locker",
+    "end-rental",
+    "settle-penalty",
+]);
 const showEndRentalConfirm = ref(false);
 
 defineProps({
@@ -162,6 +167,7 @@ defineProps({
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canSettlePenalty"
+                        @click="$emit('settle-penalty')"
                     >
                         Settle Penalty
                     </button>

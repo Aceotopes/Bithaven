@@ -34,9 +34,17 @@ const rental = useLockerRental(session.state, {
         penalty.applyPenalty();
     },
 });
-const pendingRental = ref({
-    locker: null,
-    duration: null,
+// const pendingRental = ref({
+//     locker: null,
+//     duration: null,
+// });
+
+const paymentContext = ref({
+    mode: null, // 'RENTAL' | 'PENALTY'
+    amount: null, // number
+    locker: null, // locker number
+    duration: null, // for RENTAL only
+    penalty: null, // for PENALTY only
 });
 
 // ===================== mock student data for testing =====================
@@ -65,11 +73,39 @@ function handleLockerSelectBack() {
 
 function handleLockerSelectConfirm(payload) {
     // TEMP: validate flow only
-    pendingRental.value = payload;
     console.log("Locker selection confirmed:", payload);
+    const { locker, duration } = payload;
+
+    paymentContext.value = {
+        mode: "RENTAL",
+        amount: duration * 5, // pricing logic (temporary)
+        locker,
+        duration,
+        penalty: null,
+    };
+
     flow.goToPayment();
 }
 // =======================================================================================
+
+function handleSettlePenalty() {
+    const snapshot = penalty.getPenaltySnapshot();
+    if (!snapshot) return;
+
+    paymentContext.value = {
+        mode: "PENALTY",
+        locker: session.state.locker.number,
+        duration: null,
+        amount: snapshot.amount,
+        penalty: {
+            exceededDuration: snapshot.exceededDuration,
+            breakdown: snapshot.breakdown,
+        },
+    };
+
+    flow.goToPayment();
+}
+
 function handlEndSession() {
     session.clearSession();
     console.log("Session ended.");
@@ -80,31 +116,52 @@ function handleRentLocker() {
     flow.goToLockerSelect();
 }
 
-function handlePaymentCancel() {
-    // Optional: clear pending rental intent
-    pendingRental.value = {
+function resetPaymentContext() {
+    paymentContext.value = {
+        mode: null,
+        amount: null,
         locker: null,
         duration: null,
+        penalty: null,
     };
+}
 
-    flow.goToLockerSelect();
+function handlePaymentCancel() {
+    // Optional: clear pending rental intent
+    // pendingRental.value = {
+    //     locker: null,
+    //     duration: null,
+    // };
+
+    // flow.goToLockerSelect();
+
+    const mode = paymentContext.value.mode;
+
+    resetPaymentContext();
+
+    if (mode === "RENTAL") {
+        flow.goToLockerSelect();
+    } else {
+        flow.goToStudentDashboard();
+    }
+
+    paymentContext.value = { type: null, amount: 0 };
 }
 
 function handlePaymentComplete() {
-    const { locker, duration } = pendingRental.value;
+    if (paymentContext.value.mode === "RENTAL") {
+        rental.rentLocker(
+            paymentContext.value.locker,
+            paymentContext.value.duration
+        );
+    }
 
-    if (!locker || !duration) return;
+    if (paymentContext.value.mode === "PENALTY") {
+        penalty.settlePenalty();
+    }
 
-    // Register rental officially
-    rental.rentLocker(locker, duration);
-
-    // Clear UI intent
-    pendingRental.value = {
-        locker: null,
-        duration: null,
-    };
-
-    // Return kiosk to idle
+    // cleanup
+    resetPaymentContext();
     flow.goToIdle();
 }
 
@@ -175,6 +232,7 @@ function handleEndRental() {
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
             @end-rental="handleEndRental"
+            @settle-penalty="handleSettlePenalty"
         />
 
         <LockerSelectScreen
@@ -185,8 +243,12 @@ function handleEndRental() {
 
         <PaymentScreen
             v-else-if="session.state.kioskState === KIOSK_STATES.PAYMENT"
-            :locker="pendingRental.locker"
-            :duration="pendingRental.duration"
+            :locker="paymentContext.locker"
+            :duration="paymentContext.duration"
+            :mode="paymentContext.mode"
+            :amount="paymentContext.amount"
+            :penalty="paymentContext.penalty"
+            :lockerEndTime="session.state.locker?.endTime"
             @cancel="handlePaymentCancel"
             @complete="handlePaymentComplete"
         />

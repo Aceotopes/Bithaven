@@ -9,12 +9,13 @@ const emit = defineEmits(["cancel", "complete"]);
 const props = defineProps({
     locker: Number,
     duration: Number,
+    amount: Number,
 });
 
 /* =============================
    BASE STATE
 ============================= */
-const pricePerHour = 5; // mock pricing
+//const pricePerHour = 5; // mock pricing
 const insertedAmount = ref(0);
 const hasCompleted = ref(false);
 const successCountdown = ref(3);
@@ -24,8 +25,7 @@ let countdownTimer = null;
    COMPUTED VALUES
 ============================= */
 const amountDue = computed(() => {
-    if (!props.duration) return 0;
-    return props.duration * pricePerHour;
+    return props.amount || 0;
 });
 
 const isPaid = computed(() => {

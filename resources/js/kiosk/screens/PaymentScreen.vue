@@ -1,10 +1,29 @@
 <script setup>
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
+import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
 
 const props = defineProps({
     locker: Number,
     duration: Number,
+    mode: {
+        type: String,
+        required: true, // 'RENTAL' | 'PENALTY'
+    },
+
+    amount: {
+        type: Number,
+        required: true,
+    },
+
+    penalty: {
+        type: Object,
+        default: null,
+    },
+    lockerEndTime: {
+        type: Number,
+        required: false,
+    },
 });
 
 const emit = defineEmits(["cancel", "complete"]);
@@ -27,9 +46,20 @@ const emit = defineEmits(["cancel", "complete"]);
         <SystemHeader />
 
         <main class="relative z-10 px-12 pt-10">
+            <!-- PENALTY CONTEXT -->
+            <PenaltyInfoCard
+                v-if="mode === 'PENALTY'"
+                :lockerNumber="locker"
+                :exceededDuration="penalty.exceededDuration"
+                :penaltyBreakdown="penalty.breakdown"
+                :totalAmount="amount"
+                :endTime="lockerEndTime"
+            />
             <PaymentPanel
                 :locker="locker"
                 :duration="duration"
+                :mode="mode"
+                :amount="amount"
                 @cancel="emit('cancel')"
                 @complete="emit('complete')"
             />

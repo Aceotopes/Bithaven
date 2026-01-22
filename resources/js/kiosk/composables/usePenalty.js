@@ -78,11 +78,24 @@ export function usePenalty(state) {
         );
     });
 
+    function getPenaltySnapshot() {
+        if (!state.penalty || !state.locker) return null;
+
+        const exceededMs = Math.max(0, Date.now() - state.locker.endTime);
+
+        return {
+            exceededDuration: formatExceededTime(exceededMs),
+            breakdown: buildPenaltyBreakdown(exceededMs),
+            amount: calculatePenalty(exceededMs),
+        };
+    }
+
     return {
         applyPenalty,
         settlePenalty,
         canSettlePenalty,
         penaltyAmount,
+        getPenaltySnapshot,
     };
 }
 
@@ -104,4 +117,32 @@ function calculatePenalty(exceededMs) {
     penalty += fullHours * 10;
 
     return penalty;
+}
+
+function formatExceededTime(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours === 0) return `${minutes} minute/s`;
+    return `${hours}h ${remainingMinutes}m`;
+}
+
+function buildPenaltyBreakdown(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const breakdown = [];
+
+    breakdown.push({ label: "Initial expiry", amount: 5 });
+
+    const halfHours = Math.floor(minutes / 30);
+    for (let i = 1; i <= halfHours; i++) {
+        breakdown.push({ label: `+30 mins`, amount: 5 });
+    }
+
+    const hours = Math.floor(minutes / 60);
+    for (let i = 1; i <= hours; i++) {
+        breakdown.push({ label: `+1 hour`, amount: 10 });
+    }
+
+    return breakdown;
 }
