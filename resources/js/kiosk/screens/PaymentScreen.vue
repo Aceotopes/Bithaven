@@ -2,6 +2,10 @@
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
 import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
+import CancelPaymentModal from "@/kiosk/components/kiosk/CancelPaymentModal.vue";
+import { ref } from "vue";
+
+const showCancelConfirm = ref(false);
 
 const props = defineProps({
     locker: Number,
@@ -60,8 +64,14 @@ const emit = defineEmits(["cancel", "complete"]);
                 :duration="duration"
                 :mode="mode"
                 :amount="amount"
-                @cancel="emit('cancel')"
+                @cancel="showCancelConfirm = true"
                 @complete="emit('complete')"
+            />
+
+            <CancelPaymentModal
+                :show="showCancelConfirm"
+                @close="showCancelConfirm = false"
+                @confirm="emit('cancel')"
             />
         </main>
     </div>

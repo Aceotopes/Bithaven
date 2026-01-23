@@ -3,6 +3,7 @@ import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
+import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vue";
 import { ref } from "vue";
 
 // ===================== End Session Modal Logic (TEMP) =====================
@@ -24,6 +25,7 @@ const emit = defineEmits([
     "rent-locker",
     "end-rental",
     "settle-penalty",
+    "dismiss-howto",
 ]);
 const showEndRentalConfirm = ref(false);
 
@@ -70,6 +72,7 @@ defineProps({
         type: Number,
         required: true,
     },
+    showHowTo: Boolean,
 });
 </script>
 
@@ -97,6 +100,10 @@ defineProps({
         <main
             class="relative z-10 max-w-[920px] mx-auto px-12 pt-10 space-y-10"
         >
+            <HowToUseLockerModal
+                :show="showHowTo"
+                @close="emit('dismiss-howto')"
+            />
             <!-- <StudentInfoCard /> -->
             <StudentInfoCardV2 :student="student" />
 

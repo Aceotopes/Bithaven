@@ -222,6 +222,7 @@ function handleEndRental() {
             :rentalState="session.state.rentalState"
             :locker="session.state.locker"
             :penalty="session.state.penalty"
+            :showHowTo="!session.state.hasSeenHowTo"
             :penaltyAmount="penalty.penaltyAmount.value"
             :canRent="actions.canRent.value"
             :canEndRental="actions.canEndRental.value"
@@ -233,6 +234,7 @@ function handleEndRental() {
             @rent-locker="handleRentLocker"
             @end-rental="handleEndRental"
             @settle-penalty="handleSettlePenalty"
+            @dismiss-howto="session.state.hasSeenHowTo = true"
         />
 
         <LockerSelectScreen

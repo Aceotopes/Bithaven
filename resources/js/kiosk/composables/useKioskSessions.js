@@ -22,14 +22,19 @@ export function useKioskSession() {
 
         // Penalty lifecycle
         penalty: null,
+
+        // How to use locker tutorial seen
+        hasSeenHowTo: false,
     });
 
     function startSession(studentData) {
         state.student = studentData;
+        state.hasSeenHowTo = false;
     }
 
     function clearSession() {
         state.student = null;
+        state.hasSeenHowTo = false;
         // IMPORTANT: DO NOT touch rental or penalty here
     }
 
