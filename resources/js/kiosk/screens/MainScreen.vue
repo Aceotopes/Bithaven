@@ -4,20 +4,23 @@ import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
 import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vue";
+import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
 import { ref } from "vue";
 
 // ===================== End Session Modal Logic (TEMP) =====================
-// const showEndSessionConfirm = ref(false);            commented out to fix unused var warning
+const showEndSessionConfirm = ref(false); // to show/hide end session confirmation modal
+function openEndSessionConfirm() {
+    showEndSessionConfirm.value = true;
+}
 
-// function cancelEndSession() {                        commented out to fix unused var warning
-//     showEndSessionConfirm.value = false;
-// }
+function cancelEndSession() {
+    showEndSessionConfirm.value = false;
+}
 
-//function confirmEndSession() {                        commented out to fix unused var warning
-//  showEndSessionConfirm.value = false;
-// TEMP: logic will be added later
-// emit reset / go back to idle
-//}
+function confirmEndSession() {
+    showEndSessionConfirm.value = false;
+    emit("end-session");
+}
 // ========================================================================
 
 const emit = defineEmits([
@@ -94,7 +97,7 @@ defineProps({
         </div>
 
         <!-- Header -->
-        <SystemHeader @end-session="showEndSessionConfirm = true" />
+        <SystemHeader @end-session="openEndSessionConfirm" />
 
         <!-- Main Content Area -->
         <main
@@ -113,6 +116,13 @@ defineProps({
                 :locker="locker"
                 :penalty="penalty"
                 :penaltyAmount="penaltyAmount"
+            />
+
+            <!-- end session modal -->
+            <EndSessionConfirmModal
+                :show="showEndSessionConfirm"
+                @cancel="cancelEndSession"
+                @confirm="confirmEndSession"
             />
 
             <!-- Action Buttons -->
@@ -263,3 +273,24 @@ defineProps({
         </div>
     </div>
 </template>
+
+<style>
+/* ============== end session modal transition ============== */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.modal-fade-enter-to,
+.modal-fade-leave-from {
+    opacity: 1;
+    transform: scale(1);
+}
+/* ========================================================= */
+</style>

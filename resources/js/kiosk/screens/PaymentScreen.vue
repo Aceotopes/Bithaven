@@ -3,9 +3,10 @@ import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
 import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
 import CancelPaymentModal from "@/kiosk/components/kiosk/CancelPaymentModal.vue";
+import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
 import { ref } from "vue";
 
-const showCancelConfirm = ref(false);
+const showCancelConfirm = ref(false); // to show/hide cancel payment confirmation modal
 
 const props = defineProps({
     locker: Number,
@@ -28,9 +29,15 @@ const props = defineProps({
         type: Number,
         required: false,
     },
+    show: {
+        type: Boolean,
+        default: true,
+    },
 });
 
-const emit = defineEmits(["cancel", "complete"]);
+const showEndSessionConfirm = ref(false);
+
+const emit = defineEmits(["cancel", "complete", "end-session"]);
 </script>
 
 <template>
@@ -47,7 +54,13 @@ const emit = defineEmits(["cancel", "complete"]);
             />
         </div>
 
-        <SystemHeader />
+        <SystemHeader @end-session="showEndSessionConfirm = true" />
+
+        <EndSessionConfirmModal
+            :show="showEndSessionConfirm"
+            @cancel="showEndSessionConfirm = false"
+            @confirm="emit('end-session')"
+        />
 
         <main class="relative z-10 px-12 pt-10">
             <!-- PENALTY CONTEXT -->

@@ -241,6 +241,7 @@ function handleEndRental() {
             v-else-if="session.state.kioskState === KIOSK_STATES.LOCKER_SELECT"
             @back="handleLockerSelectBack"
             @confirm="handleLockerSelectConfirm"
+            @end-session="handlEndSession"
         />
 
         <PaymentScreen
@@ -251,6 +252,8 @@ function handleEndRental() {
             :amount="paymentContext.amount"
             :penalty="paymentContext.penalty"
             :lockerEndTime="session.state.locker?.endTime"
+            :canEndSession="actions.canEndSession.value"
+            @end-session="handlEndSession"
             @cancel="handlePaymentCancel"
             @complete="handlePaymentComplete"
         />

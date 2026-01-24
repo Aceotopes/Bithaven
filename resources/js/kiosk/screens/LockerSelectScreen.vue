@@ -1,10 +1,21 @@
 <script setup>
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import LockerSelectionPanel from "../components/kiosk/LockerSelectionPanel.vue";
+import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+import { ref } from "vue";
 // UI-only screen
 // Logic will be wired later
 
-const emit = defineEmits(["back", "confirm"]);
+const props = defineProps({
+    show: {
+        type: Boolean,
+        default: true,
+    },
+});
+
+const showEndSessionConfirm = ref(false);
+
+const emit = defineEmits(["back", "confirm", "end-session"]);
 </script>
 
 <template>
@@ -23,7 +34,13 @@ const emit = defineEmits(["back", "confirm"]);
         </div>
 
         <!-- System Header -->
-        <SystemHeader />
+        <SystemHeader @end-session="showEndSessionConfirm = true" />
+
+        <EndSessionConfirmModal
+            :show="showEndSessionConfirm"
+            @cancel="showEndSessionConfirm = false"
+            @confirm="emit('end-session')"
+        />
 
         <!-- Main Content -->
         <main class="relative z-10 w-full px-16 pt-12">

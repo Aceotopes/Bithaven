@@ -25,14 +25,14 @@ const emit = defineEmits(["close"]);
                             Instructions
                         </p>
 
-                        <p class="text-[18px] text-gray-500">
+                        <!-- <p class="text-[18px] text-gray-500">
                             Smart Locker System
-                        </p>
+                        </p> -->
                     </div>
 
                     <!-- TITLE -->
                     <h1 class="text-[42px] font-bold text-gray-900 text-center">
-                        How to Use the Smart Locker
+                        How to Use Bithaven Smart Locker
                     </h1>
 
                     <p
