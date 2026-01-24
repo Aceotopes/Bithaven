@@ -7,6 +7,8 @@ import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vu
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
 import { ref } from "vue";
 
+const DEV_MODE = import.meta.env.DEV; // DEV TOOL FLAG
+
 // ===================== End Session Modal Logic (TEMP) =====================
 const showEndSessionConfirm = ref(false); // to show/hide end session confirmation modal
 function openEndSessionConfirm() {
@@ -29,6 +31,11 @@ const emit = defineEmits([
     "end-rental",
     "settle-penalty",
     "dismiss-howto",
+
+    //DEV
+    "dev-go-locker-select",
+    "dev-go-payment",
+    "dev-reset-session",
 ]);
 const showEndRentalConfirm = ref(false);
 
@@ -271,6 +278,39 @@ defineProps({
                 </div>
             </div>
         </div>
+        <!-- ================= DEV PANEL ================= -->
+        <div
+            v-if="DEV_MODE"
+            class="fixed bottom-6 right-6 z-[9999] w-[240px] rounded-2xl bg-black/80 backdrop-blur border border-white/10 shadow-xl px-5 py-4 text-white"
+        >
+            <p class="text-[12px] tracking-widest uppercase text-white/60 mb-3">
+                DEV MODE
+            </p>
+
+            <div class="space-y-3">
+                <button
+                    class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 transition text-sm font-semibold"
+                    @click="emit('dev-go-locker-select')"
+                >
+                    Open Locker Selection
+                </button>
+
+                <button
+                    class="w-full py-2 rounded-lg bg-amber-600 hover:bg-emerald-700 transition text-sm font-semibold"
+                    @click="emit('dev-go-payment')"
+                >
+                    Open Locker Selection
+                </button>
+
+                <button
+                    class="w-full py-2 rounded-lg bg-red-600 hover:bg-red-700 transition text-sm font-semibold"
+                    @click="emit('dev-reset-session')"
+                >
+                    Reset Session
+                </button>
+            </div>
+        </div>
+        <!-- ============================================ -->
     </div>
 </template>
 

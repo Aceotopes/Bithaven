@@ -11,6 +11,10 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    occupiedLockers: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const showEndSessionConfirm = ref(false);
@@ -47,6 +51,7 @@ const emit = defineEmits(["back", "confirm", "end-session"]);
             <!-- Screen Title and Instruction -->
 
             <LockerSelectionPanel
+                :occupiedLockers="occupiedLockers"
                 @back="$emit('back')"
                 @confirm="$emit('confirm', $event)"
             />

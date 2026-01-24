@@ -5,13 +5,12 @@ import { useKioskSession } from "./composables/useKioskSessions";
 import { useLockerRental } from "./composables/useLockerRental";
 import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
-import { ref, reactive } from "vue";
+import { ref, computed, reactive } from "vue";
 
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
-// import LockerSelectScreen from './screens/LockerSelectScreen.vue' //                             temporarily commented out for testing
 
 //const kioskState = reactive({
 //student: null,                  // logged-in student
@@ -20,13 +19,16 @@ import PaymentScreen from "./screens/PaymentScreen.vue";
 // penalty: null,                  // penalty info if expired
 //});
 
+/* ===================================
+        KIOSK STATE MANAGERS
+   ===================================*/
 const session = useKioskSession(); // kiosk session state manager
 
 const flow = useKioskFlow(session.state); // kiosk flow state manager
 const penalty = usePenalty(session.state); // penalty manager
 const actions = useKioskActions(session.state); // kiosk action handlers
-const isEndingRental = ref(false);
-const endCountdown = ref(3);
+const isEndingRental = ref(false); // rental ending state
+const endCountdown = ref(3); // rental end countdown
 let endTimer = null;
 
 const rental = useLockerRental(session.state, {
@@ -56,6 +58,16 @@ const mockStudent = {
     photo: null, // placeholder
 };
 // ========================================================================
+
+/* ===================================
+        OCCUPIED LOCKERS STATE
+   ===================================*/
+const occupiedLockers = computed(() => {
+    if (session.state.locker && session.state.rentalState !== "NO_RENTAL") {
+        return [session.state.locker.number];
+    }
+    return [];
+});
 
 // ===================== session start handler =====================
 function handleStartScan() {
@@ -150,10 +162,14 @@ function handlePaymentCancel() {
 
 function handlePaymentComplete() {
     if (paymentContext.value.mode === "RENTAL") {
-        rental.rentLocker(
-            paymentContext.value.locker,
-            paymentContext.value.duration
-        );
+        const locker = paymentContext.value.locker;
+
+        rental.rentLocker(locker, paymentContext.value.duration);
+
+        // mark locker as occupied
+        if (!occupiedLockers.value.includes(locker)) {
+            occupiedLockers.value.push(locker);
+        }
     }
 
     if (paymentContext.value.mode === "PENALTY") {
@@ -166,7 +182,15 @@ function handlePaymentComplete() {
 }
 
 function handleEndRental() {
+    const lockerNumber = session.state.locker?.number;
+
     rental.endRental();
+
+    if (lockerNumber !== undefined) {
+        occupiedLockers.value = occupiedLockers.value.filter(
+            (n) => n !== lockerNumber
+        );
+    }
 
     // Show success overlay
     isEndingRental.value = true;
@@ -235,10 +259,14 @@ function handleEndRental() {
             @end-rental="handleEndRental"
             @settle-penalty="handleSettlePenalty"
             @dismiss-howto="session.state.hasSeenHowTo = true"
+            @dev-go-locker-select="flow.goToLockerSelect()"
+            @dev-reset-session="handlEndSession()"
+            @dev-go-payment="flow.goToPayment()"
         />
 
         <LockerSelectScreen
             v-else-if="session.state.kioskState === KIOSK_STATES.LOCKER_SELECT"
+            :occupiedLockers="occupiedLockers"
             @back="handleLockerSelectBack"
             @confirm="handleLockerSelectConfirm"
             @end-session="handlEndSession"

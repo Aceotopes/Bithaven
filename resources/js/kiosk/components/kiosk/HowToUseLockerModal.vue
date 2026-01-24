@@ -25,6 +25,7 @@ const emit = defineEmits(["close"]);
                             Instructions
                         </p>
 
+                        <!-- RIGHT STRIP -->
                         <!-- <p class="text-[18px] text-gray-500">
                             Smart Locker System
                         </p> -->
@@ -129,7 +130,7 @@ const emit = defineEmits(["close"]);
                         </p>
                     </div>
 
-                    <!-- CTA -->
+                    <!-- PROCEED BUTTON -->
                     <div class="mt-14 flex justify-center">
                         <button
                             class="px-24 h-20 rounded-2xl bg-emerald-600 text-white text-[26px] font-semibold transition active:scale-[0.97]"

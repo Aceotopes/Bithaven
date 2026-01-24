@@ -6,9 +6,40 @@ const emit = defineEmits(["back", "confirm"]);
 const selectedLocker = ref(null);
 const selectedDuration = ref(null);
 
-const isReadyToConfirm = computed(() => {
-    return selectedLocker.value !== null && selectedDuration.value !== null;
+const props = defineProps({
+    occupiedLockers: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const isReadyToConfirm = computed(() => {
+    return (
+        selectedLocker.value !== null &&
+        selectedDuration.value !== null &&
+        !props.occupiedLockers.includes(selectedLocker.value)
+    );
+});
+
+const availableCount = computed(() => 15 - props.occupiedLockers.length);
+
+function isOccupied(n) {
+    return props.occupiedLockers.includes(n);
+}
+
+function lockerStatus(n) {
+    return isOccupied(n)
+        ? {
+              label: "OCCUPIED",
+              badge: "bg-gray-500 text-white",
+              frame: "border-gray-400",
+          }
+        : {
+              label: "AVAILABLE",
+              badge: "bg-emerald-600 text-white",
+              frame: "border-emerald-400",
+          };
+}
 </script>
 
 <template>
@@ -27,12 +58,29 @@ const isReadyToConfirm = computed(() => {
 
             <p class="text-[24px] tracking-wide text-gray-500">
                 Available Lockers
-                <span class="font-mono font-semibold text-gray-900">15</span>
+                <span class="font-mono font-semibold text-gray-900">
+                    {{ availableCount }}
+                </span>
             </p>
         </div>
 
         <!-- Divider -->
         <div class="my-8 h-px bg-black/10"></div>
+
+        <!-- LEGEND -->
+        <div class="mb-6 flex justify-center gap-10 text-[16px] text-gray-600">
+            <div class="flex items-center gap-3">
+                <span
+                    class="inline-block w-4 h-4 rounded bg-emerald-500"
+                ></span>
+                <span class="tracking-wide uppercase">Available</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-block w-4 h-4 rounded bg-gray-400"></span>
+                <span class="tracking-wide uppercase">Occupied</span>
+            </div>
+        </div>
 
         <!-- ========================= -->
         <!-- Locker Grid (5 x 3) -->
@@ -41,36 +89,66 @@ const isReadyToConfirm = computed(() => {
             <div
                 v-for="n in 15"
                 :key="n"
-                @click="selectedLocker = n"
-                class="h-56 rounded-3xl flex flex-col items-center justify-center border transition-all duration-150 cursor-pointer select-none"
+                @click="!isOccupied(n) && (selectedLocker = n)"
+                class="relative h-56 rounded-2xl border-2 transition-all duration-150 select-none flex flex-col justify-between overflow-hidden"
                 :class="[
-                    selectedLocker === n
-                        ? 'bg-emerald-50 border-emerald-400 shadow-[0_0_0_2px_rgba(16,185,129,0.4)]'
-                        : 'bg-white border-black/10 shadow-md',
-                    'active:scale-[0.97]',
+                    isOccupied(n)
+                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
+                        : selectedLocker === n
+                        ? 'bg-emerald-50 border-emerald-600 ring-4 ring-emerald-300 shadow-[0_16px_40px_rgba(16,185,129,0.35)]'
+                        : 'bg-white border-black/10 shadow-md cursor-pointer',
+                    !isOccupied(n) && 'active:scale-[0.97]',
                 ]"
             >
-                <p
-                    class="text-[48px] font-bold"
+                <!-- STATUS STRIP -->
+                <div
+                    class="h-10 flex items-center justify-center text-[13px] font-semibold tracking-widest uppercase"
                     :class="
                         selectedLocker === n
-                            ? 'text-emerald-700'
-                            : 'text-gray-900'
+                            ? 'bg-emerald-600 text-white'
+                            : lockerStatus(n).badge
                     "
                 >
-                    {{ String(n).padStart(2, "0") }}
-                </p>
+                    {{
+                        selectedLocker === n
+                            ? "SELECTED"
+                            : lockerStatus(n).label
+                    }}
+                </div>
 
-                <p
-                    class="mt-1 text-[12px] tracking-widest uppercase"
-                    :class="
-                        selectedLocker === n
-                            ? 'text-emerald-500'
-                            : 'text-gray-400'
-                    "
-                >
-                    Locker
-                </p>
+                <!-- MAIN BODY -->
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <p
+                        class="font-mono text-[52px] font-bold"
+                        :class="
+                            isOccupied(n)
+                                ? 'text-gray-500'
+                                : selectedLocker === n
+                                ? 'text-emerald-800'
+                                : 'text-gray-900'
+                        "
+                    >
+                        {{ String(n).padStart(2, "0") }}
+                    </p>
+
+                    <p
+                        class="mt-1 text-[13px] tracking-widest uppercase text-gray-400"
+                    >
+                        Locker
+                    </p>
+                </div>
+
+                <!-- FOOTER INDICATOR -->
+                <div
+                    class="h-4"
+                    :class="[
+                        isOccupied(n)
+                            ? 'bg-gray-300'
+                            : selectedLocker === n
+                            ? 'bg-emerald-600'
+                            : 'bg-emerald-200',
+                    ]"
+                />
             </div>
         </div>
 
