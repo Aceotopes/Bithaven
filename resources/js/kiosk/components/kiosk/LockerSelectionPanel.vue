@@ -7,7 +7,7 @@ const selectedLocker = ref(null);
 const selectedDuration = ref(null);
 
 const props = defineProps({
-    occupiedLockers: {
+    lockers: {
         type: Array,
         default: () => [],
     },
@@ -17,14 +17,16 @@ const isReadyToConfirm = computed(() => {
     return (
         selectedLocker.value !== null &&
         selectedDuration.value !== null &&
-        !props.occupiedLockers.includes(selectedLocker.value)
+        !isOccupied(selectedLocker.value)
     );
 });
 
-const availableCount = computed(() => 15 - props.occupiedLockers.length);
+const availableCount = computed(
+    () => props.lockers.filter((l) => l.status === "AVAILABLE").length
+);
 
 function isOccupied(n) {
-    return props.occupiedLockers.includes(n);
+    return props.lockers.find((l) => l.number === n)?.status === "OCCUPIED";
 }
 
 function lockerStatus(n) {

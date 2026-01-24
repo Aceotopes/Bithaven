@@ -29,6 +29,8 @@ const penalty = usePenalty(session.state); // penalty manager
 const actions = useKioskActions(session.state); // kiosk action handlers
 const isEndingRental = ref(false); // rental ending state
 const endCountdown = ref(3); // rental end countdown
+const TOTAL_LOCKERS = 15;
+
 let endTimer = null;
 
 const rental = useLockerRental(session.state, {
@@ -59,15 +61,12 @@ const mockStudent = {
 };
 // ========================================================================
 
-/* ===================================
-        OCCUPIED LOCKERS STATE
-   ===================================*/
-const occupiedLockers = computed(() => {
-    if (session.state.locker && session.state.rentalState !== "NO_RENTAL") {
-        return [session.state.locker.number];
-    }
-    return [];
-});
+const lockers = ref(
+    Array.from({ length: TOTAL_LOCKERS }, (_, i) => ({
+        number: i + 1,
+        status: "AVAILABLE", // AVAILABLE | OCCUPIED
+    }))
+);
 
 // ===================== session start handler =====================
 function handleStartScan() {
@@ -162,13 +161,14 @@ function handlePaymentCancel() {
 
 function handlePaymentComplete() {
     if (paymentContext.value.mode === "RENTAL") {
-        const locker = paymentContext.value.locker;
+        const lockerNumber = paymentContext.value.locker;
 
-        rental.rentLocker(locker, paymentContext.value.duration);
+        rental.rentLocker(lockerNumber, paymentContext.value.duration);
 
-        // mark locker as occupied
-        if (!occupiedLockers.value.includes(locker)) {
-            occupiedLockers.value.push(locker);
+        const locker = lockers.value.find((l) => l.number === lockerNumber);
+
+        if (locker) {
+            locker.status = "OCCUPIED";
         }
     }
 
@@ -186,10 +186,10 @@ function handleEndRental() {
 
     rental.endRental();
 
-    if (lockerNumber !== undefined) {
-        occupiedLockers.value = occupiedLockers.value.filter(
-            (n) => n !== lockerNumber
-        );
+    const locker = lockers.value.find((l) => l.number === lockerNumber);
+
+    if (locker) {
+        locker.status = "AVAILABLE";
     }
 
     // Show success overlay
@@ -266,7 +266,7 @@ function handleEndRental() {
 
         <LockerSelectScreen
             v-else-if="session.state.kioskState === KIOSK_STATES.LOCKER_SELECT"
-            :occupiedLockers="occupiedLockers"
+            :lockers="lockers"
             @back="handleLockerSelectBack"
             @confirm="handleLockerSelectConfirm"
             @end-session="handlEndSession"

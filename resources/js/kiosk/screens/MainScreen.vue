@@ -204,44 +204,6 @@ defineProps({
                 @cancel="showEndRentalConfirm = false"
                 @confirm="emit('end-rental')"
             />
-
-            <!-- End Session Confirmation -->
-            <!-- <div
-                v-if="showEndSessionConfirm"
-                class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center"
-            >
-                <div
-                    class="w-[520px] bg-white rounded-2xl border border-black/10 shadow-[0_30px_80px_rgba(0,0,0,0.25)] px-10 py-8 text-center"
-                >
-                    Title
-                    <p class="text-[26px] font-semibold text-gray-900">
-                        End Current Session?
-                    </p>
-
-                    Message
-                    <p class="mt-4 text-[18px] text-gray-600 leading-relaxed">
-                        This will cancel the current session and return the
-                        kiosk to the start screen. No actions will be saved.
-                    </p>
-
-                    Actions
-                    <div class="mt-8 flex justify-center gap-6">
-                        <button
-                            class="px-6 py-3 rounded-xl bg-gray-200 text-gray-700 text-[18px] font-semibold hover:bg-gray-300 transition"
-                            @click="cancelEndSession"
-                        >
-                            Cancel
-                        </button>
-
-                        <button
-                            class="px-6 py-3 rounded-xl bg-gray-800 text-white text-[18px] font-semibold hover:bg-black transition"
-                            @click="emit('end-session')"
-                        >
-                            End Session
-                        </button>
-                    </div>
-                </div>
-            </div> -->
         </main>
         <div
             v-if="isEndingRental"
