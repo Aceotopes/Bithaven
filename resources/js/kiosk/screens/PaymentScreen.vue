@@ -4,6 +4,7 @@ import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
 import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
 import CancelPaymentModal from "@/kiosk/components/kiosk/CancelPaymentModal.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+import RentalPaymentInfoCard from "@/kiosk/components/kiosk/RentalPaymentInfoCard.vue";
 import { ref } from "vue";
 
 const showCancelConfirm = ref(false); // to show/hide cancel payment confirmation modal
@@ -71,6 +72,13 @@ const emit = defineEmits(["cancel", "complete", "end-session"]);
                 :penaltyBreakdown="penalty.breakdown"
                 :totalAmount="amount"
                 :endTime="lockerEndTime"
+            />
+
+            <RentalPaymentInfoCard
+                v-if="mode === 'RENTAL'"
+                :lockerNumber="locker"
+                :duration="duration"
+                :totalAmount="amount"
             />
             <PaymentPanel
                 :locker="locker"

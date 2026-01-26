@@ -14,7 +14,7 @@ defineProps({
 
 <template>
     <section
-        class="relative max-w-[920px] mx-auto bg-white/90 backdrop-blur-xl border border-black/10 rounded-[24px] px-14 py-12 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+        class="relative max-w-[1080px] mx-auto bg-white/90 backdrop-blur-xl border border-black/10 rounded-[24px] px-14 py-12 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
     >
         <!-- Header -->
         <div class="flex justify-between items-center">

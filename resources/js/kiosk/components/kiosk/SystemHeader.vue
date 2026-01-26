@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
-
+import BithavenLogo from "@/kiosk/assets/idle/BithavenLogo.png";
 const time = ref("");
 const emit = defineEmits(["end-session"]);
 
@@ -24,10 +24,11 @@ onMounted(() => {
     >
         <!-- Logo -->
         <div class="flex items-center gap-3">
-            <div
-                class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white font-bold"
-            >
-                B
+            <div class="w-30 h-30">
+                <img
+                    src="@/kiosk/assets/idle/BithavenLogo.png"
+                    alt="BithavenLogo"
+                />
             </div>
             <span class="sr-only">Bithaven</span>
         </div>

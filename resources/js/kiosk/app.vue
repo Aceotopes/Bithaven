@@ -229,9 +229,9 @@ function handleEndRental() {
             equal: {{ flow.kioskState.value === KIOSK_STATES.IDLE }}
         </div> -->
     <!-- ========================================================== -->
-    <div class="fixed top-2 left-2 bg-black text-white px-3 py-1 z-50">
+    <!-- <div class="fixed top-2 left-2 bg-black text-white px-3 py-1 z-50">
         {{ session.state.kioskState }}
-    </div>
+    </div> -->
     <transition name="fade" mode="out-in">
         <IdleScreen
             v-if="session.state.kioskState === KIOSK_STATES.IDLE"

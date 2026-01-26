@@ -85,7 +85,12 @@ onBeforeUnmount(() => {
                 {{ exceededDuration }} </span
             >. A penalty has been applied according to the system rules below.
         </p>
-        <div class="mt-6 text-center">
+        <p class="mt-4 text-[20px] text-gray-600 leading-relaxed">
+            Penalty charges will continue to accumulate while the locker remains
+            locked. Please complete payment promptly to avoid additional charges
+            and regain access to your locker.
+        </p>
+        <!-- <div class="mt-6 text-center">
             <p class="text-sm tracking-widest uppercase text-gray-500">
                 Exceeded Time
             </p>
@@ -97,7 +102,7 @@ onBeforeUnmount(() => {
             <p class="mt-2 text-[16px] text-gray-500">
                 Penalty increases as time passes
             </p>
-        </div>
+        </div> -->
 
         <!-- Breakdown -->
         <div class="mt-8 space-y-4">

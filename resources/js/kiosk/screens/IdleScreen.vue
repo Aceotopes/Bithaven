@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeMount } from "vue";
 import idleVideo from "@/kiosk/assets/idle/BithavenIdleLoop.mp4";
-import StatusPopup from "../components/kiosk/StatusPopup.vue";
+import StatusPopup from "@/kiosk/components/kiosk/StatusPopup.vue";
 
 const emit = defineEmits(["start-scan"]); // emitted when user taps to proceed
 const loaded = ref(false); // fade in effect on mount

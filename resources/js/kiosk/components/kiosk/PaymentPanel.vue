@@ -114,7 +114,24 @@ onBeforeUnmount(() => {
         <!-- ========================= -->
         <!-- PROGRESS DISPLAY -->
         <!-- ========================= -->
-        <div class="grid grid-cols-1 gap-6 items-center">
+        <div class="grid grid-cols-2 gap-6 items-center">
+            <!-- Numeric -->
+            <div class="text-center">
+                <p class="text-[120px] font-bold text-gray-900 font-mono">
+                    ₱{{ insertedAmount }}
+                    <span class="text-gray-400 text-[48px]">
+                        / ₱{{ amountDue }}
+                    </span>
+                </p>
+
+                <p class="mt-2 text-[28px] text-gray-500">
+                    {{ remainingAmount }} peso<span v-if="remainingAmount !== 1"
+                        >s</span
+                    >
+                    remaining
+                </p>
+            </div>
+
             <!-- Ring -->
             <div class="flex justify-center">
                 <div class="relative w-[360px] h-[360px]">
@@ -164,36 +181,16 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- MACHINE INSTRUCTION -->
+        <div class="flex flex-col items-center text-center mt-4 space-y-2">
+            <!-- ACCEPTED COINS -->
+            <p class="text-[24px] text-gray-600">Accepts: ₱1 • ₱5 • ₱10</p>
 
-            <!-- Numeric -->
-            <div class="text-center">
-                <p class="text-[120px] font-bold text-gray-900 font-mono">
-                    ₱{{ insertedAmount }}
-                    <span class="text-gray-400 text-[48px]">
-                        / ₱{{ amountDue }}
-                    </span>
-                </p>
-
-                <p class="mt-2 text-[28px] text-gray-500">
-                    {{ remainingAmount }} peso<span v-if="remainingAmount !== 1"
-                        >s</span
-                    >
-                    remaining
-                </p>
-            </div>
-
-            <!-- MACHINE INSTRUCTION -->
-            <div class="flex flex-col items-center text-center mt-4 space-y-2">
-                <!-- MACHINE INSTRUCTION -->
-
-                <!-- ACCEPTED COINS -->
-                <p class="text-[24px] text-gray-600">Accepts: ₱1 • ₱5 • ₱10</p>
-
-                <!-- WHAT HAPPENS NEXT -->
-                <p class="text-[22px] text-gray-500 max-w-[720px]">
-                    Locker will open automatically once payment is complete.
-                </p>
-            </div>
+            <!-- WHAT HAPPENS NEXT -->
+            <p class="text-[22px] text-gray-500 max-w-[720px]">
+                Locker will open automatically once payment is complete.
+            </p>
         </div>
 
         <!-- ========================= -->
