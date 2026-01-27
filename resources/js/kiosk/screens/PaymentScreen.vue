@@ -45,14 +45,22 @@ const emit = defineEmits(["cancel", "complete", "end-session"]);
     <div
         class="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200"
     >
-        <!-- Ambient Background -->
-        <div class="absolute inset-0 pointer-events-none">
+        <!-- Background: Geometric Gradient -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <!-- Base Gradient -->
             <div
-                class="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[720px] bg-emerald-400/20 rounded-full blur-3xl"
-            />
+                class="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300"
+            ></div>
+
+            <!-- Large Geometric Pattern -->
             <div
-                class="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px), linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:48px_48px]"
-            />
+                class="absolute inset-0 bg-[linear-gradient( 135deg, rgba(0,0,0,0.04) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.04) 75%, transparent 75%, transparent )] bg-[size:240px_240px] opacity-25"
+            ></div>
+
+            <!-- Accent Glow -->
+            <div
+                class="absolute -top-[20%] left-[10%] w-[700px] h-[700px] bg-emerald-400/20 rounded-full blur-[180px]"
+            ></div>
         </div>
 
         <SystemHeader @end-session="showEndSessionConfirm = true" />

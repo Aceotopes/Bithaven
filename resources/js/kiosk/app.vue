@@ -1,10 +1,12 @@
 <script setup>
+import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
 import { useKioskSession } from "./composables/useKioskSessions";
 import { useLockerRental } from "./composables/useLockerRental";
 import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
+import { useIdleTimeout } from "./composables/useIdleTimeout";
 import { ref, computed, reactive } from "vue";
 
 import IdleScreen from "./screens/IdleScreen.vue";
@@ -61,12 +63,27 @@ const mockStudent = {
 };
 // ========================================================================
 
-const lockers = ref(
-    Array.from({ length: TOTAL_LOCKERS }, (_, i) => ({
-        number: i + 1,
-        status: "AVAILABLE", // AVAILABLE | OCCUPIED
-    }))
+const lockers = computed(() =>
+    Array.from({ length: TOTAL_LOCKERS }, (_, i) => {
+        const number = i + 1;
+
+        return {
+            number,
+            status:
+                session.state.locker?.number === number &&
+                session.state.rentalState !== "NO_RENTAL"
+                    ? "OCCUPIED"
+                    : "AVAILABLE",
+        };
+    })
 );
+
+const idle = useIdleTimeout({
+    session,
+    flow,
+    timeoutMs: 60_000,
+    warningMs: 10_000,
+});
 
 // ===================== session start handler =====================
 function handleStartScan() {
@@ -161,15 +178,10 @@ function handlePaymentCancel() {
 
 function handlePaymentComplete() {
     if (paymentContext.value.mode === "RENTAL") {
-        const lockerNumber = paymentContext.value.locker;
-
-        rental.rentLocker(lockerNumber, paymentContext.value.duration);
-
-        const locker = lockers.value.find((l) => l.number === lockerNumber);
-
-        if (locker) {
-            locker.status = "OCCUPIED";
-        }
+        rental.rentLocker(
+            paymentContext.value.locker,
+            paymentContext.value.duration
+        );
     }
 
     if (paymentContext.value.mode === "PENALTY") {
@@ -182,15 +194,7 @@ function handlePaymentComplete() {
 }
 
 function handleEndRental() {
-    const lockerNumber = session.state.locker?.number;
-
     rental.endRental();
-
-    const locker = lockers.value.find((l) => l.number === lockerNumber);
-
-    if (locker) {
-        locker.status = "AVAILABLE";
-    }
 
     // Show success overlay
     isEndingRental.value = true;
@@ -286,6 +290,13 @@ function handleEndRental() {
             @complete="handlePaymentComplete"
         />
     </transition>
+    <IdleWarningModal
+        v-if="idle.showIdleWarning"
+        :show="idle.showIdleWarning.value"
+        :secondsLeft="idle.idleCountdown.value"
+        @confirm="idle.confirmIdleNow"
+        @continue="idle.dismissWarning"
+    />
 </template>
 
 <style>

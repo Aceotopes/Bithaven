@@ -91,16 +91,31 @@ defineProps({
         class="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200"
     >
         <!-- Ambient Background -->
-        <div class="absolute inset-0 pointer-events-none">
-            <!-- Ambient Glow -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <!-- Base Vertical Gradient (Depth) -->
             <div
-                class="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[720px] bg-emerald-400/25 rounded-full blur-3xl"
-            />
+                class="absolute inset-0 bg-gradient-to-b from-slate-100 via-slate-200 to-slate-300"
+            ></div>
 
-            <!-- Engineering Grid -->
+            <!-- Top System Glow (Entry Focus) -->
             <div
-                class="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px), linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:48px_48px]"
-            />
+                class="absolute -top-[30%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-emerald-400/25 rounded-full blur-[180px]"
+            ></div>
+
+            <!-- Mid Vertical Light Column (Guides Eye Down) -->
+            <div
+                class="absolute top-[25%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/20 rounded-full blur-[220px]"
+            ></div>
+
+            <!-- Bottom System Glow (Weight + Balance) -->
+            <div
+                class="absolute bottom-[-40%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-blue-400/18 rounded-full blur-[200px]"
+            ></div>
+
+            <!-- Subtle Vertical Texture (No Grid) -->
+            <div
+                class="absolute inset-0 bg-[linear-gradient( to bottom, rgba(0,0,0,0.035) 1px, transparent 1px )] bg-[size:100%_120px] opacity-30"
+            ></div>
         </div>
 
         <!-- Header -->
@@ -108,7 +123,7 @@ defineProps({
 
         <!-- Main Content Area -->
         <main
-            class="relative z-10 max-w-[920px] mx-auto px-12 pt-10 space-y-10"
+            class="relative z-10 w-full max-w-[1040px] mx-auto px-8 pt-10 space-y-12"
         >
             <HowToUseLockerModal
                 :show="showHowTo"
@@ -134,32 +149,32 @@ defineProps({
 
             <!-- Action Buttons -->
             <section
-                class="max-w-[920px] mx-auto mt-10 bg-white/90 backdrop-blur-xl border border-black/10 rounded-[24px] px-14 py-10 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+                class="relative w-full bg-white/90 backdrop-blur-xl border border-black/10 rounded-[28px] px-20 py-14 shadow-[0_30px_80px_rgba(0,0,0,0.2)]"
             >
                 <!-- Panel Header -->
                 <div class="flex justify-between items-center">
                     <p
-                        class="text-[16px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
+                        class="text-[20px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
                     >
                         System Actions
                     </p>
 
-                    <p class="text-[16px] tracking-wide text-gray-400">
+                    <p class="text-[18px] tracking-wide text-gray-400">
                         Control Panel
                     </p>
                 </div>
 
                 <!-- Divider -->
-                <div class="my-8 h-px bg-black/10"></div>
+                <div class="my-12 h-px bg-black/10"></div>
 
                 <!-- Action Buttons -->
-                <div class="grid grid-cols-3 gap-10">
-                    <!-- Rent Locker -->
+                <div class="grid grid-cols-3 gap-16">
+                    <!-- Rent Locker (Primary) -->
                     <button
-                        class="h-20 rounded-2xl text-[22px] font-semibold transition border"
+                        class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
                             canRent
-                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-[0_12px_30px_rgba(16,185,129,0.4)]'
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canRent"
@@ -168,12 +183,12 @@ defineProps({
                         Rent Locker
                     </button>
 
-                    <!-- End Rental -->
+                    <!-- End Rental (Secondary) -->
                     <button
-                        class="h-20 rounded-2xl text-[22px] font-semibold transition border"
+                        class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
                             canEndRental
-                                ? 'bg-blue-600 text-white border-blue-600'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-[0_12px_30px_rgba(37,99,235,0.4)]'
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canEndRental"
@@ -182,12 +197,12 @@ defineProps({
                         End Rental
                     </button>
 
-                    <!-- Settle Penalty -->
+                    <!-- Settle Penalty (Attention) -->
                     <button
-                        class="h-20 rounded-2xl text-[22px] font-semibold transition border"
+                        class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
                             canSettlePenalty
-                                ? 'bg-amber-600 text-white border-amber-600'
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-[0_12px_30px_rgba(217,119,6,0.4)]'
                                 : 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
                         "
                         :disabled="!canSettlePenalty"

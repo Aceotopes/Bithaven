@@ -19,7 +19,6 @@ import { ref } from "vue";
  */
 export function useLockerRental(state, { onExpire }) {
     const { start, stop } = useTimer();
-    const occupiedLockers = ref(new Set());
 
     /**
      * Rent a locker to the active student.
@@ -30,9 +29,6 @@ export function useLockerRental(state, { onExpire }) {
     function rentLocker(lockerNumber, durationHours) {
         if (!state.student) return;
         if (state.rentalState !== "NO_RENTAL") return;
-        if (occupiedLockers.value.has(lockerNumber)) return;
-
-        occupiedLockers.value.add(lockerNumber);
 
         const now = Date.now();
         const durationMs = durationHours * 10 * 1000;
@@ -68,8 +64,6 @@ export function useLockerRental(state, { onExpire }) {
         stop();
         state.locker = null;
         state.rentalState = "NO_RENTAL";
-
-        occupiedLockers.value.delete(lockerNumber);
     }
 
     function expireRental() {
@@ -77,7 +71,6 @@ export function useLockerRental(state, { onExpire }) {
 
         if (state.locker) {
             state.locker.timeRemaining = "00:00:00";
-            occupiedLockers.value.add(state.locker.number);
         }
 
         state.rentalState = "EXPIRED_RENTAL";
@@ -88,7 +81,6 @@ export function useLockerRental(state, { onExpire }) {
     return {
         rentLocker,
         endRental,
-        occupiedLockers,
     };
 }
 
