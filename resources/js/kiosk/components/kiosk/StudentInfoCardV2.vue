@@ -48,14 +48,15 @@ defineProps({
                 <p
                     class="text-[34px] font-semibold text-gray-900 leading-tight"
                 >
-                    {{ student.fullName }}
+                    {{ student.first_name }} {{ student.middle_name[0] }}.
+                    {{ student.last_name }}
                 </p>
 
                 <!-- Student Number -->
                 <p
                     class="mt-3 font-mono text-[20px] text-gray-600 tracking-wide"
                 >
-                    STUDENT NO · {{ student.studentNumber }}
+                    STUDENT NO · {{ student.student_number }}
                 </p>
 
                 <!-- Meta Info -->
@@ -67,7 +68,7 @@ defineProps({
                             Year Level
                         </p>
                         <p class="mt-1 text-[22px] text-gray-800">
-                            {{ student.yearLevel }}
+                            {{ student.year_level }}
                         </p>
                     </div>
 

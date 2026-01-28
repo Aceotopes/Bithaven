@@ -1,5 +1,4 @@
 <script setup>
-import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
 import { useKioskSession } from "./composables/useKioskSessions";
@@ -7,8 +6,10 @@ import { useLockerRental } from "./composables/useLockerRental";
 import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
 import { useIdleTimeout } from "./composables/useIdleTimeout";
-import { ref, computed, reactive } from "vue";
 
+import { ref, computed } from "vue";
+
+import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
@@ -85,14 +86,43 @@ const idle = useIdleTimeout({
     warningMs: 10_000,
 });
 
-// ===================== session start handler =====================
-function handleStartScan() {
-    session.startSession(mockStudent);
-    console.log("Session started with student:", session.state.student);
-    // handler for starting scan from idle screen
-    flow.goToStudentDashboard();
-}
+// ===================== session start handler  (no Backend)=====================
+// function handleStartScan() {
+//     session.startSession(mockStudent);
+//     console.log("Session started with student:", session.state.student);
+//     // handler for starting scan from idle screen
+//     flow.goToStudentDashboard();
+// }
 // ================================================================
+
+//===================================
+//session start handler (with Backend)
+//===================================
+async function handleStartScan() {
+    try {
+        const res = await fetch("/api/kiosk/scan", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                rfid_uid: "0851967331",
+            }),
+        });
+
+        if (!res.ok) {
+            throw new Error("Scan Failed");
+        }
+
+        const data = await res.json();
+        session.startSession(data.student);
+        flow.goToStudentDashboard();
+        console.log("Session started with student:", session.state.student);
+    } catch (err) {
+        console.error(err);
+        return;
+    }
+}
 
 // ===================== locker selection (back and confirm)handlers =====================
 function handleLockerSelectBack() {
