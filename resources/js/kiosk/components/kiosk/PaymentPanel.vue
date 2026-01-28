@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
         <div class="grid grid-cols-2 gap-6 items-center">
             <!-- Numeric -->
             <div class="text-center">
-                <p class="text-[120px] font-bold text-gray-900 font-mono">
+                <p class="text-[115px] font-bold text-gray-900 font-mono">
                     ₱{{ insertedAmount }}
                     <span class="text-gray-400 text-[48px]">
                         / ₱{{ amountDue }}

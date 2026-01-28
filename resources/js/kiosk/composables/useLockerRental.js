@@ -59,8 +59,6 @@ export function useLockerRental(state, { onExpire }) {
     function endRental() {
         if (state.rentalState !== "ACTIVE_RENTAL") return;
 
-        const lockerNumber = state.locker.number;
-
         stop();
         state.locker = null;
         state.rentalState = "NO_RENTAL";
