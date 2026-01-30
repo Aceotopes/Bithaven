@@ -19,6 +19,7 @@ class Rental extends Model
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'ended_at' => 'datetime',
     ];
 
     public function locker()

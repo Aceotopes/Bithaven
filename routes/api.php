@@ -20,5 +20,5 @@ Route::post('/kiosk/scan', [ScanController::class, 'scan']);
 
 // Kiosk Rental Start Route
 Route::post('kiosk/rentals/start', [RentalController::class, 'start']);
-
 Route::get('kiosk/rentals/active', [RentalController::class, 'active']);
+Route::post('/kiosk/rentals/{rental}/end', [RentalController::class, 'end']);

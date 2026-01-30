@@ -94,4 +94,22 @@ class RentalController extends Controller
             ]
         ]);
     }
+
+    public function end(Rental $rental)
+    {
+        if ($rental->status !== 'ACTIVE') {
+            return response()->json([
+                'message' => 'Rental is not Active'
+            ], 400);
+        }
+
+        $rental->status = 'ENDED';
+        $rental->ended_at = Carbon::now();
+        $rental->save();
+
+        return response()->json([
+            'success' => true,
+            'rental_id' => $rental->id,
+        ]);
+    }
 }

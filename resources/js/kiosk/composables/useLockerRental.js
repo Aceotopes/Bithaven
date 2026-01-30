@@ -61,6 +61,7 @@ export function useLockerRental(state, { onExpire }) {
         const remainingMs = rental.endTime - now;
 
         state.locker = {
+            rentalId: rental.id,
             number: rental.lockerNumber,
             startTime: rental.startTime,
             endTime: rental.endTime,

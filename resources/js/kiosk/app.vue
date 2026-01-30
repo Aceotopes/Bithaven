@@ -86,14 +86,14 @@ const idle = useIdleTimeout({
     warningMs: 10_000,
 });
 
-// ===================== session start handler  (no Backend)=====================
+// =========== session start handler  (no Backend)========
 // function handleStartScan() {
 //     session.startSession(mockStudent);
 //     console.log("Session started with student:", session.state.student);
 //     // handler for starting scan from idle screen
 //     flow.goToStudentDashboard();
 // }
-// ================================================================
+// =======================================================
 
 //===================================
 //session start handler (with Backend)
@@ -106,7 +106,7 @@ async function handleStartScan() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                rfid_uid: "0851967331",
+                rfid_uid: "0852111539",
             }),
         });
 
@@ -212,7 +212,9 @@ function handlePaymentCancel() {
     paymentContext.value = { type: null, amount: 0 };
 }
 
-// ===================== payment complete handler (no backend) =====================
+// =====================================
+// payment complete handler (no backend)
+// =====================================
 // function handlePaymentComplete() {
 //     if (paymentContext.value.mode === "RENTAL") {
 //         rental.rentLocker(
@@ -231,6 +233,7 @@ function handlePaymentCancel() {
 // }
 
 // ===================== payment complete handler (with backend) =====================
+
 async function handlePaymentComplete() {
     // ===================== RENTAL PAYMENT =====================
     if (paymentContext.value.mode === "RENTAL") {
@@ -258,28 +261,26 @@ async function handlePaymentComplete() {
 
             console.log("Rental created:", data.rental);
 
-            // OPTIONAL (recommended):
             // update frontend rental state from backend response
-            session.state.rentalState = "ACTIVE_RENTAL";
-            session.state.locker = {
-                number: data.rental.locker_number,
-                startTime: new Date(data.rental.start_time).getTime(),
-                endTime: new Date(data.rental.end_time).getTime(),
-                timeRemaining: null, // timer will handle this
-            };
+            rental.hydrateRental({
+                id: data.rental.id,
+                lockerNumber: data.rental.locker_number,
+                startTime: Date.parse(data.rental.start_time),
+                endTime: Date.parse(data.rental.end_time),
+            });
         } catch (err) {
             console.error("Network error:", err);
             return;
         }
     }
 
-    // ===================== PENALTY PAYMENT =====================
+    // PENALTY PAYMENT
     if (paymentContext.value.mode === "PENALTY") {
         // Phase 3 will replace this with API
         penalty.settlePenalty();
     }
 
-    // ===================== CLEANUP =====================
+    // CLEANUP
     resetPaymentContext();
     flow.goToIdle();
 }
@@ -299,12 +300,13 @@ async function recoverActiveRental() {
 
     //rehydrate sesssion state
     rental.hydrateRental({
+        id: activeRental.id,
         lockerNumber: activeRental.locker_number,
         startTime: Date.parse(activeRental.start_time),
         endTime: Date.parse(activeRental.end_time),
     });
-    console.log("Bacend start_time:", activeRental.start_time);
-    console.log("Bacend end_time: ", activeRental.end_time);
+    console.log("Backend start_time:", activeRental.start_time);
+    console.log("Backend end_time: ", activeRental.end_time);
 
     console.log(
         "Parsed startTime: ",
@@ -323,22 +325,57 @@ async function recoverActiveRental() {
     );
 }
 
-function handleEndRental() {
-    rental.endRental();
+// ===================== rental end handler (no backend) =====================
+// function handleEndRental() {
+//     rental.endRental();
 
-    // Show success overlay
-    isEndingRental.value = true;
-    endCountdown.value = 3;
+//     // Show success overlay
+//     isEndingRental.value = true;
+//     endCountdown.value = 3;
 
-    endTimer = setInterval(() => {
-        endCountdown.value--;
+//     endTimer = setInterval(() => {
+//         endCountdown.value--;
 
-        if (endCountdown.value === 0) {
-            clearInterval(endTimer);
-            isEndingRental.value = false;
-            flow.goToIdle();
-        }
-    }, 1000);
+//         if (endCountdown.value === 0) {
+//             clearInterval(endTimer);
+//             isEndingRental.value = false;
+//             flow.goToIdle();
+//         }
+//     }, 1000);
+// }
+
+async function handleEndRental() {
+    try {
+        const rentalId = session.state.locker?.rentalId;
+        if (!rentalId) return;
+
+        await fetch(`/api/kiosk/rentals/${rentalId}/end`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        //stop local timer + clear rental state
+        rental.endRental();
+
+        // Show success overlay
+        isEndingRental.value = true;
+        endCountdown.value = 3;
+
+        endTimer = setInterval(() => {
+            endCountdown.value--;
+
+            if (endCountdown.value === 0) {
+                clearInterval(endTimer);
+                isEndingRental.value = false;
+                flow.goToIdle();
+            }
+        }, 1000);
+    } catch (err) {
+        console.error("Failed to end rental", err);
+        return;
+    }
 }
 
 // ===================== debugging info for checkpoint 10 =====================
