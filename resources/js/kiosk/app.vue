@@ -7,7 +7,7 @@ import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
 import { useIdleTimeout } from "./composables/useIdleTimeout";
 
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
 
 import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import IdleScreen from "./screens/IdleScreen.vue";
@@ -32,7 +32,8 @@ const penalty = usePenalty(session.state); // penalty manager
 const actions = useKioskActions(session.state); // kiosk action handlers
 const isEndingRental = ref(false); // rental ending state
 const endCountdown = ref(3); // rental end countdown
-const TOTAL_LOCKERS = 15;
+const TOTAL_LOCKERS = 15; //mock total lockers
+const lockers = ref([]);
 
 let endTimer = null;
 
@@ -64,20 +65,21 @@ const mockStudent = {
 };
 // ========================================================================
 
-const lockers = computed(() =>
-    Array.from({ length: TOTAL_LOCKERS }, (_, i) => {
-        const number = i + 1;
+// ===================== locker statuses (mock data) =====================
+// const lockers = computed(() =>
+//     Array.from({ length: TOTAL_LOCKERS }, (_, i) => {
+//         const number = i + 1;
 
-        return {
-            number,
-            status:
-                session.state.locker?.number === number &&
-                session.state.rentalState !== "NO_RENTAL"
-                    ? "OCCUPIED"
-                    : "AVAILABLE",
-        };
-    })
-);
+//         return {
+//             number,
+//             status:
+//                 session.state.locker?.number === number &&
+//                 session.state.rentalState !== "NO_RENTAL"
+//                     ? "OCCUPIED"
+//                     : "AVAILABLE",
+//         };
+//     })
+// );
 
 const idle = useIdleTimeout({
     session,
@@ -106,7 +108,7 @@ async function handleStartScan() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                rfid_uid: "0852111539",
+                rfid_uid: "0851967331",
             }),
         });
 
@@ -177,6 +179,7 @@ function handlEndSession() {
 }
 
 function handleRentLocker() {
+    fetchLockerStatuses();
     flow.goToLockerSelect();
 }
 
@@ -268,6 +271,7 @@ async function handlePaymentComplete() {
                 startTime: Date.parse(data.rental.start_time),
                 endTime: Date.parse(data.rental.end_time),
             });
+            await fetchLockerStatuses();
         } catch (err) {
             console.error("Network error:", err);
             return;
@@ -325,6 +329,18 @@ async function recoverActiveRental() {
     );
 }
 
+async function fetchLockerStatuses() {
+    try {
+        const res = await fetch("/api/kiosk/lockers/status");
+        if (!res.ok) throw new Error("Failed to load lockers");
+
+        const data = await res.json();
+        lockers.value = data.lockers;
+    } catch (err) {
+        console.error("Locker status error:", err);
+    }
+}
+
 // ===================== rental end handler (no backend) =====================
 // function handleEndRental() {
 //     rental.endRental();
@@ -358,6 +374,7 @@ async function handleEndRental() {
 
         //stop local timer + clear rental state
         rental.endRental();
+        await fetchLockerStatuses();
 
         // Show success overlay
         isEndingRental.value = true;
@@ -378,6 +395,14 @@ async function handleEndRental() {
     }
 }
 
+async function hydrateGlobalState() {
+    await fetchLockerStatuses();
+    await recoverActiveRental();
+}
+
+onMounted(() => {
+    hydrateGlobalState();
+});
 // ===================== debugging info for checkpoint 10 =====================
 // console.log("kioskState:", flow.kioskState, typeof flow.kioskState);
 // console.log("IDLE:", KIOSK_STATES.IDLE, typeof KIOSK_STATES.IDLE);
