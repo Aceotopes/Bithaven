@@ -31,7 +31,7 @@ export function useLockerRental(state, { onExpire }) {
         if (state.rentalState !== "NO_RENTAL") return;
 
         const now = Date.now();
-        const durationMs = durationHours * 10 * 1000;
+        const durationMs = durationHours * 60 * 60 * 1000;
         const endTime = now + durationMs;
 
         state.locker = {
@@ -45,6 +45,32 @@ export function useLockerRental(state, { onExpire }) {
 
         start(
             endTime,
+            (remaining) => {
+                state.locker.timeRemaining = formatDuration(remaining);
+            },
+            expireRental
+        );
+    }
+
+    function hydrateRental(rental) {
+        if (!rental) return;
+
+        stop(); // Stop any existing timer
+
+        const now = Date.now();
+        const remainingMs = rental.endTime - now;
+
+        state.locker = {
+            number: rental.lockerNumber,
+            startTime: rental.startTime,
+            endTime: rental.endTime,
+            timeRemaining: formatDuration(remainingMs),
+        };
+
+        state.rentalState = "ACTIVE_RENTAL";
+
+        start(
+            rental.endTime,
             (remaining) => {
                 state.locker.timeRemaining = formatDuration(remaining);
             },
@@ -79,6 +105,7 @@ export function useLockerRental(state, { onExpire }) {
     return {
         rentLocker,
         endRental,
+        hydrateRental,
     };
 }
 

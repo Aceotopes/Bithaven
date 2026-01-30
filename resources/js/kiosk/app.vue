@@ -115,7 +115,13 @@ async function handleStartScan() {
         }
 
         const data = await res.json();
+
+        //start session
         session.startSession(data.student);
+
+        //check for active rental
+        await recoverActiveRental();
+
         flow.goToStudentDashboard();
         console.log("Session started with student:", session.state.student);
     } catch (err) {
@@ -206,21 +212,115 @@ function handlePaymentCancel() {
     paymentContext.value = { type: null, amount: 0 };
 }
 
-function handlePaymentComplete() {
+// ===================== payment complete handler (no backend) =====================
+// function handlePaymentComplete() {
+//     if (paymentContext.value.mode === "RENTAL") {
+//         rental.rentLocker(
+//             paymentContext.value.locker,
+//             paymentContext.value.duration
+//         );
+//     }
+
+//     if (paymentContext.value.mode === "PENALTY") {
+//         penalty.settlePenalty();
+//     }
+
+//     // cleanup
+//     resetPaymentContext();
+//     flow.goToIdle();
+// }
+
+// ===================== payment complete handler (with backend) =====================
+async function handlePaymentComplete() {
+    // ===================== RENTAL PAYMENT =====================
     if (paymentContext.value.mode === "RENTAL") {
-        rental.rentLocker(
-            paymentContext.value.locker,
-            paymentContext.value.duration
-        );
+        try {
+            const response = await fetch("/api/kiosk/rentals/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    student_id: session.state.student.id,
+                    locker_number: paymentContext.value.locker,
+                    duration_hours: paymentContext.value.duration,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error("Rental creation failed:", error);
+                // TODO: show error UI later
+                return;
+            }
+
+            const data = await response.json();
+
+            console.log("Rental created:", data.rental);
+
+            // OPTIONAL (recommended):
+            // update frontend rental state from backend response
+            session.state.rentalState = "ACTIVE_RENTAL";
+            session.state.locker = {
+                number: data.rental.locker_number,
+                startTime: new Date(data.rental.start_time).getTime(),
+                endTime: new Date(data.rental.end_time).getTime(),
+                timeRemaining: null, // timer will handle this
+            };
+        } catch (err) {
+            console.error("Network error:", err);
+            return;
+        }
     }
 
+    // ===================== PENALTY PAYMENT =====================
     if (paymentContext.value.mode === "PENALTY") {
+        // Phase 3 will replace this with API
         penalty.settlePenalty();
     }
 
-    // cleanup
+    // ===================== CLEANUP =====================
     resetPaymentContext();
     flow.goToIdle();
+}
+
+async function recoverActiveRental() {
+    if (!session.state.student) return;
+
+    const res = await fetch(
+        `/api/kiosk/rentals/active?student_id=${session.state.student.id}`
+    );
+
+    if (!res.ok) return;
+
+    const { rental: activeRental } = await res.json();
+
+    if (!activeRental) return;
+
+    //rehydrate sesssion state
+    rental.hydrateRental({
+        lockerNumber: activeRental.locker_number,
+        startTime: Date.parse(activeRental.start_time),
+        endTime: Date.parse(activeRental.end_time),
+    });
+    console.log("Bacend start_time:", activeRental.start_time);
+    console.log("Bacend end_time: ", activeRental.end_time);
+
+    console.log(
+        "Parsed startTime: ",
+        new Date(Date.parse(activeRental.start_time))
+    );
+    console.log(
+        "Parsed endTime: ",
+        new Date(Date.parse(activeRental.end_time))
+    );
+
+    console.log("JS now:", new Date(Date.now()));
+
+    console.log(
+        "remaining MS: ",
+        Date.parse(activeRental.end_time) - Date.now()
+    );
 }
 
 function handleEndRental() {
