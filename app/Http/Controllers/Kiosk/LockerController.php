@@ -11,12 +11,11 @@ class LockerController extends Controller
 {
     public function status()
     {
-        //get all ACTIVE rentals
-        $occupiedLockerIds = Rental::where('status', 'ACTIVE')
+        // locker IDs that are currently occupied
+        $occupiedLockerIds = Rental::whereIn('status', ['ACTIVE', 'EXPIRED'])
             ->pluck('locker_id')
             ->toArray();
 
-        //get all lockers
         $lockers = Locker::all()->map(function ($locker) use ($occupiedLockerIds) {
             return [
                 'number' => $locker->locker_number,

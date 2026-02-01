@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rental;
 use App\Models\Locker;
+use App\Models\Penalty;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 
 class RentalController extends Controller
@@ -46,7 +48,8 @@ class RentalController extends Controller
 
         // 4️⃣ Create rental
         $start = Carbon::now();
-        $end = $start->copy()->addHours($request->duration_hours);
+        //$end = $start->copy()->addHours($request->duration_hours);
+        $end = $start->copy()->addSeconds(20); //for testing purposes only  
 
         $rental = Rental::create([
             'student_id' => $request->student_id,
@@ -74,7 +77,7 @@ class RentalController extends Controller
         ]);
 
         $rental = Rental::where('student_id', $request->student_id)
-            ->whereIn('status', ['ACTIVE'])
+            ->whereIn('status', ['ACTIVE', 'EXPIRED'])
             ->with('locker')
             ->first();
 
@@ -82,6 +85,11 @@ class RentalController extends Controller
             return response()->json([
                 'rental' => null
             ]);
+        }
+
+        if ($rental && $rental->status === 'ACTIVE' && $rental->end_time->isPast()) {
+            $this->expire($rental);
+            $rental->refresh();
         }
 
         return response()->json([
@@ -111,5 +119,25 @@ class RentalController extends Controller
             'success' => true,
             'rental_id' => $rental->id,
         ]);
+    }
+
+    public function expire(Rental $rental)
+    {
+        if ($rental->status !== 'ACTIVE') {
+            return;
+        }
+
+        DB::transaction(function () use ($rental) {
+            $rental->update(['status' => 'EXPIRED']);
+
+            Penalty::firstOrCreate(
+                ['rental_id' => $rental->id],
+                [
+                    'started_at' => now(),
+                    'status' => 'ACTIVE',
+                    'amount' => 0,
+                ]
+            );
+        });
     }
 }

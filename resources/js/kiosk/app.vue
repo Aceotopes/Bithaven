@@ -37,11 +37,28 @@ const lockers = ref([]);
 
 let endTimer = null;
 
+// =======================================
+// locker rental manager for testing (no Backend)
+// const rental = useLockerRental(session.state, {
+//     onExpire: () => {
+//         penalty.applyPenalty();
+//     },
+// });
+// =======================================
+
+// ===================== locker rental manager (with Backend) =====================
 const rental = useLockerRental(session.state, {
-    onExpire: () => {
-        penalty.applyPenalty();
+    onExpire: async (rentalId) => {
+        // Inform backend that rental expired
+        await fetch(`/api/kiosk/rentals/${rentalId}/expire`, {
+            method: "POST",
+        });
+
+        // Rehydrate state from backend
+        await hydrateGlobalState();
     },
 });
+
 // const pendingRental = ref({
 //     locker: null,
 //     duration: null,
@@ -120,11 +137,12 @@ async function handleStartScan() {
 
         //start session
         session.startSession(data.student);
+        flow.goToStudentDashboard();
 
         //check for active rental
         await recoverActiveRental();
+        await recoverActivePenalty();
 
-        flow.goToStudentDashboard();
         console.log("Session started with student:", session.state.student);
     } catch (err) {
         console.error(err);
@@ -155,18 +173,11 @@ function handleLockerSelectConfirm(payload) {
 // =======================================================================================
 
 function handleSettlePenalty() {
-    const snapshot = penalty.getPenaltySnapshot();
-    if (!snapshot) return;
+    if (!session.state.penalty) return;
 
     paymentContext.value = {
         mode: "PENALTY",
-        locker: session.state.locker.number,
-        duration: null,
-        amount: snapshot.amount,
-        penalty: {
-            exceededDuration: snapshot.exceededDuration,
-            breakdown: snapshot.breakdown,
-        },
+        penaltyId: session.state.penalty.id,
     };
 
     flow.goToPayment();
@@ -179,6 +190,10 @@ function handlEndSession() {
 }
 
 function handleRentLocker() {
+    if (session.state.penalty?.status === "ACTIVE") {
+        return; // 🔒 Block navigation
+    }
+
     fetchLockerStatuses();
     flow.goToLockerSelect();
 }
@@ -280,8 +295,23 @@ async function handlePaymentComplete() {
 
     // PENALTY PAYMENT
     if (paymentContext.value.mode === "PENALTY") {
-        // Phase 3 will replace this with API
-        penalty.settlePenalty();
+        try {
+            const response = await fetch(
+                `/api/kiosk/penalties/${paymentContext.value.penaltyId}/settle`,
+                { method: "POST" }
+            );
+
+            if (!response.ok) {
+                console.error("Penalty settlement failed");
+                return;
+            }
+
+            // Rehydrate authoritative state
+            await hydrateGlobalState();
+        } catch (err) {
+            console.error("Network error", err);
+            return;
+        }
     }
 
     // CLEANUP
@@ -290,18 +320,31 @@ async function handlePaymentComplete() {
 }
 
 async function recoverActiveRental() {
-    if (!session.state.student) return;
+    console.log("🔎 recoverActiveRental START");
+
+    if (!session.state.student) {
+        console.log("❌ no student, abort recoverActiveRental");
+        return;
+    }
 
     const res = await fetch(
         `/api/kiosk/rentals/active?student_id=${session.state.student.id}`
     );
 
-    if (!res.ok) return;
+    if (!res.ok) {
+        console.log("❌ rentals/active request failed");
+        return;
+    }
 
     const { rental: activeRental } = await res.json();
+    console.log("📦 backend rental:", activeRental);
 
-    if (!activeRental) return;
+    if (!activeRental) {
+        console.log("ℹ️ no active rental found");
+        return;
+    }
 
+    console.log("📊 rental status:", activeRental.status);
     //rehydrate sesssion state
     rental.hydrateRental({
         id: activeRental.id,
@@ -309,24 +352,51 @@ async function recoverActiveRental() {
         startTime: Date.parse(activeRental.start_time),
         endTime: Date.parse(activeRental.end_time),
     });
-    console.log("Backend start_time:", activeRental.start_time);
-    console.log("Backend end_time: ", activeRental.end_time);
 
-    console.log(
-        "Parsed startTime: ",
-        new Date(Date.parse(activeRental.start_time))
-    );
-    console.log(
-        "Parsed endTime: ",
-        new Date(Date.parse(activeRental.end_time))
+    console.log("✅ hydrateRental called");
+    // console.log("Backend start_time:", activeRental.start_time);
+    // console.log("Backend end_time: ", activeRental.end_time);
+
+    // console.log(
+    //     "Parsed startTime: ",
+    //     new Date(Date.parse(activeRental.start_time))
+    // );
+    // console.log(
+    //     "Parsed endTime: ",
+    //     new Date(Date.parse(activeRental.end_time))
+    // );
+
+    // console.log("JS now:", new Date(Date.now()));
+
+    // console.log(
+    //     "remaining MS: ",
+    //     Date.parse(activeRental.end_time) - Date.now()
+    // );
+}
+
+async function recoverActivePenalty() {
+    if (!session.state.student) return;
+
+    const res = await fetch(
+        `/api/kiosk/penalties/active?student_id=${session.state.student.id}`
     );
 
-    console.log("JS now:", new Date(Date.now()));
+    if (!res.ok) return;
 
-    console.log(
-        "remaining MS: ",
-        Date.parse(activeRental.end_time) - Date.now()
-    );
+    const { penalty } = await res.json();
+
+    if (!penalty) return;
+
+    session.state.penalty = {
+        id: penalty.id,
+        rentalId: penalty.rental_id,
+        startedAt: Date.parse(penalty.started_at),
+        amount: penalty.amount,
+        status: penalty.status,
+    };
+    if (session.state.rentalState !== "ACTIVE_RENTAL") {
+        session.state.rentalState = "EXPIRED_RENTAL";
+    }
 }
 
 async function fetchLockerStatuses() {
@@ -394,15 +464,38 @@ async function handleEndRental() {
         return;
     }
 }
-
-async function hydrateGlobalState() {
-    await fetchLockerStatuses();
-    await recoverActiveRental();
+function debugDump(label) {
+    console.group(`🧪 DEBUG DUMP — ${label}`);
+    console.log("kioskState:", session.state.kioskState);
+    console.log("student:", session.state.student);
+    console.log("rentalState:", session.state.rentalState);
+    console.log("locker:", session.state.locker);
+    console.log("penalty:", session.state.penalty);
+    console.log("lockers list:", lockers.value);
+    console.groupEnd();
 }
 
-onMounted(() => {
-    hydrateGlobalState();
+async function hydrateGlobalState() {
+    console.log("🌍 hydrateGlobalState START");
+    await fetchLockerStatuses();
+    await recoverActiveRental();
+    await recoverActivePenalty();
+    console.log("🌍 hydrateGlobalState END");
+}
+
+onMounted(async () => {
+    console.log("🔁 APP MOUNTED");
+    await hydrateGlobalState();
+    debugDump("after hydrateGlobalState (mount)");
 });
+
+// onMounted(async () => {
+//     if (session.state.student) {
+//         await hydrateGlobalState();
+//     }
+// });
+// TODO (Phase 3): Add polling when admin dashboard can modify rentals
+
 // ===================== debugging info for checkpoint 10 =====================
 // console.log("kioskState:", flow.kioskState, typeof flow.kioskState);
 // console.log("IDLE:", KIOSK_STATES.IDLE, typeof KIOSK_STATES.IDLE);

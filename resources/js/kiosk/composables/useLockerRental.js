@@ -53,30 +53,52 @@ export function useLockerRental(state, { onExpire }) {
     }
 
     function hydrateRental(rental) {
-        if (!rental) return;
+        // if (!rental) return;
+        console.group("⏱ hydrateRental");
+        console.log("incoming rental:", rental);
 
-        stop(); // Stop any existing timer
+        stop();
 
         const now = Date.now();
         const remainingMs = rental.endTime - now;
+
+        console.group("⏱ hydrateRental");
+        console.log("incoming rental:", rental);
 
         state.locker = {
             rentalId: rental.id,
             number: rental.lockerNumber,
             startTime: rental.startTime,
             endTime: rental.endTime,
-            timeRemaining: formatDuration(remainingMs),
+            timeRemaining:
+                remainingMs > 0 ? formatDuration(remainingMs) : "00:00:00",
         };
 
-        state.rentalState = "ACTIVE_RENTAL";
+        state.rentalState =
+            remainingMs > 0 ? "ACTIVE_RENTAL" : "EXPIRED_RENTAL";
 
-        start(
-            rental.endTime,
-            (remaining) => {
-                state.locker.timeRemaining = formatDuration(remaining);
-            },
-            expireRental
-        );
+        console.log("state.rentalState set to:", state.rentalState);
+
+        if (remainingMs > 0) {
+            // ACTIVE RENTAL
+            // state.rentalState = "ACTIVE_RENTAL";
+
+            start(
+                rental.endTime,
+                (remaining) => {
+                    state.locker.timeRemaining = formatDuration(remaining);
+                },
+                expireRental
+            );
+            console.log("▶️ timer started");
+        } else {
+            console.log("⚠️ timer NOT started (expired)");
+            // EXPIRED RENTAL
+            // state.rentalState = "EXPIRED_RENTAL";
+            // ❌ DO NOT start countdown timer
+            // exceeded timer is handled by LockerStatusCard
+        }
+        console.groupEnd();
     }
 
     /**
@@ -94,13 +116,16 @@ export function useLockerRental(state, { onExpire }) {
     function expireRental() {
         stop();
 
-        if (state.locker) {
-            state.locker.timeRemaining = "00:00:00";
+        const rentalId = state.locker?.rentalId;
+
+        if (!rentalId) {
+            console.warn("Expire fired without rentalId — ignoring");
+            return;
         }
 
         state.rentalState = "EXPIRED_RENTAL";
-        // 🔔 Notify penalty system
-        onExpire?.();
+
+        onExpire?.(rentalId);
     }
 
     return {

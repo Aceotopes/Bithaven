@@ -1,9 +1,4 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-
-const exceededTime = ref("00:00:00");
-let timer = null;
-
 const props = defineProps({
     lockerNumber: {
         type: Number,
@@ -13,46 +8,14 @@ const props = defineProps({
         type: String, // e.g. "1 hour 30 minutes"
         required: true,
     },
-    penaltyBreakdown: {
+    breakdown: {
         type: Array,
         required: true,
-        /*
-          Example:
-          [
-            { label: "Initial exceed", amount: 5 },
-            { label: "30 minutes", amount: 5 },
-            { label: "1 hour", amount: 10 },
-          ]
-        */
     },
-    totalAmount: {
+    amount: {
         type: Number,
         required: true,
     },
-    endTime: {
-        type: Number,
-        required: true,
-    },
-});
-
-function formatDuration(ms) {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-
-    return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
-}
-
-onMounted(() => {
-    timer = setInterval(() => {
-        const exceededMs = Date.now() - props.endTime;
-        exceededTime.value = formatDuration(exceededMs);
-    }, 1000);
-});
-
-onBeforeUnmount(() => {
-    clearInterval(timer);
 });
 </script>
 
@@ -107,7 +70,7 @@ onBeforeUnmount(() => {
         <!-- Breakdown -->
         <div class="mt-8 space-y-4">
             <div
-                v-for="(item, index) in penaltyBreakdown"
+                v-for="(item, index) in breakdown"
                 :key="index"
                 class="flex justify-between text-[20px]"
             >
@@ -132,7 +95,7 @@ onBeforeUnmount(() => {
             </p>
 
             <p class="text-[28px] font-mono font-bold text-amber-800">
-                ₱{{ totalAmount }}
+                ₱{{ amount }}
             </p>
         </div>
     </section>
