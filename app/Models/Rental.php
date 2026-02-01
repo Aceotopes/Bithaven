@@ -14,6 +14,8 @@ class Rental extends Model
         'start_time',
         'end_time',
         'status',
+        'ended_at',
+        'ended_by',
     ];
 
     protected $casts = [

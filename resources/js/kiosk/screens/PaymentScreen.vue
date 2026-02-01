@@ -76,10 +76,7 @@ const emit = defineEmits(["cancel", "complete", "end-session"]);
             <PenaltyInfoCard
                 v-if="mode === 'PENALTY'"
                 :lockerNumber="locker"
-                :exceededDuration="penalty.exceededDuration"
-                :penaltyBreakdown="penalty.breakdown"
-                :totalAmount="amount"
-                :endTime="lockerEndTime"
+                :amount="amount"
             />
 
             <RentalPaymentInfoCard

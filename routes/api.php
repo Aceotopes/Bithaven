@@ -29,3 +29,4 @@ Route::post('/kiosk/rentals/{rental}/expire', [RentalController::class, 'expire'
 Route::get('/kiosk/lockers/status', [LockerController::class, 'status']); // Locker Status Route
 
 Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']); // Active Penalty Route
+Route::post('/kiosk/penalties/{penalty}/settle', [PenaltyController::class, 'settle']); // Settle Penalty Route 

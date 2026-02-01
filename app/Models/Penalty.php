@@ -9,7 +9,7 @@ class Penalty extends Model
     protected $fillable = [
         'rental_id',
         'started_at',
-        'resolved_at',
+        'settled_at',
         'amount',
         'status',
     ];

@@ -173,11 +173,17 @@ function handleLockerSelectConfirm(payload) {
 // =======================================================================================
 
 function handleSettlePenalty() {
-    if (!session.state.penalty) return;
+    const penalty = session.state.penalty;
+    const locker = session.state.locker;
+
+    if (!penalty || !locker) return;
 
     paymentContext.value = {
         mode: "PENALTY",
-        penaltyId: session.state.penalty.id,
+        penaltyId: penalty.id,
+        locker: locker.number,
+        amount: penalty.amount, // backend-authoritative
+        penalty: null, // ❌ no snapshot
     };
 
     flow.goToPayment();
@@ -385,7 +391,17 @@ async function recoverActivePenalty() {
 
     const { penalty } = await res.json();
 
-    if (!penalty) return;
+    if (!penalty) {
+        // 🔥 CLEAR frontend penalty state
+        session.state.penalty = null;
+
+        // If rental was expired, fully reset it
+        if (session.state.rentalState === "EXPIRED_RENTAL") {
+            session.state.rentalState = "NO_RENTAL";
+            session.state.locker = null;
+        }
+        return;
+    }
 
     session.state.penalty = {
         id: penalty.id,
@@ -394,9 +410,7 @@ async function recoverActivePenalty() {
         amount: penalty.amount,
         status: penalty.status,
     };
-    if (session.state.rentalState !== "ACTIVE_RENTAL") {
-        session.state.rentalState = "EXPIRED_RENTAL";
-    }
+    session.state.rentalState = "EXPIRED_RENTAL";
 }
 
 async function fetchLockerStatuses() {

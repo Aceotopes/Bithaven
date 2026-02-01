@@ -7,6 +7,8 @@ use App\Models\Penalty;
 use App\Models\Rental;
 use App\Services\PenaltyCalculator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class PenaltyController extends Controller
 {
@@ -40,6 +42,39 @@ class PenaltyController extends Controller
                 'status' => $penalty->status,
 
             ]
+        ]);
+    }
+
+    public function settle(Penalty $penalty, PenaltyCalculator $calculator)
+    {
+        if ($penalty->status !== 'ACTIVE') {
+            return response()->json([
+                'message' => 'Penalty already settled'
+            ], 400);
+        }
+
+        DB::transaction(function () use ($penalty, $calculator) {
+            $amount = $calculator->calculate($penalty);
+
+            // 1. Mark penalty as PAID
+            $penalty->update([
+                'status' => 'PAID',
+                'settled_at' => now(),
+                'amount' => $amount,
+            ]);
+
+            // 2. End the rental
+            $rental = $penalty->rental;
+
+            $rental->update([
+                'status' => 'ENDED',
+                'ended_at' => now(),
+                'ended_by' => 'USER',
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
         ]);
     }
 }
