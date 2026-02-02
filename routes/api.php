@@ -6,6 +6,7 @@ use App\Http\Controllers\Kiosk\ScanController;
 use App\Http\Controllers\Kiosk\RentalController;
 use App\Http\Controllers\Kiosk\LockerController;
 use App\Http\Controllers\Kiosk\PenaltyController;
+use App\Http\Controllers\Kiosk\PaymentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -30,3 +31,6 @@ Route::get('/kiosk/lockers/status', [LockerController::class, 'status']); // Loc
 
 Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']); // Active Penalty Route
 Route::post('/kiosk/penalties/{penalty}/settle', [PenaltyController::class, 'settle']); // Settle Penalty Route 
+
+Route::post('/kiosk/payments/penalty', [PaymentController::class, 'payPenalty']); // Pay Penalty Route    
+Route::post('/kiosk/payments/rental', [PaymentController::class, 'payRental']); // Pay Penalty Route    

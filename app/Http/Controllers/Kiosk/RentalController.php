@@ -7,68 +7,86 @@ use Illuminate\Http\Request;
 use App\Models\Rental;
 use App\Models\Locker;
 use App\Models\Penalty;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 
 class RentalController extends Controller
 {
-    public function start(Request $request)
-    {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'locker_number' => 'required|exists:lockers,locker_number',
-            'duration_hours' => 'required|integer|min:1|max:12',
-        ]);
+    // public function start(Request $request)
+    // {
+    //     $request->validate([
+    //         'student_id' => 'required|exists:students,id',
+    //         'locker_number' => 'required|exists:lockers,locker_number',
+    //         'duration_hours' => 'required|integer|min:1|max:12',
+    //     ]);
 
-        // 1️⃣ Prevent multiple active rentals per student
-        $hasActiveRental = Rental::where('student_id', $request->student_id)
-            ->whereIn('status', ['ACTIVE', 'EXPIRED'])
-            ->exists();
+    //     // Block ongoing rentals
+    //     $hasOngoingRental = Rental::where('student_id', $request->student_id)
+    //         ->whereIn('status', ['ACTIVE', 'EXPIRED'])
+    //         ->exists();
 
-        if ($hasActiveRental) {
-            return response()->json([
-                'error' => 'STUDENT_ALREADY_HAS_ACTIVE_RENTAL'
-            ], 409);
-        }
+    //     if ($hasOngoingRental) {
+    //         return response()->json(['error' => 'STUDENT_ALREADY_HAS_RENTAL'], 409);
+    //     }
 
-        // 2️⃣ Get locker
-        $locker = Locker::where('locker_number', $request->locker_number)->first();
+    //     $locker = Locker::where('locker_number', $request->locker_number)->firstOrFail();
 
-        // 3️⃣ Ensure locker is not currently rented
-        $lockerInUse = Rental::where('locker_id', $locker->id)
-            ->whereIn('status', ['ACTIVE', 'EXPIRED'])
-            ->exists();
+    //     $lockerInUse = Rental::where('locker_id', $locker->id)
+    //         ->whereIn('status', ['ACTIVE', 'EXPIRED'])
+    //         ->exists();
 
-        if ($lockerInUse) {
-            return response()->json([
-                'error' => 'LOCKER_UNAVAILABLE'
-            ], 409);
-        }
+    //     if ($lockerInUse) {
+    //         return response()->json(['error' => 'LOCKER_UNAVAILABLE'], 409);
+    //     }
 
-        // 4️⃣ Create rental
-        $start = Carbon::now();
-        //$end = $start->copy()->addHours($request->duration_hours);
-        $end = $start->copy()->addSeconds(20); //for testing purposes only  
+    //     $start = now();
+    //     $end = $start->copy()->addHours($request->duration_hours);
 
-        $rental = Rental::create([
-            'student_id' => $request->student_id,
-            'locker_id' => $locker->id,
-            'start_time' => $start,
-            'end_time' => $end,
-            'status' => 'ACTIVE',
-        ]);
+    //     $rental = Rental::create([
+    //         'student_id' => $request->student_id,
+    //         'locker_id' => $locker->id,
+    //         'start_time' => $start,
+    //         'end_time' => $end,
+    //         'status' => 'ACTIVE',
+    //     ]);
 
-        return response()->json([
-            'rental' => [
-                'id' => $rental->id,
-                'locker_number' => $locker->locker_number,
-                'start_time' => $rental->start_time->toIso8601String(),
-                'end_time' => $rental->end_time->toIso8601String(),
-                'status' => $rental->status,
-            ]
-        ]);
-    }
+    //     return response()->json([
+    //         'rental' => [
+    //             'id' => $rental->id,
+    //             'locker_number' => $locker->locker_number,
+    //             'start_time' => $start->toIso8601String(),
+    //             'end_time' => $end->toIso8601String(),
+    //             'status' => 'ACTIVE',
+    //         ]
+    //     ]);
+    // }
+
+    // public function activate(Rental $rental)
+    // {
+    //     if ($rental->status !== 'PENDING') {
+    //         return response()->json(['message' => 'Rental not activatable'], 400);
+    //     }
+
+    //     $start = now();
+    //     // $end = $start->copy()->addHours($rental->duration_hours);
+    //     $end = $start->copy()->addSeconds(50); //for testing purposes only  
+
+    //     $rental->update([
+    //         'status' => 'ACTIVE',
+    //         'start_time' => $start,
+    //         'end_time' => $end,
+    //     ]);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'rental' => [
+    //             'id' => $rental->id,
+    //             'start_time' => $start->toIso8601String(),
+    //             'end_time' => $end->toIso8601String(),
+    //         ]
+    //     ]);
+    // }
+
 
     public function active(Request $request)
     {
@@ -87,7 +105,9 @@ class RentalController extends Controller
             ]);
         }
 
-        if ($rental && $rental->status === 'ACTIVE' && $rental->end_time->isPast()) {
+
+        // ACTIVE -- auto expire if overdue
+        if ($rental->status === 'ACTIVE' && $rental->end_time->isPast()) {
             $this->expire($rental);
             $rental->refresh();
         }
@@ -103,6 +123,22 @@ class RentalController extends Controller
         ]);
     }
 
+    // public function cancel(Rental $rental)
+    // {
+    //     if ($rental->status !== 'PENDING') {
+    //         return response()->json(['message' => 'Cannot cancel'], 400);
+    //     }
+
+    //     $rental->update([
+    //         'status' => 'CANCELLED',
+    //         'ended_at' => now(),
+    //         'ended_by' => 'USER',
+    //     ]);
+
+    //     return response()->json(['success' => true]);
+    // }
+
+
     public function end(Rental $rental)
     {
         if ($rental->status !== 'ACTIVE') {
@@ -111,9 +147,11 @@ class RentalController extends Controller
             ], 400);
         }
 
-        $rental->status = 'ENDED';
-        $rental->ended_at = Carbon::now();
-        $rental->save();
+        $rental->update([
+            'status' => 'ENDED',
+            'ended_at' => now(),
+            'ended_by' => 'USER', // ✅ FIX
+        ]);
 
         return response()->json([
             'success' => true,

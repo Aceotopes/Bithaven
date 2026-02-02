@@ -13,6 +13,10 @@ return new class extends Migration {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('student_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
             $table->foreignId('rental_id')
                 ->nullable()
                 ->constrained()
@@ -26,17 +30,24 @@ return new class extends Migration {
             $table->decimal('amount', 10, 2);
 
             $table->enum('method', [
-                'COIN',
-                'ADMIN_OVERRIDE'
+                'CASH',
+                'ADMIN',
             ]);
 
-            $table->enum('status', ['SUCCESS', 'FAILED']);
+            // Reference / receipt / transaction ID
+            $table->string('reference_code')
+                ->nullable()
+                ->unique();
 
-            $table->string('reference_code', 100)->nullable();
+            $table->enum('status', [
+                'COMPLETED',
+                'FAILED',
+            ])->default('COMPLETED');
 
-            $table->dateTime('paid_at');
+            $table->timestamp('paid_at');
 
             $table->timestamps();
+
         });
     }
 

@@ -10,18 +10,22 @@ import { ref } from "vue";
 const showCancelConfirm = ref(false); // to show/hide cancel payment confirmation modal
 
 const props = defineProps({
-    locker: Number,
-    duration: Number,
+    locker: {
+        type: Number,
+        required: false,
+    },
+    duration: {
+        type: Number,
+        required: false,
+    },
     mode: {
         type: String,
         required: true, // 'RENTAL' | 'PENALTY'
     },
-
     amount: {
         type: Number,
-        required: true,
+        required: false, // ❗ NOT always required anymore
     },
-
     penalty: {
         type: Object,
         default: null,

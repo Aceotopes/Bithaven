@@ -7,9 +7,22 @@ import { ref, computed, watch, onBeforeUnmount } from "vue";
 const emit = defineEmits(["cancel", "complete"]);
 
 const props = defineProps({
-    locker: Number,
-    duration: Number,
-    amount: Number,
+    locker: {
+        type: Number,
+        required: true,
+    },
+    duration: {
+        type: Number,
+        required: false, // only for RENTAL
+    },
+    amount: {
+        type: Number,
+        required: true,
+    },
+    mode: {
+        type: String,
+        required: true, // 'RENTAL' | 'PENALTY'
+    },
 });
 
 /* =============================
@@ -99,7 +112,12 @@ onBeforeUnmount(() => {
                 <span class="font-mono font-semibold text-gray-900">
                     #{{ locker }}
                 </span>
-                · {{ duration }} Hour<span v-if="duration > 1">s</span>
+
+                <template v-if="mode === 'RENTAL'">
+                    · {{ duration }} Hour<span v-if="duration > 1">s</span>
+                </template>
+
+                <template v-else> · Penalty Payment </template>
             </p>
         </div>
 

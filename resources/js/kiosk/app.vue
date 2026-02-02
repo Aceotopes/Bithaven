@@ -172,18 +172,33 @@ function handleLockerSelectConfirm(payload) {
 }
 // =======================================================================================
 
-function handleSettlePenalty() {
-    const penalty = session.state.penalty;
-    const locker = session.state.locker;
+// display only penalty settlement handler
+// function handleSettlePenalty() {
+//     const penalty = session.state.penalty;
+//     const locker = session.state.locker;
 
-    if (!penalty || !locker) return;
+//     if (!penalty || !locker) return;
+
+//     paymentContext.value = {
+//         mode: "PENALTY",
+//         penaltyId: penalty.id,
+//         locker: locker.number,
+//         amount: penalty.amount, // backend-authoritative
+//         penalty: null, // ❌ no snapshot
+//     };
+
+//     flow.goToPayment();
+// }
+
+function handleSettlePenalty() {
+    if (!session.state.penalty) return;
 
     paymentContext.value = {
         mode: "PENALTY",
-        penaltyId: penalty.id,
-        locker: locker.number,
-        amount: penalty.amount, // backend-authoritative
-        penalty: null, // ❌ no snapshot
+        penaltyId: session.state.penalty.id,
+        locker: session.state.locker.number,
+        amount: session.state.penalty.amount, // backend-authoritative
+        penalty: null,
     };
 
     flow.goToPayment();
@@ -260,9 +275,13 @@ function handlePaymentCancel() {
 
 async function handlePaymentComplete() {
     // ===================== RENTAL PAYMENT =====================
+    console.log("PAYMENT START");
+    console.log("locker:", session.state.locker);
+    console.log("rentalState:", session.state.rentalState);
+    console.log("paymentContext:", paymentContext.value);
     if (paymentContext.value.mode === "RENTAL") {
         try {
-            const response = await fetch("/api/kiosk/rentals/start", {
+            const response = await fetch("/api/kiosk/payments/rental", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -271,6 +290,7 @@ async function handlePaymentComplete() {
                     student_id: session.state.student.id,
                     locker_number: paymentContext.value.locker,
                     duration_hours: paymentContext.value.duration,
+                    method: "CASH",
                 }),
             });
 
@@ -281,17 +301,8 @@ async function handlePaymentComplete() {
                 return;
             }
 
-            const data = await response.json();
-
-            console.log("Rental created:", data.rental);
-
             // update frontend rental state from backend response
-            rental.hydrateRental({
-                id: data.rental.id,
-                lockerNumber: data.rental.locker_number,
-                startTime: Date.parse(data.rental.start_time),
-                endTime: Date.parse(data.rental.end_time),
-            });
+            await hydrateGlobalState(); // 🔑 authoritative refresh
             await fetchLockerStatuses();
         } catch (err) {
             console.error("Network error:", err);
@@ -299,21 +310,27 @@ async function handlePaymentComplete() {
         }
     }
 
-    // PENALTY PAYMENT
+    // ===================== PENALTY PAYMENT =====================
     if (paymentContext.value.mode === "PENALTY") {
         try {
-            const response = await fetch(
-                `/api/kiosk/penalties/${paymentContext.value.penaltyId}/settle`,
-                { method: "POST" }
-            );
+            const res = await fetch("/api/kiosk/payments/penalty", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    penalty_id: paymentContext.value.penaltyId,
+                    method: "CASH",
+                }),
+            });
 
-            if (!response.ok) {
-                console.error("Penalty settlement failed");
+            if (!res.ok) {
+                const err = await res.json();
+                console.error("Penalty payment failed:", err);
                 return;
             }
 
-            // Rehydrate authoritative state
-            await hydrateGlobalState();
+            await hydrateGlobalState(); // authoritative refresh
         } catch (err) {
             console.error("Network error", err);
             return;
