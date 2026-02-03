@@ -1,4 +1,6 @@
 <script setup>
+import { ref, onMounted } from "vue";
+
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
 import { useKioskSession } from "./composables/useKioskSessions";
@@ -7,13 +9,13 @@ import { usePenalty } from "./composables/usePenalty";
 import { useKioskActions } from "./composables/useKioskActions";
 import { useIdleTimeout } from "./composables/useIdleTimeout";
 
-import { ref, onMounted } from "vue";
-
 import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
+
+import { useRFIDService } from "./services";
 
 //const kioskState = reactive({
 //student: null,                  // logged-in student
@@ -34,6 +36,9 @@ const isEndingRental = ref(false); // rental ending state
 const endCountdown = ref(3); // rental end countdown
 const TOTAL_LOCKERS = 15; //mock total lockers
 const lockers = ref([]);
+
+const rfid = useRFIDService();
+const scanResult = ref(null);
 
 let endTimer = null;
 
@@ -117,7 +122,11 @@ const idle = useIdleTimeout({
 //===================================
 //session start handler (with Backend)
 //===================================
-async function handleStartScan() {
+async function handleStartScan(uid) {
+    console.log("📟 RFID scanned:", uid);
+
+    scanResult.value = null;
+
     try {
         const res = await fetch("/api/kiosk/scan", {
             method: "POST",
@@ -125,28 +134,37 @@ async function handleStartScan() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                rfid_uid: "0851967331",
+                rfid_uid: uid,
             }),
         });
 
         if (!res.ok) {
-            throw new Error("Scan Failed");
+            throw new Error("RFID not Registered");
         }
 
         const data = await res.json();
 
+        scanResult.value = {
+            status: "success",
+            uid,
+        };
+
         //start session
         session.startSession(data.student);
-        flow.goToStudentDashboard();
 
         //check for active rental
         await recoverActiveRental();
         await recoverActivePenalty();
 
+        rfid.disable();
+
         console.log("Session started with student:", session.state.student);
+        return { success: true, uid };
     } catch (err) {
-        console.error(err);
-        return;
+        console.error("RFID scan failed", err);
+        scanResult.value = {
+            status: "error",
+        };
     }
 }
 
@@ -556,6 +574,8 @@ onMounted(async () => {
         <IdleScreen
             v-if="session.state.kioskState === KIOSK_STATES.IDLE"
             @start-scan="handleStartScan"
+            @success-complete="flow.goToStudentDashboard()"
+            :scanResult="scanResult"
         />
 
         <MainScreen
