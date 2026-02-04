@@ -49,7 +49,7 @@ const amountDue = computed(() => {
     return props.amountDue || 0;
 });
 
-const isPaid = computed(() => props.paymentStatus === "PAID");
+const isPaid = computed(() => props.paymentStatus === "COMPLETED");
 
 const progressRatio = computed(() => {
     if (amountDue.value === 0) return 0;

@@ -27,15 +27,19 @@ class CoinController extends Controller
         }
 
         DB::transaction(function () use ($session, $request) {
-            $session->increment('amount_paid', $request->value);
-        });
+            $session->amount_paid += $request->value;
 
-        // Refresh model
-        $session->refresh();
+            // 🔑 PAYMENT COMPLETION RULE
+            if ($session->amount_paid >= $session->amount_due) {
+                $session->status = 'COMPLETED';
+            }
+
+            $session->save();
+        });
 
         return response()->json([
             'success' => true,
-            'session' => $session,
+            'session' => $session->fresh(),
         ]);
     }
 }
