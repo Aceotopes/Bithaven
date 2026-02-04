@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
@@ -39,6 +39,7 @@ const lockers = ref([]);
 
 const rfid = useRFIDService();
 const scanResult = ref(null);
+const paymentSession = ref(null);
 
 let endTimer = null;
 
@@ -110,6 +111,30 @@ const idle = useIdleTimeout({
     warningMs: 10_000,
 });
 
+const amountPaid = computed(() => {
+    if (paymentContext.value.mode === "RENTAL") {
+        return session.state.locker?.amount_paid ?? 0;
+    }
+
+    if (paymentContext.value.mode === "PENALTY") {
+        return session.state.penalty?.amount_paid ?? 0;
+    }
+
+    return 0;
+});
+
+const paymentStatus = computed(() => {
+    if (paymentContext.value.mode === "RENTAL") {
+        return session.state.locker?.payment_status ?? "UNPAID";
+    }
+
+    if (paymentContext.value.mode === "PENALTY") {
+        return session.state.penalty?.status ?? "ACTIVE";
+    }
+
+    return "UNPAID";
+});
+
 // =========== session start handler  (no Backend)========
 // function handleStartScan() {
 //     session.startSession(mockStudent);
@@ -173,14 +198,30 @@ function handleLockerSelectBack() {
     flow.goToStudentDashboard();
 }
 
-function handleLockerSelectConfirm(payload) {
+async function handleLockerSelectConfirm(payload) {
     // TEMP: validate flow only
     console.log("Locker selection confirmed:", payload);
     const { locker, duration } = payload;
 
+    const res = await fetch("/api/kiosk/payment-sessions/start", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            kiosk_id: "KIOSK-01",
+            context_type: "RENTAL",
+            locker_id: locker,
+            duration_hours: duration,
+        }),
+    });
+
+    const data = await res.json();
+    paymentSession.value = data.session;
+
     paymentContext.value = {
         mode: "RENTAL",
-        amount: duration * 5, // pricing logic (temporary)
+        amount: data.session.amount_due, // pricing logic (temporary)
         locker,
         duration,
         penalty: null,
@@ -208,17 +249,29 @@ function handleLockerSelectConfirm(payload) {
 //     flow.goToPayment();
 // }
 
-function handleSettlePenalty() {
-    if (!session.state.penalty) return;
+async function handleSettlePenalty() {
+    const penalty = session.state.penalty;
+    if (!penalty) return;
+
+    const res = await fetch("/api/kiosk/payment-sessions/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            kiosk_id: "KIOSK-01",
+            context_type: "PENALTY",
+            penalty_id: penalty.id,
+        }),
+    });
+
+    const data = await res.json();
+    paymentSession.value = data.session;
 
     paymentContext.value = {
         mode: "PENALTY",
-        penaltyId: session.state.penalty.id,
-        locker: session.state.locker.number,
-        amount: session.state.penalty.amount, // backend-authoritative
-        penalty: null,
+        locker: session.state.locker?.number,
+        amount: data.session.amount_due,
+        penalty: penalty,
     };
-
     flow.goToPayment();
 }
 
@@ -618,12 +671,15 @@ onMounted(async () => {
             :duration="paymentContext.duration"
             :mode="paymentContext.mode"
             :amount="paymentContext.amount"
+            :amountPaid="Number(paymentSession?.amount_paid ?? 0)"
+            :paymentStatus="paymentSession?.status ?? 'UNPAID'"
             :penalty="paymentContext.penalty"
             :lockerEndTime="session.state.locker?.endTime"
             :canEndSession="actions.canEndSession.value"
             @end-session="handlEndSession"
             @cancel="handlePaymentCancel"
             @complete="handlePaymentComplete"
+            @session-updated="paymentSession = $event"
         />
     </transition>
     <IdleWarningModal

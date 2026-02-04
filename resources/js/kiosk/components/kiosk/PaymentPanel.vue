@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from "vue";
-
+import { insertCoin } from "@/kiosk/services/coin.service";
 /* =============================
    PROPS & EMITS
 ============================= */
-const emit = defineEmits(["cancel", "complete"]);
+const emit = defineEmits(["cancel", "complete", "session-updated"]);
 
 const props = defineProps({
     locker: {
@@ -15,7 +15,11 @@ const props = defineProps({
         type: Number,
         required: false, // only for RENTAL
     },
-    amount: {
+    amountDue: {
+        type: Number,
+        required: true,
+    },
+    amountPaid: {
         type: Number,
         required: true,
     },
@@ -23,13 +27,17 @@ const props = defineProps({
         type: String,
         required: true, // 'RENTAL' | 'PENALTY'
     },
+    paymentStatus: {
+        type: String,
+        required: true, // 'UNPAID' | 'PAID'
+    },
 });
 
 /* =============================
    BASE STATE
 ============================= */
 //const pricePerHour = 5; // mock pricing
-const insertedAmount = ref(0);
+const insertedAmount = computed(() => props.amountPaid);
 const hasCompleted = ref(false);
 const successCountdown = ref(3);
 let countdownTimer = null;
@@ -38,22 +46,30 @@ let countdownTimer = null;
    COMPUTED VALUES
 ============================= */
 const amountDue = computed(() => {
-    return props.amount || 0;
+    return props.amountDue || 0;
 });
 
-const isPaid = computed(() => {
-    if (amountDue.value === 0) return false;
-    return insertedAmount.value >= amountDue.value;
-});
+const isPaid = computed(() => props.paymentStatus === "PAID");
 
 const progressRatio = computed(() => {
     if (amountDue.value === 0) return 0;
-    return Math.min(insertedAmount.value / amountDue.value, 1);
+    return Math.min(props.amountPaid / props.amountDue, 1);
 });
 
 const remainingAmount = computed(() =>
-    Math.max(amountDue.value - insertedAmount.value, 0)
+    Math.max(props.amountDue - props.amountPaid, 0)
 );
+
+async function insertCoinUI(value) {
+    try {
+        const res = await insertCoin("KIOSK-01", value);
+
+        // 🔑 Update session via parent (temporary local emit)
+        emit("session-updated", res.session);
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 /* =============================
    WATCHERS
@@ -69,7 +85,6 @@ watch(isPaid, (paid) => {
 
         if (successCountdown.value === 0) {
             clearInterval(countdownTimer);
-            countdownTimer = null;
             emit("complete");
         }
     }, 1000);
@@ -78,9 +93,9 @@ watch(isPaid, (paid) => {
 /* =============================
    METHODS
 ============================= */
-function insertCoin(value) {
-    insertedAmount.value += value;
-}
+// function insertCoin(value) {
+//     insertedAmount.value += value;
+// }
 
 /* =============================
    CLEANUP
@@ -217,21 +232,21 @@ onBeforeUnmount(() => {
         <div class="mt-12 grid grid-cols-3 gap-6">
             <button
                 class="h-20 rounded-2xl bg-gray-200 text-[22px] font-semibold active:scale-[0.97] transition"
-                @click="insertCoin(1)"
+                @click="insertCoinUI(1)"
             >
                 +₱1
             </button>
 
             <button
                 class="h-20 rounded-2xl bg-gray-200 text-[22px] font-semibold active:scale-[0.97] transition"
-                @click="insertCoin(5)"
+                @click="insertCoinUI(5)"
             >
                 +₱5
             </button>
 
             <button
                 class="h-20 rounded-2xl bg-gray-200 text-[22px] font-semibold active:scale-[0.97] transition"
-                @click="insertCoin(10)"
+                @click="insertCoinUI(10)"
             >
                 +₱10
             </button>
@@ -247,6 +262,9 @@ onBeforeUnmount(() => {
             >
                 Cancel Payment
             </button>
+        </div>
+        <div class="text-xs text-red-500">
+            due={{ amountDue }} paid={{ amountPaid }} status={{ paymentStatus }}
         </div>
 
         <!-- ========================= -->

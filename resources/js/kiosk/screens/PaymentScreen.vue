@@ -38,11 +38,24 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    amountPaid: {
+        type: Number,
+        required: true,
+    },
+    paymentStatus: {
+        type: String,
+        required: true, // 'UNPAID' | 'PAID'
+    },
 });
 
 const showEndSessionConfirm = ref(false);
 
-const emit = defineEmits(["cancel", "complete", "end-session"]);
+const emit = defineEmits([
+    "cancel",
+    "complete",
+    "end-session",
+    "session-updated",
+]);
 </script>
 
 <template>
@@ -93,9 +106,12 @@ const emit = defineEmits(["cancel", "complete", "end-session"]);
                 :locker="locker"
                 :duration="duration"
                 :mode="mode"
-                :amount="amount"
+                :amountDue="amount"
+                :amountPaid="amountPaid"
+                :paymentStatus="paymentStatus"
                 @cancel="showCancelConfirm = true"
                 @complete="emit('complete')"
+                @session-updated="emit('session-updated', $event)"
             />
 
             <CancelPaymentModal
