@@ -4,14 +4,18 @@ const props = defineProps({
         type: Number,
         required: true,
     },
+
+    // backend-frozen snapshot
     exceededDuration: {
-        type: String, // e.g. "1 hour 30 minutes"
+        type: String,
         required: true,
     },
+
     breakdown: {
         type: Array,
         required: true,
     },
+
     amount: {
         type: Number,
         required: true,

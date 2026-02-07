@@ -46,6 +46,14 @@ const props = defineProps({
         type: String,
         required: true, // 'UNPAID' | 'PAID'
     },
+    penaltySnapshot: {
+        type: Object,
+        default: null,
+    },
+    exceededDuration: {
+        type: String,
+        default: "",
+    },
 });
 
 const showEndSessionConfirm = ref(false);
@@ -91,9 +99,11 @@ const emit = defineEmits([
         <main class="relative z-10 px-12 pt-10">
             <!-- PENALTY CONTEXT -->
             <PenaltyInfoCard
-                v-if="mode === 'PENALTY'"
+                v-if="mode === 'PENALTY' && penaltySnapshot"
                 :lockerNumber="locker"
-                :amount="amount"
+                :exceededDuration="penaltySnapshot.exceededDuration"
+                :breakdown="penaltySnapshot.breakdown"
+                :amount="Number(amount)"
             />
 
             <RentalPaymentInfoCard

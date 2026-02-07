@@ -299,4 +299,9 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </section>
+    <div class="text-[55px] text-red-500">
+        mode={{ mode }} due={{ amountDue }} paid={{ amountPaid }} status={{
+            paymentStatus
+        }}
+    </div>
 </template>

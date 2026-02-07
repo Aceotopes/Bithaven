@@ -8,6 +8,7 @@ use App\Models\Rental;
 use App\Models\Locker;
 use App\Models\Penalty;
 use Illuminate\Support\Facades\DB;
+use App\Services\PenaltyCalculator;
 
 
 class RentalController extends Controller
@@ -97,18 +98,16 @@ class RentalController extends Controller
         $rental = Rental::where('student_id', $request->student_id)
             ->whereIn('status', ['ACTIVE', 'EXPIRED'])
             ->with('locker')
+            ->latest()
             ->first();
 
         if (!$rental) {
-            return response()->json([
-                'rental' => null
-            ]);
+            return response()->json(['rental' => null]);
         }
 
-
-        // ACTIVE -- auto expire if overdue
+        //Auto-expire if overdue
         if ($rental->status === 'ACTIVE' && $rental->end_time->isPast()) {
-            $this->expire($rental);
+            $this->expireRental($rental);
             $rental->refresh();
         }
 
@@ -119,7 +118,7 @@ class RentalController extends Controller
                 'start_time' => $rental->start_time->toIso8601String(),
                 'end_time' => $rental->end_time->toIso8601String(),
                 'status' => $rental->status,
-            ]
+            ],
         ]);
     }
 
@@ -150,7 +149,7 @@ class RentalController extends Controller
         $rental->update([
             'status' => 'ENDED',
             'ended_at' => now(),
-            'ended_by' => 'USER', // ✅ FIX
+            'ended_by' => 'USER',
         ]);
 
         return response()->json([
@@ -161,19 +160,33 @@ class RentalController extends Controller
 
     public function expire(Rental $rental)
     {
+        $this->expireRental($rental);
+
+        return response()->json([
+            'success' => true,
+            'rental_id' => $rental->id,
+        ]);
+    }
+
+    private function expireRental(Rental $rental): void
+    {
         if ($rental->status !== 'ACTIVE') {
             return;
         }
 
         DB::transaction(function () use ($rental) {
-            $rental->update(['status' => 'EXPIRED']);
 
+            // Mark rental expired
+            $rental->update([
+                'status' => 'EXPIRED',
+            ]);
+
+            // Create penalty ONCE (no amount)
             Penalty::firstOrCreate(
                 ['rental_id' => $rental->id],
                 [
-                    'started_at' => now(),
+                    'started_at' => $rental->end_time,
                     'status' => 'ACTIVE',
-                    'amount' => 0,
                 ]
             );
         });

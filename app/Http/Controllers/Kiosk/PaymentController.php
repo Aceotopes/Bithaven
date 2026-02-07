@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function payPenalty(Request $request, PenaltyCalculator $calculator)
+    public function payPenalty(Request $request)
     {
         $request->validate([
             'penalty_id' => 'required|exists:penalties,id',
@@ -23,30 +23,34 @@ class PaymentController extends Controller
         $penalty = Penalty::with('rental')->findOrFail($request->penalty_id);
 
         if ($penalty->status !== 'ACTIVE') {
-            return response()->json(['message' => 'Penalty already settled'], 422);
+            return response()->json([
+                'message' => 'Penalty already settled'
+            ], 422);
         }
 
+        if ($penalty->frozen_at === null || $penalty->frozen_amount === null) {
+            return response()->json([
+                'message' => 'Penalty must be frozen before payment'
+            ], 409);
+        }
 
-        DB::transaction(function () use ($penalty, $request, $calculator) {
-            $amount = $calculator->calculate($penalty);
-            // Create payment (IMMUTABLE)
+        DB::transaction(function () use ($penalty, $request) {
+
+            //Create IMMUTABLE payment record
             Payment::create([
                 'student_id' => $penalty->rental->student_id,
                 'penalty_id' => $penalty->id,
-                'amount' => $amount,
+                'amount' => $penalty->frozen_amount, // 🔒 frozen, never recalculated
                 'method' => $request->input('method'),
                 'status' => 'COMPLETED',
                 'paid_at' => now(),
             ]);
 
-            // Settle penalty
             $penalty->update([
                 'status' => 'PAID',
                 'settled_at' => now(),
-                'amount' => $amount,
             ]);
 
-            // End rental
             $penalty->rental->update([
                 'status' => 'ENDED',
                 'ended_at' => now(),
@@ -90,8 +94,7 @@ class PaymentController extends Controller
             // Create rental
             $start = now();
             // $end = $start->copy()->addHours($request->duration_hours);
-            $end = $start->copy()->addSeconds(50); //for testing purposes only  
-
+            $end = $start->copy()->addSeconds(50); // testing only
 
             $rental = Rental::create([
                 'student_id' => $request->student_id,
@@ -101,11 +104,11 @@ class PaymentController extends Controller
                 'status' => 'ACTIVE',
             ]);
 
-            // Create payment (AUDIT SOURCE OF TRUTH)
+            // Create IMMUTABLE payment record
             Payment::create([
                 'student_id' => $request->student_id,
                 'rental_id' => $rental->id,
-                'amount' => $request->duration_hours * 5, // centralize later
+                'amount' => $request->duration_hours * 5, // fixed pricing
                 'method' => $request->input('method'),
                 'status' => 'COMPLETED',
                 'paid_at' => now(),

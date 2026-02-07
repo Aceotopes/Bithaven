@@ -8,10 +8,12 @@ use App\Models\Locker;
 use App\Models\Penalty;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Services\PenaltyCalculator;
+
 
 class PaymentSessionController extends Controller
 {
-    public function start(Request $request)
+    public function start(Request $request, PenaltyCalculator $calculator)
     {
         $request->validate([
             'kiosk_id' => 'required|string',
@@ -25,23 +27,45 @@ class PaymentSessionController extends Controller
             'penalty_id' => 'required_if:context_type,PENALTY|exists:penalties,id',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request, $calculator) {
 
-            // 1️⃣ Cancel any existing ACTIVE session for this kiosk
             PaymentSession::where('kiosk_id', $request->kiosk_id)
                 ->where('status', 'ACTIVE')
                 ->update(['status' => 'CANCELLED']);
 
-            // 2️⃣ Calculate amount_due
+            $penaltySnapshot = null;
+
+            // Calculate amount_due
             if ($request->context_type === 'RENTAL') {
-                $pricePerHour = 5; // centralize later
+
+                $pricePerHour = 5;
                 $amountDue = $request->duration_hours * $pricePerHour;
+
             } else {
-                $penalty = Penalty::findOrFail($request->penalty_id);
-                $amountDue = $penalty->amount;
+
+                //PENALTY PAYMENT (DERIVED-ON-READ)
+                $penalty = Penalty::with('rental')->findOrFail($request->penalty_id);
+
+                // source of truth for penalty amount (live if not frozen, frozen if frozen)
+                $snapshot = $calculator->calculate($penalty->rental);
+
+                // freeze
+                $penalty->update([
+                    'frozen_at' => now(),
+                    'frozen_amount' => $snapshot['amount'],
+                    'frozen_exceeded_duration' => $snapshot['exceeded_duration'],
+                    'frozen_breakdown' => $snapshot['breakdown'],
+                ]);
+
+                $amountDue = $snapshot['amount'];
+
+                $penaltySnapshot = [
+                    'amount' => $snapshot['amount'],
+                    'breakdown' => $snapshot['breakdown'],
+                    'exceeded_duration' => $snapshot['exceeded_duration'],
+                ];
             }
 
-            // 3️⃣ Create payment session
             $session = PaymentSession::create([
                 'kiosk_id' => $request->kiosk_id,
                 'context_type' => $request->context_type,
@@ -61,6 +85,7 @@ class PaymentSessionController extends Controller
             return response()->json([
                 'success' => true,
                 'session' => $session,
+                'penalty_snapshot' => $penaltySnapshot,
             ]);
         });
     }

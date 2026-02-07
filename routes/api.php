@@ -33,6 +33,7 @@ Route::get('/kiosk/lockers/status', [LockerController::class, 'status']); // Loc
 
 Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']); // Active Penalty Route
 Route::post('/kiosk/penalties/{penalty}/settle', [PenaltyController::class, 'settle']); // Settle Penalty Route 
+Route::get('/kiosk/penalties/{penalty}/live', [PenaltyController::class, 'live']); // Penalty Breakdown Route
 
 Route::post('/kiosk/payments/penalty', [PaymentController::class, 'payPenalty']); // Pay Penalty Route    
 Route::post('/kiosk/payments/rental', [PaymentController::class, 'payRental']); // Pay Penalty Route    

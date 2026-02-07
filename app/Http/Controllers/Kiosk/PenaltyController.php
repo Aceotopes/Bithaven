@@ -33,19 +33,31 @@ class PenaltyController extends Controller
             return response()->json(['penalty' => null]);
         }
 
+        // Live if not frozen, frozen if frozen
+        $snapshot = $calculator->calculate($rental, $penalty);
+
         return response()->json([
             'penalty' => [
                 'id' => $penalty->id,
                 'rental_id' => $penalty->rental_id,
                 'started_at' => $penalty->started_at,
-                'amount' => $calculator->calculate($penalty),
                 'status' => $penalty->status,
 
+                // frozen snapshot or live calculation
+                'amount' => $snapshot['amount'],
+                'breakdown' => $snapshot['breakdown'],
+                'exceeded_duration' => $snapshot['exceeded_duration'],
+
+                // !!! live vs frozen flag 
+                'is_frozen' => (bool) $penalty->frozen_at,
             ]
         ]);
     }
 
-    public function settle(Penalty $penalty, PenaltyCalculator $calculator)
+    /**
+     * Settle penalty (NO recalculation here)
+     */
+    public function settle(Penalty $penalty)
     {
         if ($penalty->status !== 'ACTIVE') {
             return response()->json([
@@ -53,20 +65,23 @@ class PenaltyController extends Controller
             ], 400);
         }
 
-        DB::transaction(function () use ($penalty, $calculator) {
-            $amount = $calculator->calculate($penalty);
+        // 🧊 SAFETY CHECK — penalty MUST be frozen before settlement
+        if (!$penalty->frozen_at || $penalty->frozen_amount === null) {
+            return response()->json([
+                'message' => 'Penalty must be frozen before settlement'
+            ], 409);
+        }
 
-            // 1. Mark penalty as PAID
+        DB::transaction(function () use ($penalty) {
+
+            // Mark penalty as PAID (NO recalculation)
             $penalty->update([
                 'status' => 'PAID',
                 'settled_at' => now(),
-                'amount' => $amount,
             ]);
 
-            // 2. End the rental
-            $rental = $penalty->rental;
-
-            $rental->update([
+            // End the rental
+            $penalty->rental->update([
                 'status' => 'ENDED',
                 'ended_at' => now(),
                 'ended_by' => 'USER',
@@ -75,6 +90,25 @@ class PenaltyController extends Controller
 
         return response()->json([
             'success' => true,
+        ]);
+    }
+
+    public function live(Penalty $penalty, PenaltyCalculator $calculator)
+    {
+        if ($penalty->status !== 'ACTIVE') {
+            return response()->json([
+                'amount' => 0,
+                'exceeded_duration' => '00:00:00',
+                'breakdown' => [],
+            ]);
+        }
+
+        $snapshot = $calculator->calculate($penalty->rental);
+
+        return response()->json([
+            'amount' => $snapshot['amount'],
+            'exceeded_duration' => $snapshot['exceeded_duration'],
+            'breakdown' => $snapshot['breakdown'],
         ]);
     }
 }

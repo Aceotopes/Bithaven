@@ -18,15 +18,19 @@ return new class extends Migration {
                 ->cascadeOnDelete();
 
             $table->dateTime('started_at');
-
             $table->dateTime('settled_at')->nullable();
-
-            $table->decimal('amount', 10, 2);
 
             $table->enum('status', ['ACTIVE', 'PAID'])
                 ->default('ACTIVE');
 
+            $table->timestamp('frozen_at')->nullable();
+            $table->decimal('frozen_amount', 10, 2)->nullable();
+            $table->json('frozen_breakdown')->nullable();
+            $table->string('frozen_exceeded_duration')->nullable();
+
             $table->timestamps();
+
+            $table->unique('rental_id');
         });
     }
 

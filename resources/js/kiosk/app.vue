@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
@@ -42,6 +42,8 @@ const scanResult = ref(null);
 const paymentSession = ref(null);
 
 let endTimer = null;
+
+const penaltySnapshot = ref(null);
 
 // =======================================
 // locker rental manager for testing (no Backend)
@@ -250,8 +252,11 @@ async function handleLockerSelectConfirm(payload) {
 // }
 
 async function handleSettlePenalty() {
-    const penalty = session.state.penalty;
-    if (!penalty) return;
+    const penaltyState = session.state.penalty; // ✅ renamed
+    if (!penaltyState) return;
+
+    // 🧊 stop live penalty accumulation
+    penalty.stopLivePenalty(); // ✅ composable
 
     const res = await fetch("/api/kiosk/payment-sessions/start", {
         method: "POST",
@@ -259,19 +264,36 @@ async function handleSettlePenalty() {
         body: JSON.stringify({
             kiosk_id: "KIOSK-01",
             context_type: "PENALTY",
-            penalty_id: penalty.id,
+            penalty_id: penaltyState.id,
         }),
     });
 
+    if (!res.ok) {
+        console.error("Failed to start penalty payment session");
+
+        // 🔁 rollback safety
+        penalty.startLivePenalty();
+        return;
+    }
+
     const data = await res.json();
+
     paymentSession.value = data.session;
+
+    // 🔒 backend-frozen snapshot
+    penaltySnapshot.value = {
+        amount: Number(data.penalty_snapshot.amount),
+        breakdown: data.penalty_snapshot.breakdown ?? [],
+        exceededDuration: data.penalty_snapshot.exceeded_duration ?? "00:00:00",
+    };
 
     paymentContext.value = {
         mode: "PENALTY",
         locker: session.state.locker?.number,
         amount: data.session.amount_due,
-        penalty: penalty,
+        penaltyId: penaltyState.id,
     };
+
     flow.goToPayment();
 }
 
@@ -310,7 +332,6 @@ function handlePaymentCancel() {
     // flow.goToLockerSelect();
 
     const mode = paymentContext.value.mode;
-
     resetPaymentContext();
 
     if (mode === "RENTAL") {
@@ -320,6 +341,7 @@ function handlePaymentCancel() {
     }
 
     paymentContext.value = { type: null, amount: 0 };
+    penaltySnapshot.value = null;
 }
 
 // =====================================
@@ -400,6 +422,10 @@ async function handlePaymentComplete() {
                 console.error("Penalty payment failed:", err);
                 return;
             }
+            console.log(
+                "🧾 SETTLING PENALTY ID:",
+                paymentContext.value.penaltyId
+            );
 
             await hydrateGlobalState(); // authoritative refresh
         } catch (err) {
@@ -494,9 +520,15 @@ async function recoverActivePenalty() {
     session.state.penalty = {
         id: penalty.id,
         rentalId: penalty.rental_id,
-        startedAt: Date.parse(penalty.started_at),
-        amount: penalty.amount,
         status: penalty.status,
+
+        // backend authoritative
+        amount: Number(penalty.amount),
+        breakdown: penalty.breakdown,
+        exceeded_duration: penalty.exceeded_duration,
+
+        frozen_at: penalty.frozen_at ?? null,
+        frozen_amount: penalty.frozen_amount ?? null,
     };
     session.state.rentalState = "EXPIRED_RENTAL";
 }
@@ -591,6 +623,18 @@ onMounted(async () => {
     debugDump("after hydrateGlobalState (mount)");
 });
 
+watch(
+    () => session.state.rentalState,
+    (state) => {
+        if (state === "EXPIRED_RENTAL") {
+            penalty.startLivePenalty();
+        } else {
+            penalty.stopLivePenalty();
+        }
+    },
+    { immediate: true }
+);
+
 // onMounted(async () => {
 //     if (session.state.student) {
 //         await hydrateGlobalState();
@@ -640,7 +684,7 @@ onMounted(async () => {
             :locker="session.state.locker"
             :penalty="session.state.penalty"
             :showHowTo="!session.state.hasSeenHowTo"
-            :penaltyAmount="penalty.penaltyAmount.value"
+            :penaltyAmount="penalty.livePenaltyAmount.value"
             :canRent="actions.canRent.value"
             :canEndRental="actions.canEndRental.value"
             :canSettlePenalty="actions.canSettlePenalty.value"
@@ -672,10 +716,11 @@ onMounted(async () => {
             :mode="paymentContext.mode"
             :amount="paymentContext.amount"
             :amountPaid="Number(paymentSession?.amount_paid ?? 0)"
-            :paymentStatus="paymentSession?.status ?? 'UNPAID'"
+            :paymentStatus="paymentSession?.status ?? 'ACTIVE'"
             :penalty="paymentContext.penalty"
             :lockerEndTime="session.state.locker?.endTime"
             :canEndSession="actions.canEndSession.value"
+            :penaltySnapshot="penaltySnapshot"
             @end-session="handlEndSession"
             @cancel="handlePaymentCancel"
             @complete="handlePaymentComplete"

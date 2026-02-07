@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
 /**
  * usePenalty
@@ -126,17 +126,26 @@ import { ref, computed, onMounted } from "vue";
 // }
 
 export function usePenalty(state) {
+    const poller = ref(null);
+
     /**
-     * Read-only: current penalty amount
-     * Comes from backend via hydration
+     * LIVE penalty amount (backend-derived)
      */
-    const penaltyAmount = computed(() => {
+    const livePenaltyAmount = computed(() => {
         return state.penalty?.amount ?? 0;
     });
 
     /**
-     * UI permission
+     * Frozen penalty amount (during payment)
      */
+    const frozenPenaltyAmount = computed(() => {
+        return state.penalty?.frozen_amount ?? null;
+    });
+
+    const isPenaltyFrozen = computed(() => {
+        return !!state.penalty?.frozen_at;
+    });
+
     const canSettlePenalty = computed(() => {
         return (
             state.rentalState === "EXPIRED_RENTAL" &&
@@ -146,21 +155,60 @@ export function usePenalty(state) {
     });
 
     /**
-     * Clear penalty AFTER backend confirms payment
+     * 🔥 Live polling (single source of truth)
      */
+    async function fetchLivePenalty() {
+        if (!state.penalty?.id || isPenaltyFrozen.value) return;
+
+        try {
+            const res = await fetch(
+                `/api/kiosk/penalties/${state.penalty.id}/live`
+            );
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            // 🔑 overwrite state with backend truth
+            state.penalty.amount = Number(data.amount);
+            state.penalty.breakdown = data.breakdown;
+            state.penalty.exceeded_duration = data.exceeded_duration;
+        } catch (err) {
+            console.error("Live penalty fetch failed", err);
+        }
+    }
+
+    function startLivePenalty() {
+        stopLivePenalty();
+        fetchLivePenalty();
+        poller.value = setInterval(fetchLivePenalty, 5000); // every 5s
+    }
+
+    function stopLivePenalty() {
+        if (poller.value) {
+            clearInterval(poller.value);
+            poller.value = null;
+        }
+    }
+
     function clearPenalty() {
+        stopLivePenalty();
         state.penalty = null;
         state.locker = null;
         state.rentalState = "NO_RENTAL";
     }
 
+    onBeforeUnmount(stopLivePenalty);
+
     return {
-        penaltyAmount,
+        livePenaltyAmount,
+        frozenPenaltyAmount,
+        isPenaltyFrozen,
         canSettlePenalty,
+        startLivePenalty,
+        stopLivePenalty,
         clearPenalty,
     };
 }
-
 /* --------------------
  * Utilities (FRONTEND MOCK ONLY)
  * -------------------- */

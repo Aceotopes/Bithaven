@@ -20,6 +20,8 @@ class PaymentSession extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'amount_due' => 'float',
+        'amount_paid' => 'float',
     ];
 
     public function locker()
