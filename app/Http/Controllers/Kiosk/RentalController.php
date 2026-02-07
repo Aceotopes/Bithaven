@@ -8,6 +8,7 @@ use App\Models\Rental;
 use App\Models\Locker;
 use App\Models\Penalty;
 use Illuminate\Support\Facades\DB;
+use App\Services\LockerUnlockService;
 use App\Services\PenaltyCalculator;
 
 
@@ -138,7 +139,7 @@ class RentalController extends Controller
     // }
 
 
-    public function end(Rental $rental)
+    public function end(Rental $rental, LockerUnlockService $unlockService)
     {
         if ($rental->status !== 'ACTIVE') {
             return response()->json([
@@ -150,6 +151,12 @@ class RentalController extends Controller
             'status' => 'ENDED',
             'ended_at' => now(),
             'ended_by' => 'USER',
+        ]);
+
+        $unlockService->issue([
+            'locker_id' => $rental->locker_id,
+            'reason' => 'RENTAL_END',
+            'rental_id' => $rental->id,
         ]);
 
         return response()->json([

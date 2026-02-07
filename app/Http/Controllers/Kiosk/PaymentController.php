@@ -8,12 +8,13 @@ use App\Models\Penalty;
 use App\Models\Rental;
 use App\Models\Locker;
 use Illuminate\Support\Facades\DB;
+use App\Services\LockerUnlockService;
 use App\Services\PenaltyCalculator;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function payPenalty(Request $request)
+    public function payPenalty(Request $request, LockerUnlockService $unlockService)
     {
         $request->validate([
             'penalty_id' => 'required|exists:penalties,id',
@@ -34,7 +35,7 @@ class PaymentController extends Controller
             ], 409);
         }
 
-        DB::transaction(function () use ($penalty, $request) {
+        DB::transaction(function () use ($penalty, $request, $unlockService) {
 
             //Create IMMUTABLE payment record
             Payment::create([
@@ -44,6 +45,12 @@ class PaymentController extends Controller
                 'method' => $request->input('method'),
                 'status' => 'COMPLETED',
                 'paid_at' => now(),
+            ]);
+
+            $unlockService->issue([
+                'locker_id' => $penalty->rental->locker_id,
+                'reason' => 'PENALTY_SETTLED',
+                'penalty_id' => $penalty->id,
             ]);
 
             $penalty->update([
@@ -61,7 +68,7 @@ class PaymentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function payRental(Request $request)
+    public function payRental(Request $request, LockerUnlockService $unlockService)
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -70,7 +77,7 @@ class PaymentController extends Controller
             'method' => 'required|in:CASH,ADMIN',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request, $unlockService) {
             // Prevent multiple rentals
             $hasRental = Rental::where('student_id', $request->student_id)
                 ->whereIn('status', ['ACTIVE', 'EXPIRED'])
@@ -112,6 +119,12 @@ class PaymentController extends Controller
                 'method' => $request->input('method'),
                 'status' => 'COMPLETED',
                 'paid_at' => now(),
+            ]);
+
+            $unlockService->issue([
+                'locker_id' => $locker->id,
+                'reason' => 'RENTAL_START',
+                'rental_id' => $rental->id,
             ]);
 
             return response()->json([

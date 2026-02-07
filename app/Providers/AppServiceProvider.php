@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton('locker.hardware', function () {
+            return new \App\Services\LockerHardwareService();
+        });
     }
 
     /**

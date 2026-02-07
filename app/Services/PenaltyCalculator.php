@@ -114,7 +114,7 @@ class PenaltyCalculator
         if ($penalty && $penalty->frozen_at) {
             return [
                 'amount' => $penalty->frozen_amount,
-                'breakdown' => $penalty->breakdown ?? [],
+                'breakdown' => $penalty->frozen_breakdown ?? [],
                 'exceeded_duration' =>
                     $penalty->started_at->diffForHumans($penalty->frozen_at, true),
             ];

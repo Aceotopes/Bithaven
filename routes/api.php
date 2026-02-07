@@ -30,6 +30,7 @@ Route::post('/kiosk/rentals/{rental}/end', [RentalController::class, 'end']); //
 Route::post('/kiosk/rentals/{rental}/expire', [RentalController::class, 'expire']); // Expire Rental Route
 
 Route::get('/kiosk/lockers/status', [LockerController::class, 'status']); // Locker Status Route
+Route::post('/kiosk/lockers/{locker}/unlock', [LockerController::class, 'unlock']); // Locker Unlock Route
 
 Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']); // Active Penalty Route
 Route::post('/kiosk/penalties/{penalty}/settle', [PenaltyController::class, 'settle']); // Settle Penalty Route 
