@@ -200,6 +200,27 @@ function handleLockerSelectBack() {
     flow.goToStudentDashboard();
 }
 
+async function unlockLocker(lockerNumber) {
+    if (!lockerNumber) return;
+
+    console.log("Unlocking locker:", lockerNumber);
+
+    const res = await fetch(`/api/kiosk/lockers/${lockerNumber}/unlock`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        console.error("Failed to unlock locker:", err);
+        return;
+    }
+
+    console.log("Locker unlocked successfully");
+}
+
 async function handleLockerSelectConfirm(payload) {
     // TEMP: validate flow only
     console.log("Locker selection confirmed:", payload);
@@ -394,6 +415,8 @@ async function handlePaymentComplete() {
                 return;
             }
 
+            await unlockLocker(paymentContext.value.locker);
+
             // update frontend rental state from backend response
             await hydrateGlobalState(); // 🔑 authoritative refresh
             await fetchLockerStatuses();
@@ -426,6 +449,8 @@ async function handlePaymentComplete() {
                 "🧾 SETTLING PENALTY ID:",
                 paymentContext.value.penaltyId
             );
+
+            await unlockLocker(session.state.locker?.number);
 
             await hydrateGlobalState(); // authoritative refresh
         } catch (err) {
@@ -567,6 +592,7 @@ async function fetchLockerStatuses() {
 async function handleEndRental() {
     try {
         const rentalId = session.state.locker?.rentalId;
+        const lockerNumber = session.state.locker?.number;
         if (!rentalId) return;
 
         await fetch(`/api/kiosk/rentals/${rentalId}/end`, {
@@ -575,6 +601,8 @@ async function handleEndRental() {
                 "Content-Type": "application/json",
             },
         });
+
+        await unlockLocker(lockerNumber);
 
         //stop local timer + clear rental state
         rental.endRental();
