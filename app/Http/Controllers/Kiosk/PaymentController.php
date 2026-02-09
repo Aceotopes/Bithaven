@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Kiosk;
 
 use App\Http\Controllers\Controller;
+use App\Models\KioskEvent;
 use App\Models\Payment;
 use App\Models\Penalty;
 use App\Models\Rental;
 use App\Models\Locker;
 use Illuminate\Support\Facades\DB;
 use App\Services\LockerUnlockService;
+use App\Services\KioskEventService;
 use App\Services\PenaltyCalculator;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function payPenalty(Request $request, LockerUnlockService $unlockService)
+    public function payPenalty(Request $request, LockerUnlockService $unlockService, KioskEventService $events)
     {
         $request->validate([
             'penalty_id' => 'required|exists:penalties,id',
@@ -35,17 +37,31 @@ class PaymentController extends Controller
             ], 409);
         }
 
-        DB::transaction(function () use ($penalty, $request, $unlockService) {
+        DB::transaction(function () use ($penalty, $request, $unlockService, $events) {
 
             //Create IMMUTABLE payment record
-            Payment::create([
+            $payment = Payment::create([
                 'student_id' => $penalty->rental->student_id,
                 'penalty_id' => $penalty->id,
-                'amount' => $penalty->frozen_amount, // 🔒 frozen, never recalculated
+                'amount' => $penalty->frozen_amount, // frozen, never recalculated
                 'method' => $request->input('method'),
                 'status' => 'COMPLETED',
                 'paid_at' => now(),
             ]);
+
+            $events->log(
+                'PENALTY_PAID',
+                [
+                    'kiosk_id' => 'KIOSK-1', // hardcoded for now, can be passed in request if needed
+                    'rental_id' => $penalty->rental_id,
+                    'penalty_id' => $penalty->id,
+                    'payment_id' => $payment->id,
+                    'student_id' => $penalty->rental->student_id,
+                    'locker_id' => $penalty->rental->locker_id,
+                ],
+                'INFO',
+                'Penalty successfully paid'
+            );
 
             $unlockService->issue([
                 'locker_id' => $penalty->rental->locker_id,
@@ -68,7 +84,7 @@ class PaymentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function payRental(Request $request, LockerUnlockService $unlockService)
+    public function payRental(Request $request, LockerUnlockService $unlockService, KioskEventService $events)
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -77,7 +93,7 @@ class PaymentController extends Controller
             'method' => 'required|in:CASH,ADMIN',
         ]);
 
-        return DB::transaction(function () use ($request, $unlockService) {
+        return DB::transaction(function () use ($request, $unlockService, $events) {
             // Prevent multiple rentals
             $hasRental = Rental::where('student_id', $request->student_id)
                 ->whereIn('status', ['ACTIVE', 'EXPIRED'])
@@ -112,7 +128,7 @@ class PaymentController extends Controller
             ]);
 
             // Create IMMUTABLE payment record
-            Payment::create([
+            $payment = Payment::create([
                 'student_id' => $request->student_id,
                 'rental_id' => $rental->id,
                 'amount' => $request->duration_hours * 5, // fixed pricing
@@ -120,6 +136,20 @@ class PaymentController extends Controller
                 'status' => 'COMPLETED',
                 'paid_at' => now(),
             ]);
+
+            $events->log(
+                'RENTAL_PAID',
+                [
+                    'kiosk_id' => 'KIOSK-1', // hardcoded for now, can be passed in request if needed
+                    'student_id' => $request->student_id,
+                    'rental_id' => $rental->id,
+                    'payment_id' => $payment->id,
+                    'locker_id' => $locker->id,
+                    'amount' => $request->duration_hours * 5,
+                ],
+                'INFO',
+                'Rental successfully paid'
+            );
 
             $unlockService->issue([
                 'locker_id' => $locker->id,

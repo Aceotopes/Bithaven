@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Kiosk;
 
 use App\Http\Controllers\Controller;
+use App\Models\KioskEvent;
 use Illuminate\Http\Request;
 use App\Models\Rental;
 use App\Models\Locker;
@@ -10,6 +11,7 @@ use App\Models\Penalty;
 use Illuminate\Support\Facades\DB;
 use App\Services\LockerUnlockService;
 use App\Services\PenaltyCalculator;
+use App\Services\KioskEventService;
 
 
 class RentalController extends Controller
@@ -90,7 +92,7 @@ class RentalController extends Controller
     // }
 
 
-    public function active(Request $request)
+    public function active(Request $request, KioskEventService $events)
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -108,7 +110,7 @@ class RentalController extends Controller
 
         //Auto-expire if overdue
         if ($rental->status === 'ACTIVE' && $rental->end_time->isPast()) {
-            $this->expireRental($rental);
+            $this->expireRental($rental, $events);
             $rental->refresh();
         }
 
@@ -139,7 +141,7 @@ class RentalController extends Controller
     // }
 
 
-    public function end(Rental $rental, LockerUnlockService $unlockService)
+    public function end(Rental $rental, LockerUnlockService $unlockService, KioskEventService $events)
     {
         if ($rental->status !== 'ACTIVE') {
             return response()->json([
@@ -159,15 +161,26 @@ class RentalController extends Controller
             'rental_id' => $rental->id,
         ]);
 
+        $events->log(
+            'RENTAL_ENDED',
+            [
+                'rental_id' => $rental->id,
+                'locker_id' => $rental->locker_id,
+                'student_id' => $rental->student_id,
+            ],
+            'INFO',
+            'Rental ended by user'
+        );
+
         return response()->json([
             'success' => true,
             'rental_id' => $rental->id,
         ]);
     }
 
-    public function expire(Rental $rental)
+    public function expire(Rental $rental, KioskEventService $events)
     {
-        $this->expireRental($rental);
+        $this->expireRental($rental, $events);
 
         return response()->json([
             'success' => true,
@@ -175,13 +188,13 @@ class RentalController extends Controller
         ]);
     }
 
-    private function expireRental(Rental $rental): void
+    private function expireRental(Rental $rental, KioskEventService $events): void
     {
         if ($rental->status !== 'ACTIVE') {
             return;
         }
 
-        DB::transaction(function () use ($rental) {
+        DB::transaction(function () use ($rental, $events) {
 
             // Mark rental expired
             $rental->update([
@@ -195,6 +208,20 @@ class RentalController extends Controller
                     'started_at' => $rental->end_time,
                     'status' => 'ACTIVE',
                 ]
+            );
+
+            $events->log(
+                'RENTAL_EXPIRED',
+                [
+                    'kiosk_id' => 'KIOSK_01', // hardcoded for now
+                    'student_id' => $rental->student_id,
+                    'rental_id' => $rental->id,
+                    'payment_id' => $rental->payment_id,
+                    'penalty_id' => $rental->penalty ? $rental->penalty->id : null,
+                    'locker_id' => $rental->locker_id,
+                ],
+                'WARNING',
+                'Rental expired automatically'
             );
         });
     }

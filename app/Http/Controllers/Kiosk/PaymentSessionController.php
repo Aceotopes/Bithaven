@@ -9,11 +9,12 @@ use App\Models\Penalty;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Services\PenaltyCalculator;
+use App\Services\KioskEventService;
 
 
 class PaymentSessionController extends Controller
 {
-    public function start(Request $request, PenaltyCalculator $calculator)
+    public function start(Request $request, PenaltyCalculator $calculator, KioskEventService $events)
     {
         $request->validate([
             'kiosk_id' => 'required|string',
@@ -27,7 +28,7 @@ class PaymentSessionController extends Controller
             'penalty_id' => 'required_if:context_type,PENALTY|exists:penalties,id',
         ]);
 
-        return DB::transaction(function () use ($request, $calculator) {
+        return DB::transaction(function () use ($request, $calculator, $events) {
 
             PaymentSession::where('kiosk_id', $request->kiosk_id)
                 ->where('status', 'ACTIVE')
@@ -56,6 +57,20 @@ class PaymentSessionController extends Controller
                     'frozen_exceeded_duration' => $snapshot['exceeded_duration'],
                     'frozen_breakdown' => $snapshot['breakdown'],
                 ]);
+
+                $events->log(
+                    'PENALTY_FROZEN',
+                    [
+                        'kiosk_id' => 'KIOSK_01', //hard coded
+                        'student_id' => $penalty->rental->student_id,
+                        'penalty_id' => $penalty->id,
+                        'rental_id' => $penalty->rental_id,
+                        'locker_id' => $penalty->rental->locker_id,
+                        'amount' => $snapshot['amount'],
+                    ],
+                    'INFO',
+                    'Penalty frozen for payment'
+                );
 
                 $amountDue = $snapshot['amount'];
 

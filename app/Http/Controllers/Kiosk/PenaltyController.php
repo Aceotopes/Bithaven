@@ -8,6 +8,7 @@ use App\Models\Rental;
 use App\Services\PenaltyCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\KioskEventService;
 
 
 class PenaltyController extends Controller
@@ -57,7 +58,7 @@ class PenaltyController extends Controller
     /**
      * Settle penalty (NO recalculation here)
      */
-    public function settle(Penalty $penalty)
+    public function settle(Penalty $penalty, KioskEventService $events)
     {
         if ($penalty->status !== 'ACTIVE') {
             return response()->json([
@@ -65,14 +66,14 @@ class PenaltyController extends Controller
             ], 400);
         }
 
-        // 🧊 SAFETY CHECK — penalty MUST be frozen before settlement
+        // SAFETY CHECK — penalty MUST be frozen before settlement
         if (!$penalty->frozen_at || $penalty->frozen_amount === null) {
             return response()->json([
                 'message' => 'Penalty must be frozen before settlement'
             ], 409);
         }
 
-        DB::transaction(function () use ($penalty) {
+        DB::transaction(function () use ($penalty, $events) {
 
             // Mark penalty as PAID (NO recalculation)
             $penalty->update([
@@ -86,6 +87,16 @@ class PenaltyController extends Controller
                 'ended_at' => now(),
                 'ended_by' => 'USER',
             ]);
+
+            $events->log(
+                'PENALTY_SETTLED',
+                [
+                    'penalty_id' => $penalty->id,
+                    'rental_id' => $penalty->rental_id,
+                ],
+                'INFO',
+                'Penalty marked as paid'
+            );
         });
 
         return response()->json([

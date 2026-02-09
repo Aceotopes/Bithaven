@@ -23,7 +23,6 @@ class KioskEventService
             'payment_id' => $context['payment_id'] ?? null,
             'locker_id' => $context['locker_id'] ?? null,
             'unlock_token_id' => $context['unlock_token_id'] ?? null,
-            'created_at' => now(),
         ]);
     }
 }
