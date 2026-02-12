@@ -20,7 +20,7 @@ class MockCoinReader:
         while self.running:
 
             # random delay between coin insertions
-            time.sleep(random.uniform(2, 6))
+            time.sleep(random.uniform(1, 3))
 
             coin = random.choice([1, 5, 10])
             print(f"[MOCK COIN] inserting ₱{coin}")
