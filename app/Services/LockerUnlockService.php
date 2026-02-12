@@ -33,24 +33,24 @@ class LockerUnlockService
         ]);
     }
 
-    public function unlock(LockerUnlockToken $token): void
-    {
-        DB::transaction(function () use ($token) {
-            if ($token->consumed_at) {
-                abort(409, 'Unlock token already consumed');
-            }
+    // public function unlock(LockerUnlockToken $token): void
+    // {
+    //     DB::transaction(function () use ($token) {
+    //         if ($token->consumed_at) {
+    //             abort(409, 'Unlock token already consumed');
+    //         }
 
-            if ($token->expires_at->isPast()) {
-                abort(409, 'Unlock token expired');
-            }
+    //         if ($token->expires_at->isPast()) {
+    //             abort(409, 'Unlock token expired');
+    //         }
 
-            //hardware unlock first
-            app(LockerHardwareService::class)->unlock($token->locker_id);
+    //         //hardware unlock first
+    //         app(LockerHardwareService::class)->unlock($token->locker_id);
 
-            //then consume token
-            $token->update([
-                'consumed_at' => now(),
-            ]);
-        });
-    }
+    //         //then consume token
+    //         $token->update([
+    //             'consumed_at' => now(),
+    //         ]);
+    //     });
+    // }
 }

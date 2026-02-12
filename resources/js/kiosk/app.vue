@@ -113,30 +113,6 @@ const idle = useIdleTimeout({
     warningMs: 10_000,
 });
 
-const amountPaid = computed(() => {
-    if (paymentContext.value.mode === "RENTAL") {
-        return session.state.locker?.amount_paid ?? 0;
-    }
-
-    if (paymentContext.value.mode === "PENALTY") {
-        return session.state.penalty?.amount_paid ?? 0;
-    }
-
-    return 0;
-});
-
-const paymentStatus = computed(() => {
-    if (paymentContext.value.mode === "RENTAL") {
-        return session.state.locker?.payment_status ?? "UNPAID";
-    }
-
-    if (paymentContext.value.mode === "PENALTY") {
-        return session.state.penalty?.status ?? "ACTIVE";
-    }
-
-    return "UNPAID";
-});
-
 // =========== session start handler  (no Backend)========
 // function handleStartScan() {
 //     session.startSession(mockStudent);
@@ -273,11 +249,11 @@ async function handleLockerSelectConfirm(payload) {
 // }
 
 async function handleSettlePenalty() {
-    const penaltyState = session.state.penalty; // ✅ renamed
+    const penaltyState = session.state.penalty;
     if (!penaltyState) return;
 
     // 🧊 stop live penalty accumulation
-    penalty.stopLivePenalty(); // ✅ composable
+    penalty.stopLivePenalty();
 
     const res = await fetch("/api/kiosk/payment-sessions/start", {
         method: "POST",
@@ -292,7 +268,6 @@ async function handleSettlePenalty() {
     if (!res.ok) {
         console.error("Failed to start penalty payment session");
 
-        // 🔁 rollback safety
         penalty.startLivePenalty();
         return;
     }
@@ -301,7 +276,7 @@ async function handleSettlePenalty() {
 
     paymentSession.value = data.session;
 
-    // 🔒 backend-frozen snapshot
+    // backend-frozen snapshot
     penaltySnapshot.value = {
         amount: Number(data.penalty_snapshot.amount),
         breakdown: data.penalty_snapshot.breakdown ?? [],
@@ -326,7 +301,7 @@ function handlEndSession() {
 
 function handleRentLocker() {
     if (session.state.penalty?.status === "ACTIVE") {
-        return; // 🔒 Block navigation
+        return;
     }
 
     fetchLockerStatuses();
@@ -418,7 +393,7 @@ async function handlePaymentComplete() {
             await unlockLocker(paymentContext.value.locker);
 
             // update frontend rental state from backend response
-            await hydrateGlobalState(); // 🔑 authoritative refresh
+            await hydrateGlobalState();
             await fetchLockerStatuses();
         } catch (err) {
             console.error("Network error:", err);
@@ -531,7 +506,7 @@ async function recoverActivePenalty() {
     const { penalty } = await res.json();
 
     if (!penalty) {
-        // 🔥 CLEAR frontend penalty state
+        // CLEAR frontend penalty state
         session.state.penalty = null;
 
         // If rental was expired, fully reset it
@@ -743,8 +718,14 @@ watch(
             :duration="paymentContext.duration"
             :mode="paymentContext.mode"
             :amount="paymentContext.amount"
-            :amountPaid="Number(paymentSession?.amount_paid ?? 0)"
-            :paymentStatus="paymentSession?.status ?? 'ACTIVE'"
+            :amountPaid="
+                paymentSession.value
+                    ? Number(paymentSession.value.amount_paid)
+                    : 0
+            "
+            :paymentStatus="
+                paymentSession.value ? paymentSession.value.status : 'ACTIVE'
+            "
             :penalty="paymentContext.penalty"
             :lockerEndTime="session.state.locker?.endTime"
             :canEndSession="actions.canEndSession.value"
@@ -752,7 +733,16 @@ watch(
             @end-session="handlEndSession"
             @cancel="handlePaymentCancel"
             @complete="handlePaymentComplete"
-            @session-updated="paymentSession = $event"
+            @session-updated="
+                (s) => {
+                    console.log('🟢 App received session:', s);
+                    paymentSession.value = s;
+                    console.log(
+                        '🟢 paymentSession ref is now:',
+                        paymentSession.value
+                    );
+                }
+            "
         />
     </transition>
     <IdleWarningModal

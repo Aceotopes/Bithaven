@@ -24,7 +24,7 @@ const props = defineProps({
     },
     amount: {
         type: Number,
-        required: false, // ❗ NOT always required anymore
+        required: false,
     },
     penalty: {
         type: Object,

@@ -44,13 +44,28 @@ class LockerController extends Controller
     ) {
         return DB::transaction(function () use ($locker, $unlockService, $hardware, $events) {
 
-            // 🔒 Lock row to prevent double unlock
+            // Lock row to prevent double unlock
             $token = LockerUnlockToken::where('locker_id', $locker->id)
                 ->whereNull('consumed_at')
                 ->where('expires_at', '>', now())
                 ->orderBy('issued_at')
                 ->lockForUpdate()
                 ->first();
+
+            if (!$token) {
+                $events->log(
+                    'LOCKER_UNLOCK_FAILED',
+                    [
+                        'locker_id' => $locker->id,
+                    ],
+                    'WARNING',
+                    'No valid unlock token found'
+                );
+
+                return response()->json([
+                    'message' => 'No valid unlock token'
+                ], 409);
+            }
 
             try {
                 $hardware->unlock($locker->id);
@@ -68,20 +83,6 @@ class LockerController extends Controller
                 throw $e;
             }
 
-            if (!$token) {
-                $events->log(
-                    'LOCKER_UNLOCK_FAILED',
-                    [
-                        'locker_id' => $locker->id,
-                    ],
-                    'WARNING',
-                    'No valid unlock token found'
-                );
-
-                return response()->json([
-                    'message' => 'No valid unlock token'
-                ], 409);
-            }
 
             // Physical unlock (can throw later if hardware fails)
             $hardware->unlock($locker->id);

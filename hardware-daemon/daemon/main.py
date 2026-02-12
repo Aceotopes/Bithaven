@@ -5,9 +5,13 @@ from adapters.hardware import get_coin_reader, get_relay_controller
 
 REQUIRED_AMOUNT = 30
 LOCKER_ID = 1
+UNLOCK_RETRIES = 2
+UNLOCK_TIMEOUT = 3
+AUTO_LOCK_DELAY = 2  # seconds before re-lock (optional)
 
 current_amount = 0
-transaction_active = True 
+transaction_active = True
+unlock_in_progress = False
 
 
 def on_coin_inserted(amount):
@@ -29,26 +33,51 @@ def on_coin_inserted(amount):
 
 
 def process_unlock():
-    global current_amount, transaction_active, coin_reader
+    global transaction_active, unlock_in_progress
+
+    if unlock_in_progress:
+        print("[DAEMON] Unlock already in progress. Ignoring duplicate trigger.")
+        return
+
+    unlock_in_progress = True
 
     print("\n[DAEMON] Required amount reached.")
-    print("[DAEMON] Unlocking locker...")
+    print("[DAEMON] Attempting unlock...")
 
-    success = safe_unlock(LOCKER_ID)
+    success = attempt_unlock()
 
     if success:
         print("[DAEMON] Unlock successful.")
         print("[DAEMON] Payment finalized.\n")
 
-        transaction_active = False  # stop transaction
-        coin_reader.stop()          # stop accepting coins
+        transaction_active = False
+        coin_reader.stop()
+
+        # Auto lock after delay
+        threading.Thread(target=auto_lock_after_delay, daemon=True).start()
 
     else:
-        print("[DAEMON] Unlock failed.")
-        print("[DAEMON] Payment not finalized.")
+        print("[DAEMON] Unlock failed after retries.")
+        print("[DAEMON] Payment not finalized.\n")
+
+        unlock_in_progress = False  # allow retry
 
 
-def safe_unlock(locker_id, timeout=3):
+def attempt_unlock():
+    for attempt in range(UNLOCK_RETRIES + 1):
+        print(f"[DAEMON] Unlock attempt {attempt + 1}")
+
+        success = safe_unlock(LOCKER_ID, timeout=UNLOCK_TIMEOUT)
+
+        if success:
+            return True
+
+        print("[DAEMON] Unlock attempt failed")
+
+    return False
+
+
+def safe_unlock(locker_id, timeout):
     result = [False]
 
     def target():
@@ -65,6 +94,13 @@ def safe_unlock(locker_id, timeout=3):
     return result[0]
 
 
+def auto_lock_after_delay():
+    print(f"[DAEMON] Auto-locking in {AUTO_LOCK_DELAY} seconds...")
+    time.sleep(AUTO_LOCK_DELAY)
+    relay.lock(LOCKER_ID)
+    print("[DAEMON] Locker re-locked.")
+
+
 def main():
     global relay, coin_reader
 
@@ -74,7 +110,7 @@ def main():
 
     coin_reader.start()
 
-    print("[DAEMON] Running (mock + hardened coins + guaranteed unlock)\n")
+    print("[DAEMON] Running (coins hardened + unlock hardened)\n")
 
     try:
         while True:

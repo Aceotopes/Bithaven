@@ -66,6 +66,7 @@ async function insertCoinUI(value) {
 
         // 🔑 Update session via parent (temporary local emit)
         emit("session-updated", res.session);
+        console.log("COIN RESPONSE:", res);
     } catch (err) {
         console.error(err);
     }
