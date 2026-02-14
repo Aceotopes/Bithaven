@@ -127,7 +127,7 @@ class CoinController extends Controller
                         'rental_id' => $session->rental_id,
                         'penalty_id' => $session->penalty_id,
                         'payment_id' => $session->id,
-                        'locker_id' => $lockerId,
+                        'locker_id' => $session->locker_id,
                     ],
                     'INFO',
                     'Payment session completed via coins'

@@ -179,9 +179,9 @@ function handleLockerSelectBack() {
 async function unlockLocker(lockerNumber) {
     if (!lockerNumber) return;
 
-    console.log("Unlocking locker:", lockerNumber);
+    console.log("Authorizing locker:", lockerNumber);
 
-    const res = await fetch(`/api/kiosk/lockers/${lockerNumber}/unlock`, {
+    const res = await fetch(`/api/kiosk/lockers/${lockerNumber}/authorize`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -190,11 +190,12 @@ async function unlockLocker(lockerNumber) {
 
     if (!res.ok) {
         const err = await res.json();
-        console.error("Failed to unlock locker:", err);
-        return;
+        console.error("Authorization failed:", err);
+        return false;
     }
 
-    console.log("Locker unlocked successfully");
+    console.log("Unlock Authorized. Waiting for daemon confirmation...");
+    return true;
 }
 
 async function handleLockerSelectConfirm(payload) {
@@ -367,6 +368,7 @@ function handlePaymentCancel() {
 async function handlePaymentComplete() {
     // ===================== RENTAL PAYMENT =====================
     console.log("PAYMENT START");
+    console.log("PAYMENT COMPLETE → Authorizing unlock");
     console.log("locker:", session.state.locker);
     console.log("rentalState:", session.state.rentalState);
     console.log("paymentContext:", paymentContext.value);
