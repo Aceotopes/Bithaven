@@ -209,6 +209,7 @@ async function handleLockerSelectConfirm(payload) {
         },
         body: JSON.stringify({
             kiosk_id: "KIOSK-01",
+            student_id: session.state.student.id,
             context_type: "RENTAL",
             locker_id: locker,
             duration_hours: duration,
@@ -259,6 +260,7 @@ async function handleSettlePenalty() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+            student_id: session.state.student.id,
             kiosk_id: "KIOSK-01",
             context_type: "PENALTY",
             penalty_id: penaltyState.id,
@@ -368,70 +370,17 @@ async function handlePaymentComplete() {
     console.log("locker:", session.state.locker);
     console.log("rentalState:", session.state.rentalState);
     console.log("paymentContext:", paymentContext.value);
+
     if (paymentContext.value.mode === "RENTAL") {
-        try {
-            const response = await fetch("/api/kiosk/payments/rental", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    student_id: session.state.student.id,
-                    locker_number: paymentContext.value.locker,
-                    duration_hours: paymentContext.value.duration,
-                    method: "CASH",
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                console.error("Rental creation failed:", error);
-                // TODO: show error UI later
-                return;
-            }
-
-            await unlockLocker(paymentContext.value.locker);
-
-            // update frontend rental state from backend response
-            await hydrateGlobalState();
-            await fetchLockerStatuses();
-        } catch (err) {
-            console.error("Network error:", err);
-            return;
-        }
+        await unlockLocker(paymentContext.value.locker);
+        await hydrateGlobalState();
+        await fetchLockerStatuses();
     }
 
     // ===================== PENALTY PAYMENT =====================
     if (paymentContext.value.mode === "PENALTY") {
-        try {
-            const res = await fetch("/api/kiosk/payments/penalty", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    penalty_id: paymentContext.value.penaltyId,
-                    method: "CASH",
-                }),
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                console.error("Penalty payment failed:", err);
-                return;
-            }
-            console.log(
-                "🧾 SETTLING PENALTY ID:",
-                paymentContext.value.penaltyId
-            );
-
-            await unlockLocker(session.state.locker?.number);
-
-            await hydrateGlobalState(); // authoritative refresh
-        } catch (err) {
-            console.error("Network error", err);
-            return;
-        }
+        await unlockLocker(session.state.locker?.number);
+        await hydrateGlobalState();
     }
 
     // CLEANUP

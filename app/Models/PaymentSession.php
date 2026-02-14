@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentSession extends Model
 {
     protected $fillable = [
+        'student_id',
         'kiosk_id',
         'context_type',
         'locker_id',

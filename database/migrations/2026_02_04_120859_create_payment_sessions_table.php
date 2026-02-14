@@ -13,6 +13,10 @@ return new class extends Migration {
         Schema::create('payment_sessions', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('student_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
             // Which kiosk owns this session (future-proofing)
             $table->string('kiosk_id');
 

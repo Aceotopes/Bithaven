@@ -17,6 +17,8 @@ class PaymentSessionController extends Controller
     public function start(Request $request, PenaltyCalculator $calculator, KioskEventService $events)
     {
         $request->validate([
+            'student_id' => 'required|exists:students,id',
+
             'kiosk_id' => 'required|string',
             'context_type' => 'required|in:RENTAL,PENALTY',
 
@@ -82,6 +84,7 @@ class PaymentSessionController extends Controller
             }
 
             $session = PaymentSession::create([
+                'student_id' => $request->student_id,
                 'kiosk_id' => $request->kiosk_id,
                 'context_type' => $request->context_type,
 

@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Kiosk;
 
 use App\Http\Controllers\Controller;
-use App\Models\KioskEvent;
-use App\Models\Payment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Penalty;
 use App\Models\Rental;
-use App\Models\Locker;
-use Illuminate\Support\Facades\DB;
+use App\Services\PaymentService;
 use App\Services\LockerUnlockService;
 use App\Services\KioskEventService;
-use App\Services\PenaltyCalculator;
-use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function payPenalty(Request $request, LockerUnlockService $unlockService, KioskEventService $events)
+    /**
+     * Manual penalty payment (ADMIN or fallback)
+     */
+    public function payPenalty(Request $request, PaymentService $paymentService, LockerUnlockService $unlockService, KioskEventService $events)
     {
         $request->validate([
             'penalty_id' => 'required|exists:penalties,id',
@@ -31,60 +31,28 @@ class PaymentController extends Controller
             ], 422);
         }
 
-        if ($penalty->frozen_at === null || $penalty->frozen_amount === null) {
+        if (!$penalty->frozen_at || $penalty->frozen_amount === null) {
             return response()->json([
                 'message' => 'Penalty must be frozen before payment'
             ], 409);
         }
 
-        DB::transaction(function () use ($penalty, $request, $unlockService, $events) {
-
-            //Create IMMUTABLE payment record
-            $payment = Payment::create([
-                'student_id' => $penalty->rental->student_id,
-                'penalty_id' => $penalty->id,
-                'amount' => $penalty->frozen_amount, // frozen, never recalculated
-                'method' => $request->input('method'),
-                'status' => 'COMPLETED',
-                'paid_at' => now(),
-            ]);
-
-            $events->log(
-                'PENALTY_PAID',
-                [
-                    'kiosk_id' => 'KIOSK-1', // hardcoded for now, can be passed in request if needed
-                    'rental_id' => $penalty->rental_id,
-                    'penalty_id' => $penalty->id,
-                    'payment_id' => $payment->id,
-                    'student_id' => $penalty->rental->student_id,
-                    'locker_id' => $penalty->rental->locker_id,
-                ],
-                'INFO',
-                'Penalty successfully paid'
+        DB::transaction(function () use ($penalty, $request, $paymentService, $unlockService, $events) {
+            $paymentService->finalizePenaltyDirect(
+                $request->penalty_id,
+                $request->input('method'),
+                $unlockService,
+                $events
             );
-
-            $unlockService->issue([
-                'locker_id' => $penalty->rental->locker_id,
-                'reason' => 'PENALTY_SETTLED',
-                'penalty_id' => $penalty->id,
-            ]);
-
-            $penalty->update([
-                'status' => 'PAID',
-                'settled_at' => now(),
-            ]);
-
-            $penalty->rental->update([
-                'status' => 'ENDED',
-                'ended_at' => now(),
-                'ended_by' => 'USER',
-            ]);
         });
 
         return response()->json(['success' => true]);
     }
 
-    public function payRental(Request $request, LockerUnlockService $unlockService, KioskEventService $events)
+    /**
+     * Manual rental payment (ADMIN fallback)
+     */
+    public function payRental(Request $request, PaymentService $paymentService, LockerUnlockService $unlockService, KioskEventService $events)
     {
         $request->validate([
             'student_id' => 'required|exists:students,id',
@@ -93,79 +61,17 @@ class PaymentController extends Controller
             'method' => 'required|in:CASH,ADMIN',
         ]);
 
-        return DB::transaction(function () use ($request, $unlockService, $events) {
-            // Prevent multiple rentals
-            $hasRental = Rental::where('student_id', $request->student_id)
-                ->whereIn('status', ['ACTIVE', 'EXPIRED'])
-                ->exists();
-
-            if ($hasRental) {
-                abort(409, 'STUDENT_ALREADY_HAS_RENTAL');
-            }
-
-            // Lock locker
-            $locker = Locker::where('locker_number', $request->locker_number)->firstOrFail();
-
-            $lockerInUse = Rental::where('locker_id', $locker->id)
-                ->whereIn('status', ['ACTIVE', 'EXPIRED'])
-                ->exists();
-
-            if ($lockerInUse) {
-                abort(409, 'LOCKER_UNAVAILABLE');
-            }
-
-            // Create rental
-            $start = now();
-            // $end = $start->copy()->addHours($request->duration_hours);
-            $end = $start->copy()->addSeconds(50); // testing only
-
-            $rental = Rental::create([
-                'student_id' => $request->student_id,
-                'locker_id' => $locker->id,
-                'start_time' => $start,
-                'end_time' => $end,
-                'status' => 'ACTIVE',
-            ]);
-
-            // Create IMMUTABLE payment record
-            $payment = Payment::create([
-                'student_id' => $request->student_id,
-                'rental_id' => $rental->id,
-                'amount' => $request->duration_hours * 5, // fixed pricing
-                'method' => $request->input('method'),
-                'status' => 'COMPLETED',
-                'paid_at' => now(),
-            ]);
-
-            $events->log(
-                'RENTAL_PAID',
-                [
-                    'kiosk_id' => 'KIOSK-1', // hardcoded for now, can be passed in request if needed
-                    'student_id' => $request->student_id,
-                    'rental_id' => $rental->id,
-                    'payment_id' => $payment->id,
-                    'locker_id' => $locker->id,
-                    'amount' => $request->duration_hours * 5,
-                ],
-                'INFO',
-                'Rental successfully paid'
+        DB::transaction(function () use ($request, $paymentService, $unlockService, $events) {
+            $paymentService->finalizeRentalDirect(
+                $request->student_id,
+                $request->locker_number,
+                $request->duration_hours,
+                $request->input('method'),
+                $unlockService,
+                $events
             );
-
-            $unlockService->issue([
-                'locker_id' => $locker->id,
-                'reason' => 'RENTAL_START',
-                'rental_id' => $rental->id,
-            ]);
-
-            return response()->json([
-                'rental' => [
-                    'id' => $rental->id,
-                    'locker_number' => $locker->locker_number,
-                    'start_time' => $start->toIso8601String(),
-                    'end_time' => $end->toIso8601String(),
-                    'status' => $rental->status,
-                ],
-            ]);
         });
+
+        return response()->json(['success' => true]);
     }
 }

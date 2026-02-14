@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Kiosk;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use App\Models\PaymentSession;
 use Illuminate\Support\Facades\DB;
 use App\Services\KioskEventService;
 use App\Services\LockerUnlockService;
+use App\Services\PaymentService;
 
 class CoinController extends Controller
 {
@@ -48,14 +50,15 @@ class CoinController extends Controller
     public function insert(
         Request $request,
         LockerUnlockService $unlockService,
-        KioskEventService $events
+        KioskEventService $events,
+        PaymentService $paymentService
     ) {
         $request->validate([
             'kiosk_id' => 'required|string',
             'value' => 'required|integer|in:1,5,10',
         ]);
 
-        return DB::transaction(function () use ($request, $unlockService, $events) {
+        return DB::transaction(function () use ($request, $unlockService, $events, $paymentService) {
 
             $session = PaymentSession::where('kiosk_id', $request->kiosk_id)
                 ->where('status', 'ACTIVE')
@@ -77,46 +80,63 @@ class CoinController extends Controller
 
             $session->amount_paid += $request->value;
 
-            $events->log(
-                'COIN_INSERTED',
-                [
-                    'kiosk_id' => $request->kiosk_id,
-                    'payment_session_id' => $session->id,
-                    'amount' => $request->value,
-                    'locker_id' => $session->locker_id,
-                ],
-                'INFO',
-                'Coin inserted'
-            );
+            // $events->log(
+            //     'COIN_INSERTED',
+            //     [
+            //         'student_id' => $session->student_id,
+            //         'kiosk_id' => $request->kiosk_id,
+            //         'payment_session_id' => $session->id,
+            //         'amount' => $request->value,
+            //         'locker_id' => $session->locker_id,
+            //     ],
+            //     'INFO',
+            //     'Coin inserted'
+            // );
 
             $paymentComplete = false;
-            $lockerId = null;
+            $lockerId = $session->locker_id;
 
             if ($session->amount_paid >= $session->amount_due) {
 
                 $session->status = 'COMPLETED';
-                $paymentComplete = true;
-                $lockerId = $session->locker_id;
+                $session->save();
+                // $paymentComplete = true;
+                // $lockerId = $session->locker_id;
 
-                if ($lockerId) {
-                    $unlockService->issue([
-                        'locker_id' => $lockerId,
-                        'reason' => 'RENTAL_START',
-                    ]);
-                }
+                $paymentService->finalizeFromSession(
+                    $session,
+                    'CASH',
+                    $unlockService,
+                    $events
+                );
+
+                $paymentComplete = true;
+
+                // if ($lockerId) {
+                //     $unlockService->issue([
+                //         'locker_id' => $lockerId,
+                //         'reason' => 'RENTAL_START',
+                //     ]);
+                // }
 
                 $events->log(
                     'PAYMENT_SESSION_COMPLETED',
                     [
-                        'payment_session_id' => $session->id,
+                        'kiosk_id' => $request->kiosk_id,
+                        'student_id' => $session->student_id,
+                        'rental_id' => $session->rental_id,
+                        'penalty_id' => $session->penalty_id,
+                        'payment_id' => $session->id,
                         'locker_id' => $lockerId,
                     ],
                     'INFO',
                     'Payment session completed via coins'
                 );
+            } else {
+                $session->save();
             }
 
-            $session->save();
+
 
             return response()->json([
                 'success' => true,
