@@ -4,22 +4,37 @@ namespace App\Services;
 
 use App\Models\LockerUnlockToken;
 use Illuminate\Support\Facades\DB;
+use App\Models\LockerUnlockJob;
 
 class LockerUnlockService
 {
     public function issue(array $data): LockerUnlockToken
     {
-        return LockerUnlockToken::create([
-            'locker_id' => $data['locker_id'],
-            'reason' => $data['reason'],
-            'authorized_by' => $data['authorized_by'] ?? 'SYSTEM',
-            'issued_at' => now(),
-            'expires_at' => now()->addSeconds(30),
+        return DB::transaction(function () use ($data) {
 
-            'rental_id' => $data['rental_id'] ?? null,
-            'penalty_id' => $data['penalty_id'] ?? null,
-            'admin_id' => $data['admin_id'] ?? null,
-        ]);
+            // 1️⃣ Create token
+            $token = LockerUnlockToken::create([
+                'locker_id' => $data['locker_id'],
+                'reason' => $data['reason'],
+                'authorized_by' => $data['authorized_by'] ?? 'SYSTEM',
+                'issued_at' => now(),
+                'expires_at' => now()->addSeconds(30),
+                'rental_id' => $data['rental_id'] ?? null,
+                'penalty_id' => $data['penalty_id'] ?? null,
+                'admin_id' => $data['admin_id'] ?? null,
+            ]);
+
+            // 2️⃣ Immediately create execution job
+            LockerUnlockJob::create([
+                'unlock_token_id' => $token->id,
+                'locker_id' => $token->locker_id,
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'max_attempts' => 3,
+            ]);
+
+            return $token;
+        });
     }
 
     public function consume(LockerUnlockToken $token): void

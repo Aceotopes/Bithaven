@@ -10,6 +10,7 @@ use App\Http\Controllers\Kiosk\PenaltyController;
 use App\Http\Controllers\Kiosk\PaymentController;
 use App\Http\Controllers\Kiosk\UnlockTokenController;
 use App\Http\Controllers\Kiosk\PaymentSessionController;
+use App\Http\Controllers\Kiosk\UnlockJobController;
 use App\Http\Controllers\kiosk\DaemonController;
 
 Route::get('/user', function (Request $request) {
@@ -41,6 +42,9 @@ Route::post('/kiosk/coins/insert', [CoinController::class, 'insert']);
 Route::post('/kiosk/payments/penalty', [PaymentController::class, 'payPenalty']);
 Route::post('/kiosk/payments/rental', [PaymentController::class, 'payRental']);
 
+Route::get('/kiosk/unlock-jobs/pending', [UnlockJobController::class, 'pending']);
+Route::post('/kiosk/unlock-jobs/{job}/status', [UnlockJobController::class, 'updateStatus']);
+Route::post('/kiosk/unlock-jobs/{job}/processing', [UnlockJobController::class, 'processing']);
 
 // DAEMON ROUTES
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);

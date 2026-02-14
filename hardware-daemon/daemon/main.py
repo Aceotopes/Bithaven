@@ -7,48 +7,116 @@ POLL_INTERVAL = 1
 
 relay = get_relay_controller()
 
+KIOSK_ID = "KIOSK-01"
+HEARTBEAT_INTERVAL = 10
+last_heartbeat = 0
 
-def fetch_pending_tokens():
+# -------------------------------
+# JOB FETCHING
+# -------------------------------
+def fetch_pending_jobs():
     try:
-        r = requests.get(f"{API_BASE}/unlock-tokens/pending")
-        print(f"[DAEMON] Fetching: {API_BASE}/unlock-tokens/pending")
+        r = requests.get(
+            f"{API_BASE}/unlock-jobs/pending",
+            timeout=3
+        )
         r.raise_for_status()
-        return r.json().get("tokens", [])
+        return r.json().get("jobs", [])
     except Exception as e:
-        print("[DAEMON] Failed to fetch tokens:", e)
+        print("[DAEMON] Failed to fetch jobs:", e)
         return []
 
 
-def confirm_token(token_id):
+def mark_job_processing(job_id):
     try:
-        requests.post(f"{API_BASE}/unlock-tokens/{token_id}/confirm")
+        requests.post(f"{API_BASE}/unlock-jobs/{job_id}/processing")
     except Exception as e:
-        print("[DAEMON] Failed to confirm token:", e)
+        print("[DAEMON] Failed to mark processing:", e)
 
 
-def process_token(token):
-    locker_id = token["locker_id"]
-    token_id = token["id"]
+def mark_job_succeeded(job_id):
+    try:
+        r = requests.post(
+            f"{API_BASE}/unlock-jobs/{job_id}/status",
+            json={"status": "SUCCEEDED"},
+            timeout=3
+        )
+        r.raise_for_status()
+        print(r.status_code, r.text)
+    except Exception as e:
+        print("[DAEMON] Failed to mark succeeded:", e)
 
-    print(f"[DAEMON] Unlocking locker {locker_id}")
+
+def mark_job_failed(job_id):
+    try:
+        r = requests.post(
+            f"{API_BASE}/unlock-jobs/{job_id}/status",
+            json={"status": "FAILED"},
+            timeout=3
+        )
+        r.raise_for_status()
+    except Exception as e:
+        print("[DAEMON] Failed to mark failed:", e)
+
+
+# -------------------------------
+# PROCESS JOB
+# -------------------------------
+def process_job(job):
+    job_id = job["id"]
+    locker_id = job["locker_id"]
+
+    print(f"[DAEMON] Processing job {job_id} for locker {locker_id}")
+
+    mark_job_processing(job_id)
 
     success = relay.unlock(locker_id)
+    print(f"[DAEMON] unlock() returned: {success}")
 
     if success:
-        print("[DAEMON] Unlock success")
-        confirm_token(token_id)
+        print("[DAEMON] Unlock success - marking succeeded")
+        mark_job_succeeded(job_id)
     else:
-        print("[DAEMON] Unlock failed")
+        print("[DAEMON] Unlock failed - marking failed")
+        mark_job_failed(job_id)
 
 
+# -------------------------------
+# HEARTBEAT
+# -------------------------------
+def send_heartbeat():
+    try:
+        requests.post(
+            f"{API_BASE}/daemon/heartbeat",
+            json={"kiosk_id": KIOSK_ID},
+            timeout=2
+        )
+        print("[DAEMON] Heartbeat sent")
+    except Exception as e:
+        print("[DAEMON] Heartbeat failed:", e)
+
+
+# -------------------------------
+# MAIN LOOP
+# -------------------------------
 def main():
-    print("[DAEMON] Running — backend-authoritative mode")
+    global last_heartbeat
+
+    print("[DAEMON] Running — retry queue mode")
 
     while True:
-        tokens = fetch_pending_tokens()
+        now = time.time()
 
-        for token in tokens:
-            process_token(token)
+        # Heartbeat
+        if now - last_heartbeat > HEARTBEAT_INTERVAL:
+            send_heartbeat()
+            last_heartbeat = now
+
+        # Fetch unlock jobs
+        jobs = fetch_pending_jobs()
+
+        for job in jobs:
+            process_job(job)
 
         time.sleep(POLL_INTERVAL)
 
