@@ -36,7 +36,8 @@ return new class extends Migration {
 
             $table->foreignId('rental_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('penalty_id')->nullable()->constrained()->nullOnDelete();
-            $table->unsignedBigInteger('admin_id')->nullable();
+            $table->foreignId('admin_id')->nullable()->constrained('admins')->nullOnDelete();
+            $table->foreignId('admin_card_id')->nullable()->constrained('admin_cards')->nullOnDelete();
 
             $table->timestamps();
 
