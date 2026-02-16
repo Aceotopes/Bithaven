@@ -12,6 +12,7 @@ use App\Http\Controllers\Kiosk\UnlockTokenController;
 use App\Http\Controllers\Kiosk\PaymentSessionController;
 use App\Http\Controllers\Kiosk\UnlockJobController;
 use App\Http\Controllers\kiosk\DaemonController;
+use App\http\Controllers\Admin\AdminAuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -50,3 +51,15 @@ Route::post('/kiosk/unlock-jobs/{job}/processing', [UnlockJobController::class, 
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);
 Route::post('/kiosk/unlock-tokens/{token}/confirm', [UnlockTokenController::class, 'confirm']);
 Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
+
+// ADMIN ROUTES
+Route::post('/admin/login', [AdminAuthController::class, 'login']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+    Route::get('/admin/me', function (Request $request) {
+        return response()->json([
+            'admin' => $request->user()
+        ]);
+    });
+
+});
