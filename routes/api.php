@@ -13,6 +13,7 @@ use App\Http\Controllers\Kiosk\PaymentSessionController;
 use App\Http\Controllers\Kiosk\UnlockJobController;
 use App\Http\Controllers\kiosk\DaemonController;
 use App\http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminManagementController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -68,5 +69,13 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::get('/admin/manage', function () {
         return response()->json(['message' => 'Super admin area']);
     });
+
+});
+Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
+
+    Route::get('/admin/admins', [AdminManagementController::class, 'index']);
+    Route::post('/admin/admins', [AdminManagementController::class, 'store']);
+    Route::put('/admin/admins/{admin}', [AdminManagementController::class, 'update']);
+    Route::delete('/admin/admins/{admin}', [AdminManagementController::class, 'destroy']);
 
 });
