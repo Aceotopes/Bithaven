@@ -46,4 +46,13 @@ class LockerUnlockToken extends Model
     {
         return $this->consumed_at !== null;
     }
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class);
+    }
+
+    public function adminCard()
+    {
+        return $this->belongsTo(AdminCard::class);
+    }
 }

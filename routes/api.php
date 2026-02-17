@@ -63,3 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
+Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
+
+    Route::get('/admin/manage', function () {
+        return response()->json(['message' => 'Super admin area']);
+    });
+
+});
