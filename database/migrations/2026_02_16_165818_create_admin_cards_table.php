@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('card_label'); // Admin Card 01
             $table->string('rfid_uid', 50)->unique();
 
-            $table->enum('status', ['ACTIVE', 'INACTIVE'])
+            $table->enum('status', ['ACTIVE', 'DISABLED'])
                 ->default('ACTIVE');
 
             // TRACKING

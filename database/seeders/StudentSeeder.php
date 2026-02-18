@@ -17,7 +17,7 @@ class StudentSeeder extends Seeder
                 'last_name' => 'Vizcarra',
                 'year_level' => 'IV',
                 'department' => 'Computer Engineering',
-                'rfid_uid' => '0851967331',
+                'rfid_uid' => '3013818665',
                 'status' => 'ACTIVE',
                 'created_at' => now(),
                 'updated_at' => now(),

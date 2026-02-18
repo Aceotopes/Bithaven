@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AdminCard extends Model
 {
-    protected $filable = [
+    protected $fillable = [
         'card_label',
         'rfid_uid',
         'status',

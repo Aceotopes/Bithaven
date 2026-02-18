@@ -23,7 +23,6 @@ class AdminCardSeeder extends Seeder
             ['label' => 'Admin Card 07', 'rfid_uid' => '2821509430'],
             ['label' => 'Admin Card 08', 'rfid_uid' => '2989355513'],
             ['label' => 'Admin Card 09', 'rfid_uid' => '2999516633'],
-            ['label' => 'Admin Card 10', 'rfid_uid' => '3013818665'],
         ];
 
         foreach ($cards as $card) {

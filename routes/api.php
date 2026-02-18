@@ -14,6 +14,7 @@ use App\Http\Controllers\Kiosk\UnlockJobController;
 use App\Http\Controllers\kiosk\DaemonController;
 use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
+use App\Http\Controllers\Admin\AdminCardController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -78,4 +79,8 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
     Route::put('/admin/admins/{admin}', [AdminManagementController::class, 'update']);
     Route::delete('/admin/admins/{admin}', [AdminManagementController::class, 'destroy']);
 
+    Route::get('/admin/cards', [AdminCardController::class, 'index']);
+    Route::post('/admin/cards', [AdminCardController::class, 'store']);
+    Route::put('/admin/cards/{card}', [AdminCardController::class, 'update']);
+    Route::delete('/admin/cards/{card}', [AdminCardController::class, 'destroy']);
 });
