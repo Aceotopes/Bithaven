@@ -62,6 +62,8 @@ class AdminCardController extends Controller
         return response()->json($card);
     }
 
+
+    // delete card
     public function destroy(AdminCard $card)
     {
         $card->delete();

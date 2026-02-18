@@ -19,6 +19,7 @@ class LockerUnlockToken extends Model
         'rental_id',
         'penalty_id',
         'admin_id',
+        'admin_card_id',
     ];
 
     protected $casts = [
