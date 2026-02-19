@@ -46,6 +46,7 @@ export function useLockerRental(state, { onExpire }) {
         start(
             endTime,
             (remaining) => {
+                if (!state.locker) return;
                 state.locker.timeRemaining = formatDuration(remaining);
             },
             expireRental
@@ -86,6 +87,7 @@ export function useLockerRental(state, { onExpire }) {
             start(
                 rental.endTime,
                 (remaining) => {
+                    if (!state.locker) return;
                     state.locker.timeRemaining = formatDuration(remaining);
                 },
                 expireRental
@@ -106,7 +108,7 @@ export function useLockerRental(state, { onExpire }) {
      * Legal only when rental is ACTIVE.
      */
     function endRental() {
-        if (state.rentalState !== "ACTIVE_RENTAL") return;
+        // if (state.rentalState !== "ACTIVE_RENTAL") return;
 
         stop();
         state.locker = null;

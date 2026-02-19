@@ -103,7 +103,7 @@ class CoinController extends Controller
                 // $paymentComplete = true;
                 // $lockerId = $session->locker_id;
 
-                $paymentService->finalizeFromSession(
+                $payment = $paymentService->finalizeFromSession(
                     $session,
                     'CASH',
                     $unlockService,
@@ -126,7 +126,7 @@ class CoinController extends Controller
                         'student_id' => $session->student_id,
                         'rental_id' => $session->rental_id,
                         'penalty_id' => $session->penalty_id,
-                        'payment_id' => $session->id,
+                        'payment_id' => $payment->id,
                         'locker_id' => $session->locker_id,
                     ],
                     'INFO',

@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'superadmin' => App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
+
+        $middleware->alias([
+            'kiosk.admin' => \App\Http\Middleware\KioskAdminMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {

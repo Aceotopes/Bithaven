@@ -9,6 +9,14 @@ export async function insertCoin(kioskId, value) {
     });
 
     if (!res.ok) {
+        const err = await res.json();
+
+        if (err.error === "LOCKER_OUT_OF_SERVICE") {
+            console.warn(`🚫 Locker ${err.locker_id} is out of service.`);
+            return;
+        }
+
+        console.error("Unexpected error:", err);
         throw new Error("Coin insert failed");
     }
 

@@ -17,6 +17,8 @@ use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Kiosk\AdminUnlockController;
+use App\Http\Controllers\Kiosk\AdminPenaltyController;
+use App\Http\Controllers\Kiosk\AdminLockerController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -51,9 +53,18 @@ Route::get('/kiosk/unlock-jobs/pending', [UnlockJobController::class, 'pending']
 Route::post('/kiosk/unlock-jobs/{job}/status', [UnlockJobController::class, 'updateStatus']);
 Route::post('/kiosk/unlock-jobs/{job}/processing', [UnlockJobController::class, 'processing']);
 
+// ADMIN KIOSK ROUTES
 Route::post('/kiosk/admin/scan', [AdminScanController::class, 'scan']);
 Route::post('/kiosk/admin/force-unlock', [AdminUnlockController::class, 'forceUnlock']);
+Route::post('/kiosk/admin/clear-penalty', [AdminPenaltyController::class, 'clear']);
+Route::post('/kiosk/admin/end-rental', [AdminScanController::class, 'endRentalEarly']);
+Route::post('/kiosk/admin/lockers/disable', [AdminLockerController::class, 'disable']);
+Route::post('/kiosk/admin/lockers/enable', [AdminLockerController::class, 'enable']);
+Route::middleware('kiosk.admin')->prefix('kiosk/admin')->group(function () {
+    Route::get('/lockers', [AdminLockerController::class, 'index']);
+    Route::get('/lockers/{locker}', [AdminLockerController::class, 'show']);
 
+});
 
 // DAEMON ROUTES
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);

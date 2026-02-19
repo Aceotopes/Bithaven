@@ -28,4 +28,19 @@ class Rental extends Model
     {
         return $this->belongsTo(Locker::class);
     }
+
+    public function penalty()
+    {
+        return $this->hasOne(Penalty::class);
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

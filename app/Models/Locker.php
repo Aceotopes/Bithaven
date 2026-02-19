@@ -11,4 +11,15 @@ class Locker extends Model
         'status',
     ];
 
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class);
+    }
+
+    public function activeRental()
+    {
+        return $this->hasOne(Rental::class)
+            ->whereIn('status', ['ACTIVE', 'EXPIRED'])
+            ->latest();
+    }
 }

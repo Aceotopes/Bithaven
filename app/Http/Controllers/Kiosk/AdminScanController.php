@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\AdminCard;
 use App\Models\Admin;
 use App\Models\KioskEvent;
+use App\Services\RentalService;
+use App\Services\LockerUnlockService;
+use App\Services\KioskEventService;
 
 class AdminScanController extends Controller
 {
@@ -50,6 +53,36 @@ class AdminScanController extends Controller
                 'label' => $card->card_label,
                 'assigned_to' => $card->assigned_to,
             ]
+        ]);
+    }
+
+    public function endRentalEarly(Request $request, RentalService $rentalService, LockerUnlockService $unlockService, KioskEventService $eventService)
+    {
+        $request->validate([
+            'rental_id' => 'required|exists:rentals,id',
+            'admin_card_uid' => 'required|string'
+        ]);
+
+        $card = AdminCard::where('rfid_uid', $request->admin_card_uid)
+            ->where('status', 'ACTIVE')
+            ->first();
+
+        if (!$card) {
+            return response()->json([
+                'error' => 'ADMIN_CARD_NOT_FOUND'
+            ], 404);
+        }
+
+        $rentalService->endEarly(
+            $request->rental_id,
+            $unlockService,
+            $eventService,
+            $card->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rental ended successfully'
         ]);
     }
 }

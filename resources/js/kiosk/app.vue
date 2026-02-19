@@ -387,6 +387,7 @@ async function handlePaymentComplete() {
 
     // CLEANUP
     resetPaymentContext();
+    session.clearSession();
     flow.goToIdle();
 }
 
@@ -412,6 +413,9 @@ async function recoverActiveRental() {
 
     if (!activeRental) {
         console.log("ℹ️ no active rental found");
+        rental.endRental(); // stop timer safely
+        session.state.locker = null;
+        session.state.rentalState = "NO_RENTAL";
         return;
     }
 
@@ -459,12 +463,13 @@ async function recoverActivePenalty() {
     if (!penalty) {
         // CLEAR frontend penalty state
         session.state.penalty = null;
-
-        // If rental was expired, fully reset it
-        if (session.state.rentalState === "EXPIRED_RENTAL") {
-            session.state.rentalState = "NO_RENTAL";
-            session.state.locker = null;
-        }
+        // session.state.rentalState = "NO_RENTAL";
+        // session.state.locker = null;
+        // // If rental was expired, fully reset it
+        // if (session.state.rentalState === "EXPIRED_RENTAL") {
+        //     session.state.rentalState = "NO_RENTAL";
+        //     session.state.locker = null;
+        // }
         return;
     }
 
@@ -544,6 +549,7 @@ async function handleEndRental() {
             if (endCountdown.value === 0) {
                 clearInterval(endTimer);
                 isEndingRental.value = false;
+                session.clearSession();
                 flow.goToIdle();
             }
         }, 1000);

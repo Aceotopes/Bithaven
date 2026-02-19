@@ -16,31 +16,31 @@ class PaymentService
         string $method,
         LockerUnlockService $unlockService,
         KioskEventService $events
-    ): void {
+    ): Payment {
 
-        DB::transaction(function () use ($session, $method, $unlockService, $events) {
+        return DB::transaction(function () use ($session, $method, $unlockService, $events) {
 
             if ($session->status !== 'COMPLETED') {
                 throw new \RuntimeException('Payment session not completed');
             }
 
-            if ($session->context_type === 'RENTAL') {
-                $this->finalizeRentalFromSession(
+            return match ($session->context_type) {
+                'RENTAL' => $this->finalizeRentalFromSession(
                     $session,
                     $method,
                     $unlockService,
                     $events
-                );
-            }
+                ),
 
-            if ($session->context_type === 'PENALTY') {
-                $this->finalizePenaltyFromSession(
+                'PENALTY' => $this->finalizePenaltyFromSession(
                     $session,
                     $method,
                     $unlockService,
                     $events
-                );
-            }
+                ),
+
+                default => throw new \RuntimeException('Invalid payment session type'),
+            };
         });
     }
 
@@ -49,7 +49,7 @@ class PaymentService
         string $method,
         LockerUnlockService $unlockService,
         KioskEventService $events
-    ): void {
+    ): Payment {
 
         $locker = Locker::findOrFail($session->locker_id);
 
@@ -63,8 +63,15 @@ class PaymentService
         }
 
         $start = now();
-        // $end = $start->copy()->addHours($session->duration_hours);
-        $end = $start->copy()->addSeconds(50);
+        $end = $start->copy()->addHours($session->duration_hours);
+        // $end = $start->copy()->addSeconds(10);
+
+        if ($locker->status !== 'AVAILABLE') {
+            abort(response()->json([
+                'error' => 'LOCKER_OUT_OF_SERVICE',
+                'locker_id' => $locker->id
+            ], 409));
+        }
 
         $rental = Rental::create([
             'student_id' => $session->student_id, // attach if needed
@@ -101,14 +108,17 @@ class PaymentService
             'INFO',
             'Rental finalized from session'
         );
+        return $payment;
     }
 
     private function finalizePenaltyFromSession(
         PaymentSession $session,
         string $method,
         LockerUnlockService $unlockService,
-        KioskEventService $events
-    ): void {
+        KioskEventService $events,
+        string $endedBy = 'USER',
+        ?int $adminCardId = null
+    ): Payment {
         $penalty = Penalty::with('rental')->findOrFail($session->penalty_id);
 
         if ($penalty->status !== 'ACTIVE') {
@@ -132,13 +142,15 @@ class PaymentService
         $penalty->rental->update([
             'status' => 'ENDED',
             'ended_at' => now(),
-            'ended_by' => 'USER',
+            'ended_by' => $endedBy,
         ]);
 
         $unlockService->issue([
             'locker_id' => $penalty->rental->locker_id,
             'reason' => 'PENALTY_SETTLED',
             'penalty_id' => $penalty->id,
+            'authorized_by' => $endedBy === 'ADMIN' ? 'ADMIN' : 'SYSTEM',
+            'admin_card_id' => $adminCardId,
         ]);
 
         $events->log(
@@ -153,6 +165,7 @@ class PaymentService
             'INFO',
             'Penalty finalized from session'
         );
+        return $payment;
     }
 
     /**
@@ -223,7 +236,9 @@ class PaymentService
         int $penaltyId,
         string $method,
         LockerUnlockService $unlockService,
-        KioskEventService $events
+        KioskEventService $events,
+        string $endedBy = 'USER',
+        ?int $adminCardId = null
     ): void {
 
         $penalty = Penalty::with('rental')->findOrFail($penaltyId);
@@ -231,6 +246,12 @@ class PaymentService
         if ($penalty->status !== 'ACTIVE') {
             throw new \RuntimeException('Penalty already settled');
         }
+
+        PaymentSession::where('penalty_id', $penaltyId)
+            ->where('status', 'ACTIVE')
+            ->update([
+                'status' => 'CANCELLED'
+            ]);
 
         $payment = Payment::create([
             'student_id' => $penalty->rental->student_id,
@@ -249,13 +270,15 @@ class PaymentService
         $penalty->rental->update([
             'status' => 'ENDED',
             'ended_at' => now(),
-            'ended_by' => 'USER',
+            'ended_by' => $endedBy,
         ]);
 
         $unlockService->issue([
             'locker_id' => $penalty->rental->locker_id,
             'reason' => 'PENALTY_SETTLED',
             'penalty_id' => $penalty->id,
+            'authorized_by' => $endedBy === 'ADMIN' ? 'ADMIN' : 'SYSTEM',
+            'admin_card_id' => $adminCardId,
         ]);
 
         $events->log(
