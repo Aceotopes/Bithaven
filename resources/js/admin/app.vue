@@ -1,7 +1,7 @@
 <template>
-    <h1>Admin App Loaded</h1>
+    <router-view />
 </template>
 
 <script setup>
-// nothing yet
+// nothing here
 </script>
