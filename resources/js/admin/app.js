@@ -5,11 +5,13 @@ import router from "./router";
 import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura"; // use Aura instead of Lara
 
+import Chart from "primevue/chart";
+import "chart.js/auto";
+
 import "primeicons/primeicons.css";
 import "../../css/app.css";
 
 const app = createApp(App);
-
 app.use(router);
 
 app.use(PrimeVue, {
@@ -20,4 +22,5 @@ app.use(PrimeVue, {
         },
     },
 });
+app.component("Chart", Chart);
 app.mount("#admin-app");

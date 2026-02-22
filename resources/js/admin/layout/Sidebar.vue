@@ -34,7 +34,7 @@ const route = useRoute();
                 class="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200"
                 :class="
                     route.path.startsWith('/admin/home')
-                        ? 'bg-blue-600 text-white shadow-lg'
+                        ? 'bg-cyan-500 text-white shadow-lg'
                         : 'text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700'
                 "
             >

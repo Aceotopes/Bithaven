@@ -12,13 +12,14 @@ use App\Http\Controllers\Kiosk\UnlockTokenController;
 use App\Http\Controllers\Kiosk\PaymentSessionController;
 use App\Http\Controllers\Kiosk\UnlockJobController;
 use App\Http\Controllers\kiosk\DaemonController;
+use App\Http\Controllers\Kiosk\AdminUnlockController;
+use App\Http\Controllers\Kiosk\AdminPenaltyController;
+use App\Http\Controllers\Kiosk\AdminLockerController;
 use App\Http\Controllers\Kiosk\AdminScanController;
 use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
-use App\Http\Controllers\Kiosk\AdminUnlockController;
-use App\Http\Controllers\Kiosk\AdminPenaltyController;
-use App\Http\Controllers\Kiosk\AdminLockerController;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -72,15 +73,19 @@ Route::post('/kiosk/unlock-tokens/{token}/confirm', [UnlockTokenController::clas
 Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
 
 // ADMIN ROUTES
+Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);//TEMP
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+
     Route::get('/admin/me', function (Request $request) {
         return response()->json([
             'admin' => $request->user()
         ]);
     });
-
+    // temporarily commented for testing without auth
+    // Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
 });
 Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
@@ -88,14 +93,13 @@ Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
         return response()->json(['message' => 'Super admin area']);
     });
 
-});
-Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
-
+    // Admin Management for Super Admins
     Route::get('/admin/admins', [AdminManagementController::class, 'index']);
     Route::post('/admin/admins', [AdminManagementController::class, 'store']);
     Route::put('/admin/admins/{admin}', [AdminManagementController::class, 'update']);
     Route::delete('/admin/admins/{admin}', [AdminManagementController::class, 'destroy']);
 
+    // Admin Card Kiosk Access Management
     Route::get('/admin/cards', [AdminCardController::class, 'index']);
     Route::post('/admin/cards', [AdminCardController::class, 'store']);
     Route::put('/admin/cards/{card}', [AdminCardController::class, 'update']);
