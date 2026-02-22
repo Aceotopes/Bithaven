@@ -21,9 +21,9 @@
 .kpi-card {
     @apply rounded-lg
            border border-gray-200 dark:border-gray-700
-           shadow-sm;
+           bg-white dark:bg-gray-800
+           shadow-sm dark:shadow-none;
 }
-
 .kpi-body {
     @apply px-4 py-3; /* tighter padding */
 }

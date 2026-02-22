@@ -89,6 +89,34 @@ class DashboardController extends Controller
             PaymentSession::where('context_type', 'RENTAL')->where('status', 'CANCELLED')->whereDate('created_at', $today)->count(),
         ];
 
+        // THIRD ROW - LOCKER UTILIZATION RATE
+        $yesterday = Carbon::yesterday();
+        $totalLockers = Locker::count();
+        $utilizationRate = $totalAvailableLockers > 0
+            ? round(($occupiedLockers / $totalAvailableLockers) * 100, 1)
+            : 0;
+
+        // THIRD ROW - RENTAL VELOCITY (TODAY'S RENTALS)
+        $todayRentals = Rental::whereDate('created_at', $today)->count();
+        $yesterdayRentals = Rental::whereDate('created_at', $yesterday)->count();
+
+        $velocityChange = $yesterdayRentals > 0
+            ? round((($todayRentals - $yesterdayRentals) / $yesterdayRentals) * 100, 1)
+            : ($todayRentals > 0 ? 100 : 0);
+
+        // ROW 3 - DEMAND VELOCITY TREND (Last 7 Days)
+        $velocityLast7Days = collect(range(6, 0))->map(function ($daysAgo) {
+            $date = Carbon::today()->subDays($daysAgo);
+
+            return [
+                'date' => $date->format('M d'),
+                'count' => Rental::whereDate('created_at', $date)->count(),
+            ];
+        });
+
+        $velocityLabels = $velocityLast7Days->pluck('date');
+        $velocityValues = $velocityLast7Days->pluck('count');
+
         return response()->json([
             //FIRST ROW - KPI CARDS
             'active_rentals' => $activeRentals,
@@ -107,6 +135,16 @@ class DashboardController extends Controller
             'penalty_revenue_values' => $penaltyValues,
             'total_revenue_values' => $totalValues,
             'rental_status_counts' => $rentalStatusCounts,
+
+            // THIRD ROW - LOCKER UTILIZATION AND RENTAL VELOCITY
+            'locker_utilization_rate' => $utilizationRate,
+            'total_lockers' => $totalLockers,
+
+            'today_rental_velocity' => $todayRentals,
+            'yesterday_rental_velocity' => $yesterdayRentals,
+            'velocity_change_percentage' => $velocityChange,
+            'velocity_last7_labels' => $velocityLabels,
+            'velocity_last7_values' => $velocityValues,
         ]);
     }
 }
