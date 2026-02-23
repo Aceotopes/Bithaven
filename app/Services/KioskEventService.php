@@ -18,6 +18,7 @@ class KioskEventService
             'payload' => $context,
             'kiosk_id' => $context['kiosk_id'] ?? null,
             'student_id' => $context['student_id'] ?? null,
+            'admin_card_id' => $context['admin_card_id'] ?? null,
             'rental_id' => $context['rental_id'] ?? null,
             'penalty_id' => $context['penalty_id'] ?? null,
             'payment_id' => $context['payment_id'] ?? null,

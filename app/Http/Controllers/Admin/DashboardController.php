@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
         $activePenalties = Penalty::where('status', 'ACTIVE')->count();
 
-        $occupiedLockers = Rental::where('status', 'ACTIVE')
+        $occupiedLockers = Rental::whereIn('status', ['ACTIVE', 'EXPIRED'])
             ->distinct('locker_id')
             ->count('locker_id');
 
@@ -44,15 +44,7 @@ class DashboardController extends Controller
             ->where('last_seen_at', '<', now()->subMinutes(2))
             ->count();
 
-        $recentEvents = KioskEvent::orderByDesc('created_at')
-            ->limit(10)
-            ->get([
-                'id',
-                'event_type',
-                'level',
-                'message',
-                'created_at'
-            ]);
+
 
         //SECOND ROW - REVENUE CHART
         $revenueLast7Days = collect(range(6, 0))->map(function ($daysAgo) {
@@ -117,6 +109,23 @@ class DashboardController extends Controller
         $velocityLabels = $velocityLast7Days->pluck('date');
         $velocityValues = $velocityLast7Days->pluck('count');
 
+        // ROW 4 - RECENT EVENTS
+        $recentEvents = KioskEvent::with([
+            'student:id,first_name,last_name,department,year_level,photo_url',
+            'rental:id,locker_id,end_time',
+            'locker:id,locker_number'
+        ])
+            ->whereDate('created_at', Carbon::today())
+            ->whereIn('event_type', [
+                'RENTAL_PAID',
+                'RENTAL_ENDED',
+                'RENTAL_EXPIRED',
+                'PENALTY_PAID'
+            ])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
         return response()->json([
             //FIRST ROW - KPI CARDS
             'active_rentals' => $activeRentals,
@@ -127,7 +136,6 @@ class DashboardController extends Controller
             'registered_students' => $registeredStudents,
             'today_revenue' => $todayRevenue,
             'offline_kiosks' => $offlineKiosks,
-            'recent_events' => $recentEvents,
 
             //SECOND ROW - REVENUE CHART and RENTAL STATUS DISTRIBUTION
             'revenue_labels' => $revenueLabels,
@@ -145,6 +153,9 @@ class DashboardController extends Controller
             'velocity_change_percentage' => $velocityChange,
             'velocity_last7_labels' => $velocityLabels,
             'velocity_last7_values' => $velocityValues,
+
+            // FOURTH ROW - RECENT EVENTS
+            'recent_events' => $recentEvents,
         ]);
     }
 }

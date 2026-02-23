@@ -24,6 +24,7 @@ return new class extends Migration {
             $table->string('kiosk_id', 50)->nullable();
 
             $table->foreignId('student_id')->nullable()->constrained();
+            $table->foreignId('admin_card_id')->nullable()->constrained();
             $table->foreignId('rental_id')->nullable()->constrained();
             $table->foreignId('penalty_id')->nullable()->constrained();
             $table->foreignId('payment_id')->nullable()->constrained();

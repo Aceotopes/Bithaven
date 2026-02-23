@@ -164,6 +164,7 @@ class RentalController extends Controller
         $events->log(
             'RENTAL_ENDED',
             [
+                'kiosk_id' => 'KIOSK_01', // hardcoded for now
                 'rental_id' => $rental->id,
                 'locker_id' => $rental->locker_id,
                 'student_id' => $rental->student_id,

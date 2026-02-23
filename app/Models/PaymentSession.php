@@ -34,4 +34,9 @@ class PaymentSession extends Model
     {
         return $this->belongsTo(Penalty::class);
     }
+
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class);
+    }
 }

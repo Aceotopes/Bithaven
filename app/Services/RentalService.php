@@ -52,7 +52,7 @@ class RentalService
                     'kiosk_id' => 'KIOSK-01', // hardcoded for now  
                     'rental_id' => $rental->id,
                     'locker_id' => $rental->locker_id,
-                    // 'admin_card_id' => $adminCardId,
+                    'admin_card_id' => $adminCardId,
                 ],
                 'WARNING',
                 'Rental ended early by admin override'

@@ -16,6 +16,7 @@ class KioskEvent extends Model
         'kiosk_id',
 
         'student_id',
+        'admin_card_id',
         'rental_id',
         'penalty_id',
         'payment_id',
@@ -28,4 +29,19 @@ class KioskEvent extends Model
     protected $casts = [
         'payload' => 'array',
     ];
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class);
+    }
+
+    public function locker()
+    {
+        return $this->belongsTo(Locker::class);
+    }
 }

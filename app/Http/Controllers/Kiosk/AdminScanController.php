@@ -39,8 +39,9 @@ class AdminScanController extends Controller
             'event_type' => 'ADMIN_CARD_SCANNED',
             'level' => 'INFO',
             'message' => 'Admin card scanned at kiosk',
+            'admin_card_id' => $card->id,
             'payload' => [
-                'card_id' => $card->id,
+                'admin_card_id' => $card->id,
                 'card_label' => $card->card_label,
             ],
             'kiosk_id' => $request->kiosk_id,
@@ -49,7 +50,7 @@ class AdminScanController extends Controller
         return response()->json([
             'success' => true,
             'card' => [
-                'id' => $card->id,
+                'admin_card_id' => $card->id,
                 'label' => $card->card_label,
                 'assigned_to' => $card->assigned_to,
             ]
