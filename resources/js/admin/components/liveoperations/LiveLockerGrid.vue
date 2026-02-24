@@ -17,7 +17,7 @@ function statusDot(locker) {
         case "OVERDUE":
             return "bg-amber-500 animate-pulse";
         case "OUT_OF_SERVICE":
-            return "bg-gray-500";
+            return "bg-red-500";
     }
 }
 
@@ -84,7 +84,7 @@ function timeIndicator(locker) {
                     ? 'border-blue-300'
                     : effectiveStatus(locker) === 'AVAILABLE'
                     ? 'border-emerald-300'
-                    : 'border-gray-400',
+                    : 'border-red-500 ring-2 ring-red-200 ',
             ]"
         >
             <div class="flex justify-between items-center mb-2">
