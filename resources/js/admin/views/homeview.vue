@@ -2,10 +2,10 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import ProgressSpinner from "primevue/progressspinner";
-import KioskEvents from "@/admin/components/dashboard/KioskEvents.vue";
 import KpiRow from "@/admin/components/dashboard/KpiRow.vue";
 import RevenueSection from "@/admin/components/dashboard/RevenueSection.vue";
 import UtilizationSection from "@/admin/components/dashboard/UtilizationSection.vue";
+import KioskEvents from "@/admin/components/dashboard/KioskEvents.vue";
 
 const loading = ref(true);
 const stats = ref({});

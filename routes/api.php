@@ -20,6 +20,7 @@ use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LiveOperationsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -73,7 +74,11 @@ Route::post('/kiosk/unlock-tokens/{token}/confirm', [UnlockTokenController::clas
 Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
 
 // ADMIN ROUTES
-Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);//TEMP
+//TEMP
+Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
+Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
+
+//FINAL
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -86,6 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // temporarily commented for testing without auth
     // Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
+    // Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
 });
 Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
