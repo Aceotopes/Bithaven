@@ -66,9 +66,12 @@ class LiveOperationsController extends Controller
                 'rental' => $latestRental ? [
                     'id' => $latestRental->id,
                     'student_id' => $latestRental->student->id ?? null,
-                    'student_name' =>
-                        $latestRental->student->first_name . ' ' .
-                        $latestRental->student->last_name,
+
+                    'first_name' => $latestRental->student->first_name ?? null,
+                    'last_name' => $latestRental->student->last_name ?? null,
+                    'year_level' => $latestRental->student->year_level ?? null,
+                    'photo_url' => $latestRental->student->photo_url ?? null,
+
                     'start_time' => $latestRental->start_time,
                     'end_time' => $latestRental->end_time,
                     'status' => $latestRental->status,

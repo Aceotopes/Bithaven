@@ -30,7 +30,7 @@ function effectiveStatus(locker) {
         return "OVERDUE";
     }
 
-    if (locker.rental) {
+    if (locker.rental && !locker.penalty) {
         return "OCCUPIED";
     }
 

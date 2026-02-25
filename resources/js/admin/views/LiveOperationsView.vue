@@ -4,7 +4,9 @@ import axios from "axios";
 import Card from "primevue/card";
 import Dialog from "primevue/dialog";
 import LiveLockerGrid from "@/admin/components/liveoperations/LiveLockerGrid.vue";
+import LockerControlModal from "@/admin/components/liveoperations/LockerControlModal.vue";
 
+// FOR LIVE LOCKER MONITORING AND CONTROL
 const lockers = ref([]);
 const loading = ref(true);
 const selectedLocker = ref(null);
@@ -13,27 +15,66 @@ let interval = null;
 
 async function fetchLockers() {
     try {
-        const res = await axios.get("/api/admin/live/lockers");
+        const res = await axios.get("/admin/live/lockers");
         lockers.value = res.data;
     } finally {
         loading.value = false;
     }
 }
 
-const summary = computed(() => ({
-    available: lockers.value.filter((l) => l.status === "AVAILABLE").length,
-    occupied: lockers.value.filter((l) => l.status === "OCCUPIED").length,
-    overdue: lockers.value.filter((l) => l.penalty?.status === "ACTIVE").length,
-    out: lockers.value.filter((l) => l.status === "OUT_OF_SERVICE").length,
-}));
+const summary = computed(() => {
+    const counts = {
+        available: 0,
+        occupied: 0,
+        overdue: 0,
+        out: 0,
+    };
+
+    lockers.value.forEach((locker) => {
+        if (locker.status === "OUT_OF_SERVICE") {
+            counts.out++;
+        } else if (locker.penalty?.status === "ACTIVE") {
+            counts.overdue++;
+        } else if (locker.rental) {
+            counts.occupied++;
+        } else {
+            counts.available++;
+        }
+    });
+
+    return counts;
+});
 
 const filteredLockers = computed(() => {
     if (activeFilter.value === "ALL") return lockers.value;
-    return lockers.value.filter((l) => l.status === activeFilter.value);
+
+    return lockers.value.filter((locker) => {
+        if (activeFilter.value === "OUT_OF_SERVICE")
+            return locker.status === "OUT_OF_SERVICE";
+
+        if (activeFilter.value === "OVERDUE")
+            return locker.penalty?.status === "ACTIVE";
+
+        if (activeFilter.value === "OCCUPIED")
+            return locker.rental && !locker.penalty;
+
+        if (activeFilter.value === "AVAILABLE")
+            return !locker.rental && locker.status !== "OUT_OF_SERVICE";
+
+        return true;
+    });
 });
 
-function openDetails(locker) {
+// FOR LOCKER CONTROL MODAL
+const showModal = ref(false);
+
+function openLocker(locker) {
     selectedLocker.value = locker;
+    showModal.value = true;
+}
+
+async function refreshLockers() {
+    await fetchLockers();
 }
 
 onMounted(() => {
@@ -138,49 +179,16 @@ onBeforeUnmount(() => {
                 <LiveLockerGrid
                     :lockers="filteredLockers"
                     :loading="loading"
-                    @open="openDetails"
+                    @open="openLocker"
                 />
             </div>
         </template>
     </Card>
 
     <!-- DETAILS MODAL -->
-    <Dialog
-        v-model:visible="selectedLocker"
-        modal
-        header="Locker Details"
-        :style="{ width: '450px' }"
-    >
-        <div v-if="selectedLocker" class="space-y-4">
-            <div class="text-center">
-                <p class="text-3xl font-mono font-semibold">
-                    Locker {{ selectedLocker.locker_number }}
-                </p>
-                <p class="text-sm text-gray-500">
-                    Status: {{ selectedLocker.status }}
-                </p>
-            </div>
-
-            <div v-if="selectedLocker.rental" class="space-y-2 text-sm">
-                <p>
-                    <strong>Student:</strong>
-                    {{ selectedLocker.rental.student_name }}
-                </p>
-                <p>
-                    <strong>Ends:</strong>
-                    {{
-                        new Date(
-                            selectedLocker.rental.end_time
-                        ).toLocaleString()
-                    }}
-                </p>
-            </div>
-
-            <div v-else class="text-gray-400 text-sm">No active rental.</div>
-
-            <div v-if="selectedLocker.penalty" class="text-red-600 text-sm">
-                Penalty Status: {{ selectedLocker.penalty.status }}
-            </div>
-        </div>
-    </Dialog>
+    <LockerControlModal
+        v-model:visible="showModal"
+        :locker="selectedLocker"
+        @refresh="refreshLockers"
+    />
 </template>

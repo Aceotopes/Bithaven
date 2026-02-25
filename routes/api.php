@@ -75,8 +75,13 @@ Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
 
 // ADMIN ROUTES
 //TEMP
-Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
-Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
+// Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
+// Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
+// Route::post('/admin/live/lockers/{locker}/force-unlock', [LiveOperationsController::class, 'forceUnlock']);
+// Route::post('/admin/live/rentals/{rental}/end', [LiveOperationsController::class, 'endRental']);
+// Route::post('/admin/live/penalties/{penalty}/clear', [LiveOperationsController::class, 'clearPenalty']);
+// Route::post('/admin/live/lockers/{locker}/disable', [LiveOperationsController::class, 'disableLocker']);
+// Route::post('/admin/live/lockers/{locker}/enable', [LiveOperationsController::class, 'enableLocker']);
 
 //FINAL
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
@@ -88,8 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
     // temporarily commented for testing without auth
-    // Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
-    // Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
+    Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
     Route::post('/admin/live/lockers/{locker}/force-unlock', [LiveOperationsController::class, 'forceUnlock']);
     Route::post('/admin/live/rentals/{rental}/end', [LiveOperationsController::class, 'endRental']);
     Route::post('/admin/live/penalties/{penalty}/clear', [LiveOperationsController::class, 'clearPenalty']);

@@ -13,7 +13,7 @@ const events = ref([]);
 
 async function fetchDashboard() {
     try {
-        const response = await axios.get("/api/admin/dashboard/summary");
+        const response = await axios.get("/admin/dashboard/summary");
         stats.value = response.data;
         events.value = response.data.recent_events || [];
     } catch (error) {
