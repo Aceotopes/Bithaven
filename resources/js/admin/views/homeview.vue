@@ -33,7 +33,7 @@ onMounted(fetchDashboard);
             <ProgressSpinner />
         </div>
 
-        <div v-else class="space-y-10">
+        <div v-else class="space-y-5">
             <!-- FIRST ROW - KPI CARDS -->
             <KpiRow :stats="stats" />
 

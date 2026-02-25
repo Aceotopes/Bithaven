@@ -6,6 +6,9 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Button from "primevue/button";
+import { useToast } from "primevue/usetoast";
+
+const toast = useToast();
 
 const props = defineProps({
     visible: Boolean,
@@ -38,16 +41,33 @@ watch(
     () => props.student,
     (val) => {
         if (val) {
-            form.value = { ...val };
+            form.value = {
+                student_number: val.student_number,
+                first_name: val.first_name,
+                middle_name: val.middle_name,
+                last_name: val.last_name,
+                year_level: val.year_level,
+                department: val.department,
+                rfid_uid: val.rfid_uid,
+                status: val.status,
+            };
+
             previewUrl.value = val.photo_url
                 ? `http://127.0.0.1:8000/storage/${val.photo_url}`
                 : null;
+
+            photoFile.value = null;
         } else {
             resetForm();
         }
     },
     { immediate: true }
 );
+
+function handleCancel() {
+    resetForm();
+    emit("update:visible", false);
+}
 
 /* ------------------------------
    Reset
@@ -82,12 +102,14 @@ function onFileChange(event) {
    Submit
 ------------------------------- */
 async function submit() {
+    if (loading.value) return;
+
     loading.value = true;
 
     const formData = new FormData();
 
     Object.keys(form.value).forEach((key) => {
-        if (form.value[key] !== null) {
+        if (form.value[key] !== null && form.value[key] !== "") {
             formData.append(key, form.value[key]);
         }
     });
@@ -99,13 +121,34 @@ async function submit() {
     try {
         if (isEdit.value) {
             await StudentService.updateStudent(props.student.id, formData);
+
+            toast.add({
+                severity: "success",
+                summary: "Updated",
+                detail: "Student updated successfully.",
+                life: 3000,
+            });
         } else {
             await StudentService.createStudent(formData);
+
+            toast.add({
+                severity: "success",
+                summary: "Created",
+                detail: "Student added successfully.",
+                life: 3000,
+            });
         }
 
         emit("saved");
         emit("update:visible", false);
         resetForm();
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Something went wrong.",
+            life: 3000,
+        });
     } finally {
         loading.value = false;
     }
@@ -175,11 +218,7 @@ async function submit() {
             />
 
             <div class="flex justify-end gap-2 pt-4">
-                <Button
-                    label="Cancel"
-                    text
-                    @click="emit('update:visible', false)"
-                />
+                <Button label="Cancel" text @click="handleCancel" />
                 <Button
                     :label="isEdit ? 'Update' : 'Create'"
                     :loading="loading"

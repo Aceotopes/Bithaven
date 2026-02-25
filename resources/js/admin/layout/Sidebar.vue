@@ -5,7 +5,7 @@ const route = useRoute();
 
 <template>
     <aside
-        class="fixed lg:top-20 lg:left-8 lg:bottom-8 lg:w-72 top-0 left-0 bottom-0 w-80 bg-white dark:bg-gray-800 lg:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col p-8 transition-all duration-300"
+        class="fixed lg:top-23 lg:left-7 lg:bottom-6 lg:w-68 top-0 left-0 bottom-0 w-80 bg-white dark:bg-gray-800 lg:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col p-8 transition-all duration-300"
     >
         <!-- Mobile Close -->
         <div class="flex justify-between items-center lg:hidden mb-8">
@@ -19,7 +19,7 @@ const route = useRoute();
         </div>
 
         <!-- Desktop Title -->
-        <div class="hidden lg:block mb-10">
+        <div class="hidden lg:block mb-5">
             <h2
                 class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
             >

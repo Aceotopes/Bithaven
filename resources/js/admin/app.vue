@@ -4,4 +4,5 @@ import AppLayout from "./layout/AppLayout.vue";
 
 <template>
     <AppLayout />
+    <toast />
 </template>

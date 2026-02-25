@@ -20,7 +20,7 @@
 
 .kpi-card {
     @apply rounded-lg
-           border border-gray-200 dark:border-gray-700
+           border border-gray-200 dark:border-gray-800
            bg-white dark:bg-gray-800
            shadow-sm dark:shadow-none;
 }

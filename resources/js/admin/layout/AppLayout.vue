@@ -42,7 +42,7 @@ onMounted(() => {
 
         <!-- Content -->
         <main
-            class="absolute top-16 left-0 lg:left-80 right-0 bottom-0 overflow-y-auto p-8"
+            class="absolute top-15 left-0 lg:left-74 right-0 bottom-0 overflow-y-auto p-8"
         >
             <router-view />
         </main>

@@ -35,7 +35,7 @@ class StudentController extends Controller
 
         $students = $query
             ->orderByDesc('created_at')
-            ->paginate(10);
+            ->paginate($request->get('per_page', 10));
 
         return response()->json($students);
     }
@@ -52,7 +52,7 @@ class StudentController extends Controller
             'last_name' => 'required|string|max:100',
             'year_level' => 'required|string|max:20',
             'department' => 'required|string|max:50',
-            'rfid_uid' => 'required|string|max:10|unique:students',
+            'rfid_uid' => 'nullable|string|max:10|unique:students',
             'photo_url' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'SUSPENDED'])],
         ]);
@@ -106,7 +106,7 @@ class StudentController extends Controller
             'year_level' => 'required|string|max:20',
             'department' => 'required|string|max:50',
             'rfid_uid' => [
-                'required',
+                'nullable',
                 'string',
                 'max:10',
                 Rule::unique('students')->ignore($student->id),
