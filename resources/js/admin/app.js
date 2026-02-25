@@ -4,9 +4,15 @@ import router from "./router";
 
 import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura"; // use Aura instead of Lara
-import ConfirmDialog from "primevue/confirmdialog";
 import ConfirmationService from "primevue/confirmationservice";
+
+import ConfirmDialog from "primevue/confirmdialog";
 import Tooltip from "primevue/tooltip";
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Dropdown from "primevue/dropdown";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
 
 import Chart from "primevue/chart";
 import "chart.js/auto";
@@ -32,7 +38,13 @@ app.use(PrimeVue, {
     },
 });
 app.use(ConfirmationService);
-app.component("ConfirmDialog", ConfirmDialog);
 app.directive("tooltip", Tooltip);
+app.component("ConfirmDialog", ConfirmDialog);
 app.component("Chart", Chart);
+app.component("Button", Button);
+app.component("InputText", InputText);
+app.component("Dropdown", Dropdown);
+app.component("DataTable", DataTable);
+app.component("Column", Column);
+
 app.mount("#admin-app");

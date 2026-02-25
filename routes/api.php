@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LiveOperationsController;
+use App\Http\Controllers\Admin\StudentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -100,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/live/penalties/{penalty}/clear', [LiveOperationsController::class, 'clearPenalty']);
     Route::post('/admin/live/lockers/{locker}/disable', [LiveOperationsController::class, 'disableLocker']);
     Route::post('/admin/live/lockers/{locker}/enable', [LiveOperationsController::class, 'enableLocker']);
+    Route::apiResource('/admin/students', StudentController::class);
 });
 Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
