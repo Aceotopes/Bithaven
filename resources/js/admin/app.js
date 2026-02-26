@@ -1,6 +1,9 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
+import { useAuthStore } from "./stores/auth";
 import App from "./App.vue";
 import router from "./router";
+import axios from "axios";
 
 import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura"; // use Aura instead of Lara
@@ -16,6 +19,8 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Card from "primevue/card";
 import Toast from "primevue/toast";
+import Menu from "primevue/menu";
+import Avatar from "primevue/avatar";
 
 import Chart from "primevue/chart";
 import "chart.js/auto";
@@ -23,13 +28,16 @@ import "chart.js/auto";
 import "primeicons/primeicons.css";
 import "../../css/app.css";
 
-import axios from "axios";
 axios.defaults.baseURL = "http://127.0.0.1:8000/api";
 
-axios.defaults.headers.common["Authorization"] =
-    "Bearer 3|iUc5mMZXfB6Q1KomtIGxWUxEyiQniXBuHSTACUqP4d78bf6e";
-
 const app = createApp(App);
+
+const pinia = createPinia();
+app.use(pinia);
+
+const auth = useAuthStore(pinia);
+auth.initialize();
+
 app.use(router);
 
 app.use(PrimeVue, {
@@ -52,5 +60,7 @@ app.component("DataTable", DataTable);
 app.component("Column", Column);
 app.component("Card", Card);
 app.component("Toast", Toast);
+app.component("Menu", Menu);
+app.component("Avatar", Avatar);
 
 app.mount("#admin-app");

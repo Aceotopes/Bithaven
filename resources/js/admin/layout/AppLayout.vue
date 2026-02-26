@@ -48,3 +48,31 @@ onMounted(() => {
         </main>
     </div>
 </template>
+<!-- <template>
+    <div class="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 transition-colors">
+        
+        <Topbar
+            @toggle-sidebar="mobileOpen = true"
+            @toggle-dark="toggleDark"
+        />
+
+        <div class="flex flex-1 overflow-hidden">
+
+            <Sidebar class="hidden lg:flex" />
+
+            <div v-if="mobileOpen" class="fixed inset-0 z-50 flex lg:hidden">
+                <div
+                    class="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                    @click="mobileOpen = false"
+                ></div>
+
+                <Sidebar class="relative z-50" @close="mobileOpen = false" />
+            </div>
+
+            <main class="flex-1 overflow-y-auto p-8">
+                <router-view />
+            </main>
+
+        </div>
+    </div>
+</template> -->

@@ -90,7 +90,7 @@ Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
 
 //FINAL
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
     Route::get('/admin/me', function (Request $request) {
         return response()->json([
@@ -113,7 +113,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/rfid/{session}', [RfidController::class, 'show']);
     Route::post('/admin/rfid/{session}/cancel', [RfidController::class, 'cancel']);
 });
-Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
+Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 
     Route::get('/admin/manage', function () {
         return response()->json(['message' => 'Super admin area']);
