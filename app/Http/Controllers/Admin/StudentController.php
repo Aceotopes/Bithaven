@@ -34,7 +34,7 @@ class StudentController extends Controller
         }
 
         $students = $query
-            ->orderByDesc('created_at')
+            ->orderBy('id', 'asc')
             ->paginate($request->get('per_page', 10));
 
         return response()->json($students);
@@ -113,7 +113,10 @@ class StudentController extends Controller
             ],
             'photo_url' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'status' => ['required', Rule::in(['ACTIVE', 'INACTIVE', 'SUSPENDED'])],
+        ], [
+            'rfid_uid.unique' => 'UID is already assigned to another student.',
         ]);
+
         if ($request->hasFile('photo_url')) {
 
             if ($student->photo_url) {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, onBeforeUnmount } from "vue";
 
 import { KIOSK_STATES } from "./constants/kioskStates";
 import { useKioskFlow } from "./composables/useKioskFlow";
@@ -45,6 +45,12 @@ let endTimer = null;
 
 const penaltySnapshot = ref(null);
 
+const activeScanSession = ref(null);
+const showAdminScanModal = ref(false);
+
+let scanPollTimer = null;
+let currentPollMode = null;
+
 // =======================================
 // locker rental manager for testing (no Backend)
 // const rental = useLockerRental(session.state, {
@@ -53,6 +59,73 @@ const penaltySnapshot = ref(null);
 //     },
 // });
 // =======================================
+
+// =====================
+//    ADMIN FUNCTIONS
+// =====================
+// ===================== scan session polling (with Backend) =====================
+async function pollScanSession() {
+    try {
+        const res = await fetch("/api/kiosk/rfid/pending");
+
+        if (!res.ok) return;
+
+        const session = await res.json();
+
+        if (session && session.status === "PENDING") {
+            activeScanSession.value = session;
+            showAdminScanModal.value = true;
+
+            startFastPolling();
+        } else {
+            activeScanSession.value = null;
+            showAdminScanModal.value = false;
+
+            startSlowPolling();
+        }
+    } catch (err) {
+        console.error("Scan polling failed", err);
+    }
+}
+const scanCountdown = computed(() => {
+    if (!activeScanSession.value) return 0;
+
+    const expiresAt = new Date(activeScanSession.value.expires_at).getTime();
+    const now = Date.now();
+
+    return Math.max(0, Math.ceil((expiresAt - now) / 1000));
+});
+
+function stopScanPolling() {
+    if (scanPollTimer) {
+        clearInterval(scanPollTimer);
+        scanPollTimer = null;
+    }
+    currentPollMode = null;
+}
+
+function startSlowPolling() {
+    if (currentPollMode === "SLOW") return;
+
+    stopScanPolling();
+
+    scanPollTimer = setInterval(pollScanSession, 3000);
+    currentPollMode = "SLOW";
+
+    console.log("Scan polling: SLOW (4s)");
+}
+
+function startFastPolling() {
+    if (currentPollMode === "FAST") return;
+
+    stopScanPolling();
+
+    scanPollTimer = setInterval(pollScanSession, 1000);
+    currentPollMode = "FAST";
+
+    console.log("Scan polling: FAST (1s)");
+}
+// ===============================================================================
 
 // ===================== locker rental manager (with Backend) =====================
 const rental = useLockerRental(session.state, {
@@ -128,8 +201,30 @@ const idle = useIdleTimeout({
 async function handleStartScan(uid) {
     console.log("📟 RFID scanned:", uid);
 
-    scanResult.value = null;
+    if (activeScanSession.value) {
+        try {
+            await fetch(
+                `/api/kiosk/rfid/${activeScanSession.value.id}/complete`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ rfid_uid: uid }),
+                }
+            );
 
+            showAdminScanModal.value = false;
+            activeScanSession.value = null;
+
+            console.log("Admin scan completed");
+
+            return;
+        } catch (err) {
+            console.error("Failed to complete admin scan", err);
+            return;
+        }
+    }
+
+    scanResult.value = null;
     try {
         const res = await fetch("/api/kiosk/scan", {
             method: "POST",
@@ -581,6 +676,11 @@ onMounted(async () => {
     console.log("🔁 APP MOUNTED");
     await hydrateGlobalState();
     debugDump("after hydrateGlobalState (mount)");
+    startSlowPolling();
+});
+
+onBeforeUnmount(() => {
+    stopScanPolling();
 });
 
 watch(
@@ -709,6 +809,22 @@ watch(
         @confirm="idle.confirmIdleNow"
         @continue="idle.dismissWarning"
     />
+    <div
+        v-if="showAdminScanModal"
+        class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+    >
+        <div class="bg-white p-8 rounded-xl text-center w-96">
+            <h2 class="text-xl font-semibold mb-4">
+                Admin is requesting RFID scan
+            </h2>
+
+            <p class="mb-4">Please tap your card now.</p>
+
+            <p class="text-red-600 font-bold text-lg">
+                {{ scanCountdown }} seconds remaining
+            </p>
+        </div>
+    </div>
 </template>
 
 <style>

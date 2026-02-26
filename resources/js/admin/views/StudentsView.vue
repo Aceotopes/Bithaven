@@ -43,6 +43,14 @@ async function fetchStudents(page = 1) {
 
     loading.value = false;
 }
+let searchTimer = null;
+function handleSearchInput() {
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(() => {
+        fetchStudents(1);
+    }, 400); // 400ms delay
+}
 
 function getInitials(student) {
     const first = student.first_name?.charAt(0) ?? "";
@@ -82,14 +90,14 @@ function confirmDelete(student) {
                     severity: "success",
                     summary: "Deleted",
                     detail: "Student deleted successfully.",
-                    life: 3000,
+                    life: 5000,
                 });
             } catch (error) {
                 toast.add({
                     severity: "error",
                     summary: "Error",
                     detail: "Unable to delete student.",
-                    life: 3000,
+                    life: 5000,
                 });
             }
         },
@@ -146,7 +154,7 @@ onMounted(() => fetchStudents());
                         v-model="search"
                         placeholder="Search..."
                         class="w-64"
-                        @input="fetchStudents(1)"
+                        @input="handleSearchInput"
                     />
 
                     <Select
@@ -240,14 +248,14 @@ onMounted(() => fetchStudents());
                         </template>
                     </Column>
 
-                    <Column field="year_level" header="Year" />
-                    <Column field="department" header="Department" />
+                    <Column field="year_level" header="YEAR" />
+                    <Column field="department" header="DEPARTMENT" />
 
-                    <Column header="RFID">
+                    <Column header="UID">
                         <template #body="{ data }">
                             <span
                                 v-if="data.rfid_uid"
-                                class="px-2 py-1 text-xs rounded bg-cyan-100 text-cyan-700"
+                                class="px-2 py-1 text-xs rounded-lg bg-gray-200"
                             >
                                 {{ data.rfid_uid }}
                             </span>
@@ -262,7 +270,7 @@ onMounted(() => fetchStudents());
                             <span
                                 class="px-2 py-1 text-xs rounded font-medium"
                                 :class="{
-                                    'bg-cyan-100 text-cyan-700':
+                                    'bg-emerald-100 text-emerald-700':
                                         data.status === 'ACTIVE',
                                     'bg-yellow-100 text-yellow-700':
                                         data.status === 'INACTIVE',

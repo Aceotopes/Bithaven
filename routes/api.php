@@ -16,12 +16,14 @@ use App\Http\Controllers\Kiosk\AdminUnlockController;
 use App\Http\Controllers\Kiosk\AdminPenaltyController;
 use App\Http\Controllers\Kiosk\AdminLockerController;
 use App\Http\Controllers\Kiosk\AdminScanController;
+use App\Http\Controllers\Kiosk\RfidSessionController; // for ADMIN RFID scan sessions 
 use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LiveOperationsController;
 use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\RfidController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,6 +37,8 @@ Route::get('/health', function () {
 
 // KIOSK ROUTES
 Route::post('/kiosk/scan', [ScanController::class, 'scan']);
+Route::get('/kiosk/rfid/pending', [RfidSessionController::class, 'pending']);
+Route::post('/kiosk/rfid/{session}/complete', [RfidSessionController::class, 'complete']);
 
 Route::get('/kiosk/lockers/status', [LockerController::class, 'status']);
 Route::post('/kiosk/lockers/{locker}/authorize', [LockerController::class, 'authorize']);
@@ -94,14 +98,19 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
     // temporarily commented for testing without auth
-    Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']); //FOR DASHBOARD
+
     Route::get('/admin/live/lockers', [LiveOperationsController::class, 'lockers']);
     Route::post('/admin/live/lockers/{locker}/force-unlock', [LiveOperationsController::class, 'forceUnlock']);
     Route::post('/admin/live/rentals/{rental}/end', [LiveOperationsController::class, 'endRental']);
     Route::post('/admin/live/penalties/{penalty}/clear', [LiveOperationsController::class, 'clearPenalty']);
     Route::post('/admin/live/lockers/{locker}/disable', [LiveOperationsController::class, 'disableLocker']);
     Route::post('/admin/live/lockers/{locker}/enable', [LiveOperationsController::class, 'enableLocker']);
+
     Route::apiResource('/admin/students', StudentController::class);
+    Route::post('/admin/rfid/start', [RfidController::class, 'start']);
+    Route::get('/admin/rfid/{session}', [RfidController::class, 'show']);
+    Route::post('/admin/rfid/{session}/cancel', [RfidController::class, 'cancel']);
 });
 Route::middleware(['auth:sanctum', 'superadmin'])->group(function () {
 
