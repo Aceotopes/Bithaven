@@ -2,9 +2,11 @@
 import { ref, onMounted } from "vue";
 import Sidebar from "./Sidebar.vue";
 import Topbar from "./Topbar.vue";
+import SuperAdminDialog from "../components/topbar/SuperAdminDialog.vue";
 
 const mobileOpen = ref(false);
 const isDark = ref(false);
+const showSuperAdmin = ref(false);
 
 function toggleDark() {
     isDark.value = !isDark.value;
@@ -25,7 +27,12 @@ onMounted(() => {
         class="h-screen bg-gray-100 dark:bg-gray-900 transition-colors overflow-hidden"
     >
         <!-- Topbar -->
-        <Topbar @toggle-sidebar="mobileOpen = true" @toggle-dark="toggleDark" />
+        <Topbar
+            @toggle-sidebar="mobileOpen = true"
+            @toggle-dark="toggleDark"
+            @open-super-admin="showSuperAdmin = true"
+        />
+        <SuperAdminDialog v-model:visible="showSuperAdmin" />
 
         <!-- Sidebar (Desktop) -->
         <Sidebar class="hidden lg:flex" />

@@ -1,12 +1,16 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useAuthStore } from "../stores/auth";
+import { computed, ref } from "vue";
+import { useAuthStore } from "@/admin/stores/auth";
 import { useRouter } from "vue-router";
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
-const emit = defineEmits(["toggle-sidebar", "toggle-dark"]);
+const emit = defineEmits(["toggle-sidebar", "toggle-dark", "open-super-admin"]);
 
 const auth = useAuthStore();
 const router = useRouter();
+const confirm = useConfirm();
+const toast = useToast();
 
 const menu = ref(null);
 
@@ -16,9 +20,25 @@ function toggleMenu(event) {
     menu.value.toggle(event);
 }
 
-async function logout() {
-    await auth.logout();
-    router.push("/admin/login");
+function confirmLogout() {
+    confirm.require({
+        message: "Are you sure you want to logout?",
+        header: "Confirm Logout",
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
+        acceptLabel: "Logout",
+        rejectLabel: "Cancel",
+        accept: async () => {
+            await auth.logout();
+            toast.add({
+                severity: "success",
+                summary: "Logged out",
+                detail: "You have been logged out successfully.",
+                life: 3000,
+            });
+            router.push("/admin/login");
+        },
+    });
 }
 
 const items = computed(() => [
@@ -28,29 +48,23 @@ const items = computed(() => [
         command: () => router.push("/admin/account"),
     },
     {
-        label: "Super Admin Panel",
+        label: "Developer Options",
         icon: "pi pi-shield",
         disabled: !auth.isSuperAdmin,
-        command: () => {
-            if (auth.isSuperAdmin) {
-                router.push("/admin/manage");
-            }
-        },
+        command: () => emit("open-super-admin"),
     },
-    {
-        separator: true,
-    },
+    { separator: true },
     {
         label: "Logout",
         icon: "pi pi-sign-out",
-        command: logout,
+        command: confirmLogout,
     },
 ]);
 </script>
 
 <template>
     <header
-        class="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 z-40 transition-colors"
+        class="fixed top-0 left-0 right-0 h-17 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 z-40 transition-colors"
     >
         <!-- Left -->
         <div class="flex items-center gap-4">
@@ -61,42 +75,31 @@ const items = computed(() => [
                 <i class="pi pi-bars text-xl"></i>
             </button>
 
-            <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                Bithaven Admin
-            </h1>
+            <h1 class="text-lg font-semibold">Bithaven Admin</h1>
         </div>
 
         <!-- Right -->
         <div class="flex items-center gap-4">
-            <!-- Dark toggle -->
-            <button
-                @click="$emit('toggle-dark')"
-                class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-            >
+            <button @click="$emit('toggle-dark')">
                 <i class="pi pi-moon text-lg"></i>
             </button>
 
-            <!-- Admin Name -->
-            <span
-                class="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block"
-            >
+            <span class="hidden sm:block">
                 {{ adminName }}
             </span>
 
-            <!-- Avatar Button -->
             <div class="relative">
                 <button
                     @click="toggleMenu"
-                    class="flex items-center justify-center w-9 h-9 rounded-full bg-cyan-500 text-white hover:opacity-90 transition"
+                    class="flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500 text-white"
                 >
                     <Avatar
                         :label="adminName.charAt(0).toUpperCase()"
                         shape="circle"
-                        class="bg-cyan-500 text-white"
+                        size="large"
                     />
                 </button>
 
-                <!-- Dropdown -->
                 <Menu ref="menu" :model="items" popup />
             </div>
         </div>

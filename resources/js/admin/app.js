@@ -11,6 +11,7 @@ import ConfirmationService from "primevue/confirmationservice";
 import ToastService from "primevue/toastservice";
 
 import ConfirmDialog from "primevue/confirmdialog";
+import Dialog from "primevue/dialog";
 import Tooltip from "primevue/tooltip";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
@@ -28,7 +29,7 @@ import "chart.js/auto";
 import "primeicons/primeicons.css";
 import "../../css/app.css";
 
-axios.defaults.baseURL = "http://127.0.0.1:8000/api";
+axios.defaults.baseURL = "/api";
 
 const app = createApp(App);
 
@@ -62,5 +63,6 @@ app.component("Card", Card);
 app.component("Toast", Toast);
 app.component("Menu", Menu);
 app.component("Avatar", Avatar);
+app.component("Dialog", Dialog);
 
 app.mount("#admin-app");

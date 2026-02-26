@@ -24,6 +24,7 @@
            bg-white dark:bg-gray-800
            shadow-sm dark:shadow-none;
 }
+
 .kpi-body {
     @apply px-4 py-3; /* tighter padding */
 }

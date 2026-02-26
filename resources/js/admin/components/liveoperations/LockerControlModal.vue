@@ -167,8 +167,6 @@ function enableLocker() {
 </script>
 
 <template>
-    <ConfirmDialog />
-
     <Dialog
         :visible="visible"
         modal

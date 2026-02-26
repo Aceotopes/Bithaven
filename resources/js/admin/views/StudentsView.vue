@@ -321,8 +321,6 @@ onMounted(() => {
                         </template>
                     </Column>
                 </DataTable>
-
-                <ConfirmDialog />
             </div>
         </template>
     </Card>
