@@ -162,4 +162,14 @@ class StudentController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function summary()
+    {
+        return response()->json([
+            'total_students' => Student::count(),
+            'total_registered' => Student::whereNotNull('rfid_uid')->count(),
+            'total_active' => Student::where('status', 'ACTIVE')->count(),
+            'total_suspended' => Student::where('status', 'SUSPENDED')->count(),
+        ]);
+    }
 }

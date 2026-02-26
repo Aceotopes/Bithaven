@@ -4,6 +4,7 @@ import { useConfirm } from "primevue/useconfirm";
 import StudentService from "../services/studentService";
 import StudentForm from "../components/students/StudentForm.vue";
 import { useToast } from "primevue/usetoast";
+import axios from "axios";
 
 const toast = useToast();
 
@@ -26,6 +27,22 @@ const editMode = ref(false);
 const selectedStudent = ref(null);
 
 const confirm = useConfirm();
+
+const summary = ref({
+    total_students: 0,
+    total_registered: 0,
+    total_active: 0,
+    total_suspended: 0,
+});
+
+async function fetchSummary() {
+    try {
+        const res = await axios.get("/admin/students/summary");
+        summary.value = res.data;
+    } catch (err) {
+        console.error("Failed to fetch summary", err);
+    }
+}
 
 async function fetchStudents(page = 1) {
     loading.value = true;
@@ -107,6 +124,7 @@ function confirmDelete(student) {
 function handleSaved() {
     fetchStudents(currentPage.value);
     selectedStudent.value = null;
+    fetchSummary();
 }
 
 // FOR SUMMARY
@@ -124,7 +142,10 @@ const totalSuspended = computed(
     () => students.value.filter((s) => s.status === "SUSPENDED").length
 );
 
-onMounted(() => fetchStudents());
+onMounted(() => {
+    fetchStudents();
+    fetchSummary();
+});
 </script>
 
 <template>
@@ -143,7 +164,7 @@ onMounted(() => fetchStudents());
                     <Button
                         label="Add Student"
                         icon="pi pi-plus"
-                        class="bg-cyan-500 border-cyan-500 hover:bg-cyan-600"
+                        class="!bg-cyan-500 !hover:bg-cyan-600 !border-none !text-white"
                         @click="openCreate"
                     />
                 </div>
@@ -174,7 +195,7 @@ onMounted(() => fetchStudents());
                         <div class="kpi-body">
                             <div class="kpi-label">Total Students</div>
                             <div class="kpi-value text-cyan-600">
-                                {{ totalStudents }}
+                                {{ summary.total_students }}
                             </div>
                         </div>
                     </div>
@@ -183,7 +204,7 @@ onMounted(() => fetchStudents());
                         <div class="kpi-body">
                             <div class="kpi-label">Registered (RFID)</div>
                             <div class="kpi-value text-cyan-600">
-                                {{ totalRegistered }}
+                                {{ summary.total_registered }}
                             </div>
                         </div>
                     </div>
@@ -192,7 +213,7 @@ onMounted(() => fetchStudents());
                         <div class="kpi-body">
                             <div class="kpi-label">Active</div>
                             <div class="kpi-value text-cyan-600">
-                                {{ totalActive }}
+                                {{ summary.total_active }}
                             </div>
                         </div>
                     </div>
@@ -201,7 +222,7 @@ onMounted(() => fetchStudents());
                         <div class="kpi-body">
                             <div class="kpi-label">Suspended</div>
                             <div class="kpi-value text-cyan-600">
-                                {{ totalSuspended }}
+                                {{ summary.total_suspended }}
                             </div>
                         </div>
                     </div>
@@ -217,6 +238,7 @@ onMounted(() => fetchStudents());
                     :first="(currentPage - 1) * rows"
                     :loading="loading"
                     @page="onPage"
+                    stripedRows
                 >
                     <Column header="Student">
                         <template #body="{ data }">

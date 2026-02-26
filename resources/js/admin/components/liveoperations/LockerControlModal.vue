@@ -213,7 +213,7 @@ function enableLocker() {
             <!-- STUDENT SECTION -->
             <div v-if="locker.rental" class="flex items-center gap-4">
                 <div
-                    class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-base font-semibold text-gray-600 overflow-hidden"
+                    class="w-14 h-14 rounded-full bg-cyan-500 flex items-center justify-center text-base font-semibold text-white overflow-hidden"
                 >
                     <img
                         v-if="locker.rental.photo_url"

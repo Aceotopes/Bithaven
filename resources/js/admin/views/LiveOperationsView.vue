@@ -75,6 +75,9 @@ function openLocker(locker) {
 
 async function refreshLockers() {
     await fetchLockers();
+    selectedLocker.value = lockers.value.find(
+        (l) => l.id === selectedLocker.value.id
+    );
 }
 
 onMounted(() => {

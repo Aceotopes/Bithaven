@@ -107,6 +107,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/live/lockers/{locker}/disable', [LiveOperationsController::class, 'disableLocker']);
     Route::post('/admin/live/lockers/{locker}/enable', [LiveOperationsController::class, 'enableLocker']);
 
+    Route::get('/admin/students/summary', [StudentController::class, 'summary']);
     Route::apiResource('/admin/students', StudentController::class);
     Route::post('/admin/rfid/start', [RfidController::class, 'start']);
     Route::get('/admin/rfid/{session}', [RfidController::class, 'show']);

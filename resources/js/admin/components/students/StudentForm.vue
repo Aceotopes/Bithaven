@@ -7,7 +7,11 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Button from "primevue/button";
+import FloatLabel from "primevue/floatlabel";
 import { useToast } from "primevue/usetoast";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
+import InputMask from "primevue/inputmask";
 
 const toast = useToast();
 
@@ -309,98 +313,234 @@ onBeforeUnmount(() => {
     <Dialog
         :visible="visible"
         modal
-        :header="isEdit ? 'Edit Student' : 'Add Student'"
-        :style="{ width: '600px' }"
+        :style="{ width: '900px' }"
         @update:visible="handleDialogClose"
     >
-        <div class="space-y-4">
-            <!-- Photo -->
-            <div class="flex flex-col items-center space-y-2">
-                <img
-                    v-if="previewUrl"
-                    :src="previewUrl"
-                    class="w-24 h-24 rounded-full object-cover border"
-                />
-                <input type="file" accept="image/*" @change="onFileChange" />
+        <!-- HEADER -->
+        <template #header>
+            <div>
+                <h2 class="text-lg font-semibold">
+                    {{ isEdit ? "Edit Student" : "Add Student" }}
+                </h2>
+                <p class="text-xs text-surface-500">
+                    Student identity and academic configuration
+                </p>
             </div>
+        </template>
 
-            <InputText
-                v-model="form.student_number"
-                placeholder="Student Number"
-                class="w-full"
-            />
-            <InputText
-                v-model="form.first_name"
-                placeholder="First Name"
-                class="w-full"
-            />
-            <InputText
-                v-model="form.middle_name"
-                placeholder="Middle Name"
-                class="w-full"
-            />
-            <InputText
-                v-model="form.last_name"
-                placeholder="Last Name"
-                class="w-full"
-            />
-            <InputText
-                v-model="form.year_level"
-                placeholder="Year Level"
-                class="w-full"
-            />
-            <InputText
-                v-model="form.department"
-                placeholder="Department"
-                class="w-full"
-            />
-            <div class="flex gap-2 items-center">
-                <InputText
-                    v-model="form.rfid_uid"
-                    placeholder="RFID UID"
-                    class="w-full"
-                />
+        <!-- BODY -->
+        <div class="max-h-[75vh] overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <!-- ================= LEFT COLUMN ================= -->
+                <div
+                    class="md:col-span-1 flex flex-col items-center text-center gap-6 mt-2"
+                >
+                    <!-- Avatar (Clickable) -->
+                    <label class="relative group cursor-pointer">
+                        <div
+                            class="w-35 h-35 rounded-full overflow-hidden border border-surface-600 dark:border-surface-700 bg-surface-100 dark:bg-surface-800 flex items-center justify-center transition group-hover:opacity-80"
+                        >
+                            <img
+                                v-if="previewUrl"
+                                :src="previewUrl"
+                                class="w-full h-full object-cover"
+                            />
+                            <i
+                                v-else
+                                class="pi pi-user text-2xl text-surface-500"
+                                style="font-size: 2.5rem"
+                            ></i>
+                        </div>
 
-                <Button
-                    label="Scan"
-                    icon="pi pi-id-card"
-                    severity="info"
-                    @click="startScan"
-                    :loading="scanStatus === 'WAITING'"
-                    v-if="scanStatus !== 'WAITING'"
-                />
+                        <!-- Hover Overlay -->
+                        <div
+                            class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition"
+                        >
+                            <span class="text-white text-xs font-medium">
+                                Change
+                            </span>
+                        </div>
 
-                <Button
+                        <input
+                            type="file"
+                            accept="image/*"
+                            @change="onFileChange"
+                            class="hidden"
+                        />
+                    </label>
+
+                    <!-- Student Number (Centered Below Avatar) -->
+                    <div>
+                        <FloatLabel variant="on">
+                            <InputMask
+                                v-model="form.student_number"
+                                mask="99-999999"
+                                class="text-center font-semibold"
+                                size="small"
+                            />
+                            <label class="text-xs">Student Number *</label>
+                        </FloatLabel>
+                    </div>
+                </div>
+
+                <!-- ================= RIGHT COLUMN ================= -->
+                <div class="md:col-span-2 space-y-5 mt-1">
+                    <!-- STUDENT INFORMATION -->
+                    <div>
+                        <h3
+                            class="text-m font-semibold uppercase tracking-wide text-surface-400 mb-2"
+                        >
+                            Student Information
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FloatLabel variant="on">
+                                <InputText
+                                    v-model="form.first_name"
+                                    class="w-full"
+                                />
+                                <label class="text-sm">First Name *</label>
+                            </FloatLabel>
+
+                            <FloatLabel variant="on">
+                                <InputText
+                                    v-model="form.middle_name"
+                                    class="w-full"
+                                />
+                                <label class="text-sm">Middle Name</label>
+                            </FloatLabel>
+
+                            <FloatLabel variant="on">
+                                <InputText
+                                    v-model="form.last_name"
+                                    class="w-full"
+                                />
+                                <label class="text-sm">Last Name *</label>
+                            </FloatLabel>
+                        </div>
+                    </div>
+
+                    <!-- ACADEMIC INFORMATION -->
+                    <div>
+                        <h3
+                            class="text-s font-semibold uppercase tracking-wide text-surface-400 mb-2"
+                        >
+                            Academic Information
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FloatLabel variant="on">
+                                <Dropdown
+                                    v-model="form.year_level"
+                                    :options="['I', 'II', 'III', 'IV']"
+                                    class="w-full"
+                                />
+                                <label>Year Level *</label>
+                            </FloatLabel>
+
+                            <FloatLabel variant="on">
+                                <Dropdown
+                                    v-model="form.department"
+                                    :options="[
+                                        'Computer Engineering',
+                                        'Civil Engineering',
+                                        'Electrical Engineering',
+                                        'Mechanical Engineering',
+                                    ]"
+                                    class="w-full"
+                                />
+                                <label>Department *</label>
+                            </FloatLabel>
+                        </div>
+                    </div>
+
+                    <!-- ACCESS & RFID -->
+                    <div>
+                        <h3
+                            class="text-s font-semibold uppercase tracking-wide text-surface-400 mb-2"
+                        >
+                            Access Credentials
+                        </h3>
+
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"
+                        >
+                            <!-- Status -->
+                            <FloatLabel variant="on">
+                                <Dropdown
+                                    v-model="form.status"
+                                    :options="['ACTIVE', 'SUSPENDED']"
+                                    class="w-full"
+                                />
+                                <label>Status *</label>
+                            </FloatLabel>
+
+                            <!-- RFID + Scan -->
+                            <div class="flex gap-3 items-end">
+                                <!-- RFID Field -->
+                                <FloatLabel variant="on" class="flex-1">
+                                    <InputText
+                                        v-model="form.rfid_uid"
+                                        :disabled="scanStatus === 'WAITING'"
+                                        class="w-full"
+                                        :class="[
+                                            scanStatus === 'WAITING'
+                                                ? 'bg-surface-200 dark:bg-surface-800 cursor-not-allowed'
+                                                : '',
+                                            scanStatus === 'COMPLETED'
+                                                ? 'border-green-500'
+                                                : '',
+                                        ]"
+                                    />
+                                    <label>RFID UID *</label>
+                                </FloatLabel>
+
+                                <!-- Scan Button -->
+                                <Button
+                                    icon="pi pi-qrcode"
+                                    variant="outlined"
+                                    severity="info"
+                                    class="h-[42px]"
+                                    @click="startScan"
+                                    :loading="scanStatus === 'WAITING'"
+                                    v-if="scanStatus !== 'WAITING'"
+                                />
+
+                                <!-- Cancel Button -->
+                                <Button
+                                    icon="pi pi-times"
+                                    severity="danger"
+                                    class="h-[42px]"
+                                    @click="cancelScan"
+                                    v-if="scanStatus === 'WAITING'"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <template #footer>
+            <div
+                class="flex justify-between items-center dark:border-surface-800"
+            >
+                <!-- <Button
                     label="Cancel"
+                    severity="secondary"
                     icon="pi pi-times"
-                    severity="danger"
-                    @click="cancelScan"
-                    v-if="scanStatus === 'WAITING'"
-                />
-            </div>
+                    @click="handleCancel"
+                /> -->
 
-            <p v-if="scanStatus === 'WAITING'" class="text-sm text-gray-500">
-                Waiting for student to scan at kiosk...
-            </p>
-            <p v-if="scanStatus === 'EXPIRED'" class="text-sm text-red-500">
-                Scan expired. Please try again.
-            </p>
-
-            <Dropdown
-                v-model="form.status"
-                :options="['ACTIVE', 'INACTIVE', 'SUSPENDED']"
-                placeholder="Status"
-                class="w-full"
-            />
-
-            <div class="flex justify-end gap-2 pt-4">
-                <Button label="Cancel" text @click="handleCancel" />
                 <Button
-                    :label="isEdit ? 'Update' : 'Create'"
+                    :label="isEdit ? 'Update Student' : 'Create Student'"
+                    icon="pi pi-check"
+                    class="!bg-cyan-500 hover:!bg-cyan-600 !border-none !text-white"
                     :loading="loading"
                     @click="submit"
                 />
             </div>
-        </div>
+        </template>
     </Dialog>
 </template>
