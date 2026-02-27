@@ -194,4 +194,5 @@ onBeforeUnmount(() => {
         :locker="selectedLocker"
         @refresh="refreshLockers"
     />
+    <ConfirmDialog />
 </template>

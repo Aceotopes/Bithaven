@@ -5,5 +5,4 @@ import ConfirmDialog from "primevue/confirmdialog";
 <template>
     <router-view />
     <toast />
-    <ConfirmDialog />
 </template>
