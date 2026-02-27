@@ -331,47 +331,4 @@ onMounted(() => {
         :student="selectedStudent"
         @saved="handleSaved"
     />
-    <ConfirmDialog>
-        <template #container="{ message, acceptCallback, rejectCallback }">
-            <div
-                class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 text-center"
-            >
-                <!-- ICON (CENTERED) -->
-                <div
-                    class="mx-auto w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-6"
-                >
-                    <i
-                        class="pi pi-trash text-red-600 dark:text-red-400 text-xl"
-                    ></i>
-                </div>
-
-                <!-- TITLE -->
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    {{ message.header }}
-                </h3>
-
-                <!-- MESSAGE -->
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    {{ message.message }}
-                </p>
-
-                <!-- ACTIONS -->
-                <div class="flex justify-center gap-4 mt-8">
-                    <Button
-                        label="Cancel"
-                        severity="secondary"
-                        outlined
-                        @click="rejectCallback"
-                    />
-
-                    <Button
-                        label="Delete"
-                        icon="pi pi-trash"
-                        class="!bg-red-600 hover:!bg-red-700 !text-white !border-none"
-                        @click="acceptCallback"
-                    />
-                </div>
-            </div>
-        </template>
-    </ConfirmDialog>
 </template>

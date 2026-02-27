@@ -4,6 +4,7 @@ import Dialog from "primevue/dialog";
 
 import AdminManagement from "./AdminManagement.vue";
 import CardManagement from "./Cardmanagement.vue";
+
 const props = defineProps({
     visible: Boolean,
 });
@@ -37,7 +38,7 @@ function goBack() {
         <Dialog
             :visible="visible"
             modal
-            :style="{ width: currentView === 'menu' ? '500px' : '700px' }"
+            :style="{ width: currentView === 'menu' ? '500px' : '1000px' }"
             class="rounded-2xl"
             @update:visible="updateVisible"
             :draggable="false"

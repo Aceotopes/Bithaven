@@ -271,51 +271,5 @@ function deleteAdmin(admin) {
                 </div>
             </div>
         </Dialog>
-
-        <ConfirmDialog>
-            <template #container="{ message, acceptCallback, rejectCallback }">
-                <div
-                    class="w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6"
-                >
-                    <!-- Icon -->
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center"
-                        >
-                            <i
-                                class="pi pi-trash text-red-600 dark:text-red-400"
-                            ></i>
-                        </div>
-
-                        <div class="flex-1">
-                            <h3
-                                class="text-base font-semibold text-gray-900 dark:text-white"
-                            >
-                                {{ message.header }}
-                            </h3>
-                            <p class="text-sm text-gray-500 mt-1">
-                                {{ message.message }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex justify-end gap-3 mt-6">
-                        <Button
-                            label="Cancel"
-                            severity="secondary"
-                            text
-                            @click="rejectCallback"
-                        />
-                        <Button
-                            label="Delete"
-                            icon="pi pi-trash"
-                            class="!bg-red-600 hover:!bg-red-700 !text-white !border-none"
-                            @click="acceptCallback"
-                        />
-                    </div>
-                </div>
-            </template>
-        </ConfirmDialog>
     </div>
 </template>
