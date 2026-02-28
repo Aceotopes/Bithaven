@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
@@ -14,6 +14,10 @@ const search = ref("");
 const showDialog = ref(false);
 const editMode = ref(false);
 
+const scanId = ref(null);
+const scanning = ref(false);
+const scanPollTimer = null;
+
 const form = ref({
     id: null,
     card_label: "",
@@ -21,6 +25,72 @@ const form = ref({
     assigned_to: "",
     status: "ACTIVE",
 });
+
+async function startScan() {
+    try {
+        const res = await axios.post("/admin/rfid/start");
+
+        scanId.value = res.data.scan_id;
+        scanning.value = true;
+        scanPollTimer = setInterval(pollScanResult, 2000);
+
+        toast.add({
+            severity: "info",
+            summary: "RFID Scan Started",
+            detail: "Please tap the RFID card on the kiosk scanner.",
+            life: 5000,
+        });
+    } catch (err) {
+        if (err.response?.status === 409) {
+            toast.add({
+                severity: "warn",
+                summary: "Scanner Busy",
+                detail: "RFID scanner is currently in use.",
+                life: 5000,
+            });
+            return;
+        }
+    }
+}
+
+async function pollScanResult() {
+    if (!scanId.value) return;
+
+    try {
+        const res = await axios.get(`/admin/rfid/${scanId.value}`);
+
+        if (res.data.status === "COMPLETED") {
+            form.value.rfid_uid = res.data.rfid_uid;
+
+            stopScan();
+            toast.add({
+                severity: "success",
+                summary: "Card Detected",
+                detail: "RFID UID captured successfully.",
+                life: 5000,
+            });
+        }
+
+        if (res.data.status === "EXPIRED") {
+            stopScan();
+            toast.add({
+                severity: "warn",
+                summary: "Scan Expired",
+                detail: "RFID scan timed out.",
+                life: 5000,
+            });
+        }
+    } catch (e) {
+        stopScan();
+    }
+}
+
+async function cancelScan() {
+    if (!scanId.value) return;
+
+    await axios.post(`/admin/rfid/${scanId.value}/cancel`);
+    stopScan();
+}
 
 async function fetchCards() {
     loading.value = true;
@@ -33,7 +103,7 @@ async function fetchCards() {
             severity: "error",
             summary: "Error",
             detail: "Failed to load cards.",
-            life: 3000,
+            life: 5000,
         });
     } finally {
         loading.value = false;
@@ -82,7 +152,7 @@ async function saveCard() {
                 severity: "success",
                 summary: "Updated",
                 detail: "Card updated successfully.",
-                life: 2000,
+                life: 5000,
             });
         } else {
             await axios.post("/admin/cards", form.value);
@@ -90,7 +160,7 @@ async function saveCard() {
                 severity: "success",
                 summary: "Created",
                 detail: "Card registered successfully.",
-                life: 2000,
+                life: 5000,
             });
         }
 
@@ -101,7 +171,7 @@ async function saveCard() {
             severity: "error",
             summary: "Error",
             detail: e.response?.data?.message || "Operation failed.",
-            life: 3000,
+            life: 5000,
         });
     }
 }
@@ -118,7 +188,7 @@ function deleteCard(card) {
                 severity: "success",
                 summary: "Deleted",
                 detail: "Card deleted.",
-                life: 2000,
+                life: 5000,
             });
             fetchCards();
         },
@@ -135,6 +205,22 @@ function toggleStatus(card) {
 function statusSeverity(status) {
     return status === "ACTIVE" ? "success" : "danger";
 }
+
+function stopScan() {
+    if (scanPollTimer) {
+        clearInterval(scanPollTimer);
+        scanPollTimer = null;
+    }
+
+    scanId.value = null;
+    scanning.value = false;
+}
+
+watch(showDialog, (val) => {
+    if (!val) {
+        stopScan();
+    }
+});
 </script>
 
 <template>
@@ -233,9 +319,36 @@ function statusSeverity(status) {
                     <InputText v-model="form.card_label" class="w-full" />
                 </div>
 
-                <div v-if="!editMode">
+                <div v-if="!editMode" class="space-y-2">
                     <label class="text-sm">RFID UID</label>
-                    <InputText v-model="form.rfid_uid" class="w-full" />
+
+                    <div class="flex gap-2">
+                        <InputText
+                            v-model="form.rfid_uid"
+                            class="w-full"
+                            placeholder="Scan card to auto-fill"
+                            :disabled="scanning"
+                        />
+
+                        <Button
+                            icon="pi pi-qrcode"
+                            variant="outlined"
+                            :label="scanning ? 'Scanning' : 'Scan'"
+                            :severity="scanning ? 'info' : 'info'"
+                            @click="startScan"
+                            :disabled="scanning"
+                        />
+                    </div>
+
+                    <div v-if="scanning" class="text-sm text-amber-600">
+                        Waiting for RFID tap...
+                        <Button
+                            label="Cancel"
+                            text
+                            severity="danger"
+                            @click="cancelScan"
+                        />
+                    </div>
                 </div>
 
                 <div>
@@ -244,8 +357,17 @@ function statusSeverity(status) {
                 </div>
 
                 <div class="flex justify-end gap-2 pt-4">
-                    <Button label="Cancel" text @click="showDialog = false" />
-                    <Button label="Save" @click="saveCard" />
+                    <Button
+                        label="Cancel"
+                        text
+                        @click="showDialog = false"
+                        class="!text-cyan-500"
+                    />
+                    <Button
+                        label="Save"
+                        @click="saveCard"
+                        class="!bg-cyan-500 hover:!bg-cyan-600 !text-white border-none"
+                    />
                 </div>
             </div>
         </Dialog>

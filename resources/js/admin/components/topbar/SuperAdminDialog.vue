@@ -3,7 +3,7 @@ import { ref } from "vue";
 import Dialog from "primevue/dialog";
 
 import AdminManagement from "./AdminManagement.vue";
-import CardManagement from "./Cardmanagement.vue";
+import CardManagement from "./CardManagement.vue";
 
 const props = defineProps({
     visible: Boolean,

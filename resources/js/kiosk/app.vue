@@ -49,7 +49,7 @@ const activeScanSession = ref(null);
 const showAdminScanModal = ref(false);
 
 let scanPollTimer = null;
-let currentPollMode = null;
+// let currentPollMode = null;
 
 // =======================================
 // locker rental manager for testing (no Backend)
@@ -67,7 +67,6 @@ let currentPollMode = null;
 async function pollScanSession() {
     try {
         const res = await fetch("/api/kiosk/rfid/pending");
-
         if (!res.ok) return;
 
         const session = await res.json();
@@ -75,18 +74,18 @@ async function pollScanSession() {
         if (session && session.status === "PENDING") {
             activeScanSession.value = session;
             showAdminScanModal.value = true;
-
-            startFastPolling();
         } else {
             activeScanSession.value = null;
             showAdminScanModal.value = false;
 
-            startSlowPolling();
+            stopScanPolling();
         }
     } catch (err) {
         console.error("Scan polling failed", err);
+        stopScanPolling();
     }
 }
+
 const scanCountdown = computed(() => {
     if (!activeScanSession.value) return 0;
 
@@ -100,31 +99,38 @@ function stopScanPolling() {
     if (scanPollTimer) {
         clearInterval(scanPollTimer);
         scanPollTimer = null;
+        console.log("Scan polling stopped");
     }
-    currentPollMode = null;
 }
 
-function startSlowPolling() {
-    if (currentPollMode === "SLOW") return;
-
-    stopScanPolling();
-
-    scanPollTimer = setInterval(pollScanSession, 3000);
-    currentPollMode = "SLOW";
-
-    console.log("Scan polling: SLOW (4s)");
-}
-
-function startFastPolling() {
-    if (currentPollMode === "FAST") return;
-
-    stopScanPolling();
+function startScanPolling() {
+    if (scanPollTimer) return;
 
     scanPollTimer = setInterval(pollScanSession, 1000);
-    currentPollMode = "FAST";
-
-    console.log("Scan polling: FAST (1s)");
+    console.log("🟢 Scan polling started");
 }
+
+// function startSlowPolling() {
+//     if (currentPollMode === "SLOW") return;
+
+//     stopScanPolling();
+
+//     scanPollTimer = setInterval(pollScanSession, 3000);
+//     currentPollMode = "SLOW";
+
+//     console.log("Scan polling: SLOW (4s)");
+// }
+
+// function startFastPolling() {
+//     if (currentPollMode === "FAST") return;
+
+//     stopScanPolling();
+
+//     scanPollTimer = setInterval(pollScanSession, 1000);
+//     currentPollMode = "FAST";
+
+//     console.log("Scan polling: FAST (1s)");
+// }
 // ===============================================================================
 
 // ===================== locker rental manager (with Backend) =====================
@@ -200,6 +206,7 @@ const idle = useIdleTimeout({
 //===================================
 async function handleStartScan(uid) {
     console.log("📟 RFID scanned:", uid);
+    await pollScanSession(); // Check if there's a pending admin scan session
 
     if (activeScanSession.value) {
         try {
@@ -216,7 +223,7 @@ async function handleStartScan(uid) {
             activeScanSession.value = null;
 
             console.log("Admin scan completed");
-
+            startScanPolling(); // Resume polling for admin scans
             return;
         } catch (err) {
             console.error("Failed to complete admin scan", err);
@@ -676,7 +683,7 @@ onMounted(async () => {
     console.log("🔁 APP MOUNTED");
     await hydrateGlobalState();
     debugDump("after hydrateGlobalState (mount)");
-    startSlowPolling();
+    // startSlowPolling();
 });
 
 onBeforeUnmount(() => {

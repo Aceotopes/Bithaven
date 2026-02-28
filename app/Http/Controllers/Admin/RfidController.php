@@ -20,6 +20,7 @@ class RfidController extends Controller
         // Check if another admin already has active session
         $existingSession = RfidScanSession::where('kiosk_id', 'KIOSK-01')
             ->where('status', 'PENDING')
+            ->where('expires_at', '>', now())
             ->first();
 
         if ($existingSession) {

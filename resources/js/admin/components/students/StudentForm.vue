@@ -221,6 +221,13 @@ async function startScan() {
             scanId.value = res.data.scan_id;
             scanStatus.value = "WAITING";
             scanPollTimer = setInterval(pollScanResult, 2000);
+
+            toast.add({
+                severity: "info",
+                summary: "RFID Scan Started",
+                detail: "Please tap the RFID card on the kiosk scanner.",
+                life: 5000,
+            });
         }
 
         if (res.data.status === "CANCELLED") {
@@ -503,19 +510,22 @@ onBeforeUnmount(() => {
                                     variant="outlined"
                                     severity="info"
                                     class="h-[42px]"
+                                    label="Scan"
                                     @click="startScan"
                                     :loading="scanStatus === 'WAITING'"
                                     v-if="scanStatus !== 'WAITING'"
                                 />
 
                                 <!-- Cancel Button -->
-                                <Button
-                                    icon="pi pi-times"
-                                    severity="danger"
-                                    class="h-[42px]"
-                                    @click="cancelScan"
-                                    v-if="scanStatus === 'WAITING'"
-                                />
+                                <div v-if="scanStatus === 'WAITING'">
+                                    <Button
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        class="h-[42px]"
+                                        @click="cancelScan"
+                                        v-if="scanStatus === 'WAITING'"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
