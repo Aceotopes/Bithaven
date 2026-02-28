@@ -3,10 +3,13 @@ import { ref, onMounted } from "vue";
 import Sidebar from "./Sidebar.vue";
 import Topbar from "./Topbar.vue";
 import SuperAdminDialog from "../components/topbar/SuperAdminDialog.vue";
+import AccountSettingsDialog from "../components/topbar/AccountSettingsDialog.vue";
 
 const mobileOpen = ref(false);
 const isDark = ref(false);
+
 const showSuperAdmin = ref(false);
+const showAccountSettings = ref(false);
 
 function toggleDark() {
     isDark.value = !isDark.value;
@@ -31,8 +34,10 @@ onMounted(() => {
             @toggle-sidebar="mobileOpen = true"
             @toggle-dark="toggleDark"
             @open-super-admin="showSuperAdmin = true"
+            @open-account-settings="showAccountSettings = true"
         />
         <SuperAdminDialog v-model:visible="showSuperAdmin" />
+        <AccountSettingsDialog v-model:visible="showAccountSettings" />
 
         <!-- Sidebar (Desktop) -->
         <Sidebar class="hidden lg:flex" />

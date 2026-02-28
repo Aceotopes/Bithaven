@@ -155,7 +155,7 @@ function formatDate(date) {
                         >
                             <img
                                 v-if="event.student?.photo_url"
-                                :src="event.student.photo_url"
+                                :src="`/storage/${event.student.photo_url}`"
                                 class="w-full h-full object-cover"
                             />
 

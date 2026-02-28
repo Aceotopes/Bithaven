@@ -5,7 +5,12 @@ import { useRouter } from "vue-router";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
-const emit = defineEmits(["toggle-sidebar", "toggle-dark", "open-super-admin"]);
+const emit = defineEmits([
+    "toggle-sidebar",
+    "toggle-dark",
+    "open-super-admin",
+    "open-account-settings",
+]);
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -45,7 +50,7 @@ const items = computed(() => [
     {
         label: "Account Settings",
         icon: "pi pi-cog",
-        command: () => router.push("/admin/account"),
+        command: () => emit("open-account-settings"),
     },
     {
         label: "Developer Options",
@@ -91,12 +96,21 @@ const items = computed(() => [
             <div class="relative">
                 <button
                     @click="toggleMenu"
-                    class="flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500 text-white"
+                    class="flex items-center justify-center"
                 >
                     <Avatar
+                        v-if="auth.admin?.photo_url"
+                        :image="`/storage/${auth.admin.photo_url}`"
+                        shape="circle"
+                        size="xlarge"
+                    />
+
+                    <Avatar
+                        v-else
                         :label="adminName.charAt(0).toUpperCase()"
                         shape="circle"
                         size="large"
+                        style="background-color: #00bcd4; color: #ffffff"
                     />
                 </button>
 

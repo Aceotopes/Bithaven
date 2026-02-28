@@ -538,12 +538,12 @@ onBeforeUnmount(() => {
             <div
                 class="flex justify-between items-center dark:border-surface-800"
             >
-                <!-- <Button
+                <Button
                     label="Cancel"
-                    severity="secondary"
-                    icon="pi pi-times"
+                    class="!text-cyan-500"
                     @click="handleCancel"
-                /> -->
+                    text
+                />
 
                 <Button
                     :label="isEdit ? 'Update Student' : 'Create Student'"

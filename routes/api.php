@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LiveOperationsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\RfidController;
+use App\Http\Controllers\Admin\AdminProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -112,6 +113,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/rfid/start', [RfidController::class, 'start']);
     Route::get('/admin/rfid/{session}', [RfidController::class, 'show']);
     Route::post('/admin/rfid/{session}/cancel', [RfidController::class, 'cancel']);
+
+    Route::post('/admin/profile/update', [AdminProfileController::class, 'update']);
+    Route::post('/admin/profile/change-password', [AdminProfileController::class, 'changePassword']);
 });
 Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 

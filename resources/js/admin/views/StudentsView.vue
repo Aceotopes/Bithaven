@@ -249,7 +249,7 @@ onMounted(() => {
                                 >
                                     <img
                                         v-if="data.photo_url"
-                                        :src="`http://127.0.0.1:8000/storage/${data.photo_url}`"
+                                        :src="`/storage/${data.photo_url}`"
                                         class="w-10 h-10 rounded-full object-cover"
                                     />
                                     <span v-else>
