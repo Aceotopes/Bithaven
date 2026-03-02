@@ -48,11 +48,12 @@ defineEmits(["close", "action"]);
                     <!-- Glow -->
                     <div
                         class="absolute inset-0 rounded-full blur-xl opacity-60"
-                        :class="
-                            type === 'success'
-                                ? 'bg-emerald-400'
-                                : 'bg-rose-400'
-                        "
+                        :class="{
+                            'bg-emerald-400': type === 'success',
+                            'bg-rose-400': type === 'error',
+                            'bg-blue-400': type === 'admin',
+                            'bg-amber-400': type === 'warning',
+                        }"
                     />
 
                     <!-- Icon badge -->
@@ -92,6 +93,36 @@ defineEmits(["close", "action"]);
                                 d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
                             />
                         </svg>
+                        <svg
+                            v-if="type === 'admin'"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-25 h-25 text-blue-600"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 9v3m0 0v3m0-3h3m-3 0H9m9 9H6a2 2 0 01-2-2V8a2 2 0 012-2h3l1-2h4l1 2h3a2 2 0 012 2v11a2 2 0 01-2 2z"
+                            />
+                        </svg>
+                        <svg
+                            v-if="type === 'warning'"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-25 h-25 text-amber-600"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 9v4m0 4h.01M10.29 3.86l-7.17 12.42A2 2 0 004.83 19h14.34a2 2 0 001.71-3.02L13.71 3.86a2 2 0 00-3.42 0z"
+                            />
+                        </svg>
                     </div>
                 </div>
 
@@ -119,12 +150,16 @@ defineEmits(["close", "action"]);
                             >.
                         </span>
 
-                        <span v-else>
+                        <span v-else-if="type === 'error'">
                             Your information is
                             <span class="font-semibold text-rose-600">
                                 not currently enrolled
                             </span>
                             in the system.
+                        </span>
+
+                        <span v-else>
+                            {{ message }}
                         </span>
                     </p>
                     <p
@@ -151,10 +186,14 @@ defineEmits(["close", "action"]);
                             You will be redirected to the system shortly.
                         </span>
 
-                        <span v-else>
+                        <span v-else-if="type === 'error'">
                             Please contact the
                             <span class="font-semibold">administrator</span>
                             for further assistance.
+                        </span>
+
+                        <span v-else>
+                            {{ message }}
                         </span>
                     </p>
                 </div>

@@ -21,7 +21,30 @@ const popupType = ref(null); // "success" | "error"
 const countdown = ref(5);
 const scannedUid = ref(null);
 
+const popupTitle = ref("");
+const popupMessage = ref("");
+const popupCountdown = ref(null);
+const showPopupAction = ref(false);
+const popupActionLabel = ref("Continue");
+
 let countdownTimer = null;
+
+function triggerPopup({
+    type,
+    title,
+    message = "",
+    countdown = null,
+    showAction = false,
+    actionLabel = "Continue",
+}) {
+    popupType.value = type;
+    popupTitle.value = title;
+    popupMessage.value = message;
+    popupCountdown.value = countdown;
+    showPopupAction.value = showAction;
+    popupActionLabel.value = actionLabel;
+    showPopup.value = true;
+}
 
 /* -----------------------------
    Popup helpers
@@ -31,12 +54,25 @@ function handlePopupClose() {
     showPopup.value = false;
 }
 
+// function startCountdown() {
+//     countdown.value = 5;
+
+//     countdownTimer = setInterval(() => {
+//         countdown.value--;
+//         if (countdown.value === 0) {
+//             clearInterval(countdownTimer);
+//             emit("success-complete");
+//         }
+//     }, 1000);
+// }
+
 function startCountdown() {
-    countdown.value = 5;
+    popupCountdown.value = 5;
 
     countdownTimer = setInterval(() => {
-        countdown.value--;
-        if (countdown.value === 0) {
+        popupCountdown.value--;
+
+        if (popupCountdown.value === 0) {
             clearInterval(countdownTimer);
             emit("success-complete");
         }
@@ -46,6 +82,24 @@ function startCountdown() {
 /* -----------------------------
    React to backend result
 ------------------------------ */
+// watch(
+//     () => props.scanResult,
+//     (result) => {
+//         if (!result) return;
+
+//         clearInterval(countdownTimer);
+
+//         if (result.status === "success") {
+//             popupType.value = "success";
+//             scannedUid.value = result.uid;
+//             showPopup.value = true;
+//             startCountdown();
+//         } else {
+//             popupType.value = "error";
+//             showPopup.value = true;
+//         }
+//     }
+// );
 watch(
     () => props.scanResult,
     (result) => {
@@ -53,14 +107,46 @@ watch(
 
         clearInterval(countdownTimer);
 
-        if (result.status === "success") {
-            popupType.value = "success";
-            scannedUid.value = result.uid;
-            showPopup.value = true;
-            startCountdown();
-        } else {
-            popupType.value = "error";
-            showPopup.value = true;
+        switch (result.status) {
+            case "success":
+                triggerPopup({
+                    type: "success",
+                    title: "ACCESS CONFIRMED",
+                    countdown: 5,
+                    showAction: true,
+                });
+
+                startCountdown();
+                break;
+
+            case "error":
+                triggerPopup({
+                    type: "error",
+                    title: "ACCESS NOT AVAILABLE",
+                });
+                break;
+
+            // 🔵 Future: Admin
+            case "admin":
+                triggerPopup({
+                    type: "admin",
+                    title: "ADMIN CARD DETECTED",
+                    message: "Accessing administrative controls...",
+                    countdown: 5,
+                    showAction: true,
+                });
+                startCountdown();
+                break;
+
+            // 🟡 Future: Suspended
+            case "suspended":
+                triggerPopup({
+                    type: "warning",
+                    title: "ACCOUNT SUSPENDED",
+                    message:
+                        "Your ID has been suspended. Please contact administration.",
+                });
+                break;
         }
     }
 );
@@ -111,7 +197,7 @@ onBeforeMount(() => {
         </div>
 
         <!-- Status Popup -->
-        <StatusPopup
+        <!-- <StatusPopup
             :show="showPopup"
             :type="popupType"
             :title="
@@ -127,6 +213,17 @@ onBeforeMount(() => {
             :countdown="popupType === 'success' ? countdown : null"
             :showAction="popupType === 'success'"
             actionLabel="Continue"
+            @action="handlePopupClose"
+            @close="handlePopupClose"
+        /> -->
+        <StatusPopup
+            :show="showPopup"
+            :type="popupType"
+            :title="popupTitle"
+            :message="popupMessage"
+            :countdown="popupCountdown"
+            :showAction="showPopupAction"
+            :actionLabel="popupActionLabel"
             @action="handlePopupClose"
             @close="handlePopupClose"
         />

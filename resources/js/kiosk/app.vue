@@ -14,6 +14,7 @@ import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
+import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
 
 import { useRFIDService } from "./services";
 
@@ -206,7 +207,11 @@ const idle = useIdleTimeout({
 //===================================
 async function handleStartScan(uid) {
     console.log("📟 RFID scanned:", uid);
-    await pollScanSession(); // Check if there's a pending admin scan session
+
+    // -------------------------------------------------
+    // 1️⃣ ADMIN POLLING SESSION COMPLETION (KEEP THIS)
+    // -------------------------------------------------
+    await pollScanSession();
 
     if (activeScanSession.value) {
         try {
@@ -223,7 +228,7 @@ async function handleStartScan(uid) {
             activeScanSession.value = null;
 
             console.log("Admin scan completed");
-            startScanPolling(); // Resume polling for admin scans
+            startScanPolling();
             return;
         } catch (err) {
             console.error("Failed to complete admin scan", err);
@@ -231,46 +236,84 @@ async function handleStartScan(uid) {
         }
     }
 
-    scanResult.value = null;
+    // -------------------------------------------------
+    // 2️⃣ CHECK IF ADMIN CARD (DIRECT ADMIN TAP)
+    // -------------------------------------------------
     try {
-        const res = await fetch("/api/kiosk/scan", {
+        const adminRes = await fetch("/api/kiosk/admin/scan", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 rfid_uid: uid,
+                kiosk_id: "KIOSK-01",
             }),
         });
 
+        if (adminRes.ok) {
+            scanResult.value = {
+                status: "admin",
+                uid,
+            };
+            return;
+        }
+    } catch (err) {
+        console.log("Not an admin card");
+    }
+
+    // -------------------------------------------------
+    // 3️⃣ STUDENT CHECK
+    // -------------------------------------------------
+    try {
+        const res = await fetch("/api/kiosk/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rfid_uid: uid }),
+        });
+
         if (!res.ok) {
-            throw new Error("RFID not Registered");
+            scanResult.value = { status: "error" };
+            return;
         }
 
         const data = await res.json();
 
+        // Example: suspended
+        if (data.student?.status === "SUSPENDED") {
+            scanResult.value = { status: "suspended" };
+            return;
+        }
+
+        // Valid student
         scanResult.value = {
             status: "success",
-            uid,
+            student: data.student,
         };
-
-        //start session
-        session.startSession(data.student);
-
-        //check for active rental
-        await recoverActiveRental();
-        await recoverActivePenalty();
-
-        rfid.disable();
-
-        console.log("Session started with student:", session.state.student);
-        return { success: true, uid };
     } catch (err) {
         console.error("RFID scan failed", err);
-        scanResult.value = {
-            status: "error",
-        };
+        scanResult.value = { status: "error" };
     }
+}
+
+function handleIdleComplete() {
+    const result = scanResult.value;
+
+    if (!result) return;
+
+    if (result.status === "admin") {
+        flow.goToAdminAccess();
+        return;
+    }
+
+    if (result.status === "success") {
+        session.startSession(result.student);
+        recoverActiveRental();
+        recoverActivePenalty();
+        rfid.disable();
+        flow.goToStudentDashboard();
+        return;
+    }
+
+    // suspended & error → stay idle
 }
 
 // ===================== locker selection (back and confirm)handlers =====================
@@ -738,8 +781,13 @@ watch(
         <IdleScreen
             v-if="session.state.kioskState === KIOSK_STATES.IDLE"
             @start-scan="handleStartScan"
-            @success-complete="flow.goToStudentDashboard()"
+            @success-complete="handleIdleComplete"
             :scanResult="scanResult"
+        />
+
+        <AdminAccessScreen
+            v-else-if="session.state.kioskState === KIOSK_STATES.ADMIN_ACCESS"
+            @exit-admin="flow.goToIdle()"
         />
 
         <MainScreen

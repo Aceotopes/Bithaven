@@ -46,6 +46,10 @@ export function useKioskFlow(state) {
         state.kioskState = KIOSK_STATES.ERROR;
     }
 
+    function goToAdminAccess() {
+        state.kioskState = KIOSK_STATES.ADMIN_ACCESS;
+    }
+
     return {
         kioskState,
         goToIdle,
@@ -57,5 +61,6 @@ export function useKioskFlow(state) {
         goToActiveSession,
         goToDone,
         goToError,
+        goToAdminAccess,
     };
 }

@@ -12,4 +12,5 @@ export const KIOSK_STATES = {
     DONE: "DONE",
 
     ERROR: "ERROR",
+    ADMIN_ACCESS: "ADMIN_ACCESS",
 };
