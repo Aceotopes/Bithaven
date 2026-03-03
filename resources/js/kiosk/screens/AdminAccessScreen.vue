@@ -26,7 +26,7 @@ const emit = defineEmits([
     <div
         class="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200"
     >
-        <!-- Background identical style -->
+        <!-- Background -->
         <div class="absolute inset-0 pointer-events-none overflow-hidden">
             <div
                 class="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300"
@@ -42,11 +42,17 @@ const emit = defineEmits([
         <main class="relative z-10 w-full px-16 pt-12">
             <AdminLockerPanel
                 :lockers="lockers"
+                :selectedLockerDetails="selectedLockerDetails"
                 @select-locker="$emit('select-locker', $event)"
+                @force-unlock="$emit('force-unlock')"
+                @disable-locker="$emit('disable-locker')"
+                @enable-locker="$emit('enable-locker')"
+                @clear-penalty="$emit('clear-penalty')"
+                @end-rental="$emit('end-rental')"
             />
         </main>
 
-        <AdminLockerDetailsModal
+        <!-- <AdminLockerDetailsModal
             :show="showDetails"
             :details="selectedLockerDetails"
             @close="$emit('close-details')"
@@ -55,6 +61,6 @@ const emit = defineEmits([
             @enable-locker="$emit('enable-locker')"
             @clear-penalty="$emit('clear-penalty')"
             @end-rental="$emit('end-rental')"
-        />
+        /> -->
     </div>
 </template>

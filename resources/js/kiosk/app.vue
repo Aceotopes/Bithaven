@@ -159,7 +159,10 @@ async function executeAdminAction() {
         });
 
         await fetchAdminLockers();
-        showAdminDetails.value = false;
+
+        if (lockerNumber) {
+            await handleAdminSelectLocker(lockerNumber);
+        }
     } catch (err) {
         toast.add({
             severity: "error",

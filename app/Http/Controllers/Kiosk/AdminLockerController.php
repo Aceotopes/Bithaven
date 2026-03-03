@@ -111,9 +111,33 @@ class AdminLockerController extends Controller
 
     public function index()
     {
-        $lockers = Locker::select('id', 'locker_number', 'status')
+        $lockers = Locker::with([
+            'activeRental.penalty'
+        ])
             ->orderBy('locker_number')
-            ->get();
+            ->get()
+            ->map(function ($locker) {
+
+                $rental = $locker->activeRental;
+                $penalty = $rental?->penalty;
+
+                if ($locker->status === 'OUT_OF_SERVICE') {
+                    $state = 'OUT_OF_SERVICE';
+                } elseif ($penalty && $penalty->status === 'ACTIVE') {
+                    $state = 'PENALTY';
+                } elseif ($rental && $rental->status === 'ACTIVE') {
+                    $state = 'IN_USE';
+                } else {
+                    $state = 'AVAILABLE';
+                }
+
+                return [
+                    'id' => $locker->id,
+                    'locker_number' => $locker->locker_number,
+                    'status' => $locker->status,
+                    'operational_state' => $state,
+                ];
+            });
 
         return response()->json([
             'lockers' => $lockers

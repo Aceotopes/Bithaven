@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed } from "vue";
+
+const props = defineProps({
     show: Boolean,
     details: Object,
 });
@@ -12,6 +14,52 @@ const emit = defineEmits([
     "clear-penalty",
     "end-rental",
 ]);
+
+const hasRental = computed(() => !!props.details?.rental);
+
+const hasActiveRental = computed(
+    () => props.details?.rental?.status === "ACTIVE"
+);
+
+const hasPenalty = computed(() => props.details?.penalty?.status === "ACTIVE");
+
+const lockerStatus = computed(() => props.details?.locker?.status);
+
+const isAvailable = computed(() => lockerStatus.value === "AVAILABLE");
+
+const isOutOfService = computed(() => lockerStatus.value === "OUT_OF_SERVICE");
+
+const canEndRental = computed(() => hasActiveRental.value && !hasPenalty.value);
+
+const canClearPenalty = computed(() => hasPenalty.value);
+
+const canForceUnlock = computed(() => hasRental.value);
+
+const toggleLabel = computed(() => {
+    if (isAvailable.value) return "Disable Locker";
+    if (isOutOfService.value) return "Enable Locker";
+    return "Unavailable";
+});
+
+const toggleClass = computed(() => {
+    if (isAvailable.value) return "bg-gray-800 text-white";
+    if (isOutOfService.value) return "bg-emerald-600 text-white";
+    return "bg-gray-300 text-gray-500 cursor-not-allowed";
+});
+
+const canToggleLocker = computed(
+    () => isAvailable.value || isOutOfService.value
+);
+
+const handleToggleLocker = () => {
+    if (!canToggleLocker.value) return;
+
+    if (isAvailable.value) {
+        emit("disable-locker");
+    } else if (isOutOfService.value) {
+        emit("enable-locker");
+    }
+};
 </script>
 
 <template>
@@ -46,43 +94,51 @@ const emit = defineEmits([
 
                 <div class="mt-10 grid grid-cols-2 gap-6">
                     <button
-                        v-if="details?.rental"
-                        class="h-16 bg-red-600 text-white rounded-xl"
+                        :disabled="!canForceUnlock"
+                        class="h-16 rounded-xl"
+                        :class="
+                            canForceUnlock
+                                ? 'bg-red-600 text-white'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        "
                         @click="$emit('force-unlock')"
                     >
                         Force Unlock
                     </button>
 
                     <button
-                        v-if="details?.rental"
-                        class="h-16 bg-orange-600 text-white rounded-xl"
+                        :disabled="!canEndRental"
+                        class="h-16 rounded-xl"
+                        :class="
+                            canEndRental
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        "
                         @click="$emit('end-rental')"
                     >
                         End Rental Early
                     </button>
 
                     <button
-                        v-if="details?.penalty"
-                        class="h-16 bg-purple-600 text-white rounded-xl"
+                        :disabled="!canClearPenalty"
+                        class="h-16 rounded-xl"
+                        :class="
+                            canClearPenalty
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        "
                         @click="$emit('clear-penalty')"
                     >
                         Clear Penalty
                     </button>
 
                     <button
-                        v-if="details?.locker?.status === 'AVAILABLE'"
-                        class="h-16 bg-gray-800 text-white rounded-xl"
-                        @click="$emit('disable-locker')"
+                        :disabled="!canToggleLocker"
+                        class="h-16 rounded-xl"
+                        :class="toggleClass"
+                        @click="handleToggleLocker"
                     >
-                        Disable Locker
-                    </button>
-
-                    <button
-                        v-if="details?.locker?.status === 'OUT_OF_SERVICE'"
-                        class="h-16 bg-emerald-600 text-white rounded-xl"
-                        @click="$emit('enable-locker')"
-                    >
-                        Enable Locker
+                        {{ toggleLabel }}
                     </button>
                 </div>
 
