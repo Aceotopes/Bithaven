@@ -24,17 +24,18 @@ class AdminScanController extends Controller
 
         if (!$card) {
             return response()->json([
-                'error' => 'ADMIN_CARD_NOT_FOUND'
-            ], 404);
+                'is_admin' => false
+            ], 200);
         }
 
         if ($card->status !== 'ACTIVE') {
             return response()->json([
+                'is_admin' => true,
+                'active' => false,
                 'error' => 'ADMIN_CARD_DISABLED'
-            ], 403);
+            ], 200);
         }
 
-        // Log event
         KioskEvent::create([
             'event_type' => 'ADMIN_CARD_SCANNED',
             'level' => 'INFO',
@@ -48,9 +49,11 @@ class AdminScanController extends Controller
         ]);
 
         return response()->json([
-            'success' => true,
+            'is_admin' => true,
+            'active' => true,
             'card' => [
                 'admin_card_id' => $card->id,
+                'rfid_uid' => $card->rfid_uid,
                 'label' => $card->card_label,
                 'assigned_to' => $card->assigned_to,
             ]

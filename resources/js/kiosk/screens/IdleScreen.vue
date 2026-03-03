@@ -50,8 +50,13 @@ function triggerPopup({
    Popup helpers
 ------------------------------ */
 function handlePopupClose() {
+    completeScan();
+}
+
+function completeScan() {
     clearInterval(countdownTimer);
     showPopup.value = false;
+    emit("success-complete");
 }
 
 // function startCountdown() {
@@ -73,8 +78,7 @@ function startCountdown() {
         popupCountdown.value--;
 
         if (popupCountdown.value === 0) {
-            clearInterval(countdownTimer);
-            emit("success-complete");
+            completeScan();
         }
     }, 1000);
 }

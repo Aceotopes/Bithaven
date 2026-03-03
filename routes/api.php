@@ -68,11 +68,13 @@ Route::post('/kiosk/admin/clear-penalty', [AdminPenaltyController::class, 'clear
 Route::post('/kiosk/admin/end-rental', [AdminScanController::class, 'endRentalEarly']);
 Route::post('/kiosk/admin/lockers/disable', [AdminLockerController::class, 'disable']);
 Route::post('/kiosk/admin/lockers/enable', [AdminLockerController::class, 'enable']);
-Route::middleware('kiosk.admin')->prefix('kiosk/admin')->group(function () {
-    Route::get('/lockers', [AdminLockerController::class, 'index']);
-    Route::get('/lockers/{locker}', [AdminLockerController::class, 'show']);
+Route::get('/kiosk/admin/lockers', [AdminLockerController::class, 'index']);
+Route::get('/kiosk/admin/lockers/{locker}', [AdminLockerController::class, 'show']);
+// Route::middleware('kiosk.admin')->prefix('kiosk/admin')->group(function () {
+//     Route::get('/lockers', [AdminLockerController::class, 'index']);
+//     Route::get('/lockers/{locker}', [AdminLockerController::class, 'show']);
 
-});
+// });
 
 // DAEMON ROUTES
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);

@@ -10,6 +10,7 @@ import { useKioskActions } from "./composables/useKioskActions";
 import { useIdleTimeout } from "./composables/useIdleTimeout";
 
 import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
+import AdminConfirmModal from "@/kiosk/components/kiosk/AdminConfirmModal.vue";
 import IdleScreen from "./screens/IdleScreen.vue";
 import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
@@ -17,6 +18,13 @@ import PaymentScreen from "./screens/PaymentScreen.vue";
 import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
 
 import { useRFIDService } from "./services";
+
+import { useToast } from "primevue/usetoast";
+import Toast from "primevue/toast";
+const toast = useToast();
+
+const showAdminConfirm = ref(false);
+const pendingAdminAction = ref(null);
 
 //const kioskState = reactive({
 //student: null,                  // logged-in student
@@ -49,6 +57,10 @@ const penaltySnapshot = ref(null);
 const activeScanSession = ref(null);
 const showAdminScanModal = ref(false);
 
+const adminLockers = ref([]);
+const selectedAdminLocker = ref(null);
+const showAdminDetails = ref(false);
+
 let scanPollTimer = null;
 // let currentPollMode = null;
 
@@ -60,7 +72,103 @@ let scanPollTimer = null;
 //     },
 // });
 // =======================================
+function requestAdminAction(action) {
+    pendingAdminAction.value = action;
+    showAdminConfirm.value = true;
+}
 
+async function executeAdminAction() {
+    showAdminConfirm.value = false;
+
+    const action = pendingAdminAction.value;
+    const lockerNumber = selectedAdminLocker.value?.locker?.number;
+    const adminUid = scanResult.value?.rfid_uid;
+
+    try {
+        let res;
+
+        switch (action) {
+            case "forceUnlock":
+                res = await fetch("/api/kiosk/admin/force-unlock", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        rfid_uid: adminUid,
+                        locker_number: lockerNumber,
+                        kiosk_id: "KIOSK-01",
+                    }),
+                });
+                break;
+
+            case "disableLocker":
+                res = await fetch("/api/kiosk/admin/lockers/disable", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        admin_card_uid: adminUid,
+                        locker_number: lockerNumber,
+                    }),
+                });
+                break;
+
+            case "enableLocker":
+                res = await fetch("/api/kiosk/admin/lockers/enable", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        admin_card_uid: adminUid,
+                        locker_number: lockerNumber,
+                    }),
+                });
+                break;
+
+            case "clearPenalty":
+                res = await fetch("/api/kiosk/admin/clear-penalty", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        rfid_uid: adminUid,
+                        penalty_id: selectedAdminLocker.value.penalty?.id,
+                        kiosk_id: "KIOSK-01",
+                    }),
+                });
+                break;
+
+            case "endRental":
+                res = await fetch("/api/kiosk/admin/end-rental", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        rental_id: selectedAdminLocker.value.rental?.id,
+                        admin_card_uid: adminUid,
+                    }),
+                });
+                break;
+        }
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "Action failed");
+        }
+
+        toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "Action completed successfully.",
+            life: 3000,
+        });
+
+        await fetchAdminLockers();
+        showAdminDetails.value = false;
+    } catch (err) {
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: err.message,
+            life: 3000,
+        });
+    }
+}
 // =====================
 //    ADMIN FUNCTIONS
 // =====================
@@ -249,15 +357,25 @@ async function handleStartScan(uid) {
             }),
         });
 
-        if (adminRes.ok) {
+        const adminData = await adminRes.json();
+
+        if (adminData.is_admin) {
+            if (!adminData.active) {
+                scanResult.value = {
+                    status: "error",
+                };
+                return;
+            }
+
             scanResult.value = {
                 status: "admin",
-                uid,
+                card: adminData.card,
+                rfid_uid: uid,
             };
             return;
         }
     } catch (err) {
-        console.log("Not an admin card");
+        console.error("Admin check failed", err);
     }
 
     // -------------------------------------------------
@@ -294,12 +412,24 @@ async function handleStartScan(uid) {
     }
 }
 
-function handleIdleComplete() {
-    const result = scanResult.value;
+async function fetchAdminLockers() {
+    const res = await fetch("/api/kiosk/admin/lockers");
+    const data = await res.json();
+    adminLockers.value = data.lockers;
+}
 
+async function handleAdminSelectLocker(lockerNumber) {
+    const res = await fetch(`/api/kiosk/admin/lockers/${lockerNumber}`);
+    selectedAdminLocker.value = await res.json();
+    showAdminDetails.value = true;
+}
+
+async function handleIdleComplete() {
+    const result = scanResult.value;
     if (!result) return;
 
     if (result.status === "admin") {
+        await fetchAdminLockers();
         flow.goToAdminAccess();
         return;
     }
@@ -760,6 +890,7 @@ watch(
 </script>
 
 <template>
+    <Toast />
     <!-- ============ debugging info for checkpoint 10 ============ -->
     <!-- <div
             class="fixed top-2 left-2 z-50 bg-red-600 text-white px-4 py-2 text-lg"
@@ -787,7 +918,17 @@ watch(
 
         <AdminAccessScreen
             v-else-if="session.state.kioskState === KIOSK_STATES.ADMIN_ACCESS"
+            :lockers="adminLockers"
+            :selectedLockerDetails="selectedAdminLocker"
+            :showDetails="showAdminDetails"
+            @select-locker="handleAdminSelectLocker"
+            @close-details="showAdminDetails = false"
             @exit-admin="flow.goToIdle()"
+            @force-unlock="() => requestAdminAction('forceUnlock')"
+            @disable-locker="() => requestAdminAction('disableLocker')"
+            @enable-locker="() => requestAdminAction('enableLocker')"
+            @clear-penalty="() => requestAdminAction('clearPenalty')"
+            @end-rental="() => requestAdminAction('endRental')"
         />
 
         <MainScreen
@@ -863,6 +1004,12 @@ watch(
         :secondsLeft="idle.idleCountdown.value"
         @confirm="idle.confirmIdleNow"
         @continue="idle.dismissWarning"
+    />
+    <AdminConfirmModal
+        :show="showAdminConfirm"
+        message="Are you sure you want to proceed?"
+        @cancel="showAdminConfirm = false"
+        @confirm="executeAdminAction"
     />
     <div
         v-if="showAdminScanModal"
