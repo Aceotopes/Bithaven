@@ -17,14 +17,24 @@ import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
 import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
 
-import { useRFIDService } from "./services";
+import KioskToast from "@/kiosk/components/kiosk/KioskToast.vue";
 
-import { useToast } from "primevue/usetoast";
-import Toast from "primevue/toast";
-const toast = useToast();
+import { useRFIDService } from "./services";
 
 const showAdminConfirm = ref(false);
 const pendingAdminAction = ref(null);
+
+const toastMessage = ref(null);
+const toastType = ref("success");
+
+function showToast(message, type = "success") {
+    toastMessage.value = message;
+    toastType.value = type;
+
+    setTimeout(() => {
+        toastMessage.value = null;
+    }, 3000);
+}
 
 //const kioskState = reactive({
 //student: null,                  // logged-in student
@@ -151,12 +161,7 @@ async function executeAdminAction() {
             throw new Error(err.error || "Action failed");
         }
 
-        toast.add({
-            severity: "success",
-            summary: "Success",
-            detail: "Action completed successfully.",
-            life: 3000,
-        });
+        showToast("Action completed successfully.", "success");
 
         await fetchAdminLockers();
 
@@ -164,12 +169,7 @@ async function executeAdminAction() {
             await handleAdminSelectLocker(lockerNumber);
         }
     } catch (err) {
-        toast.add({
-            severity: "error",
-            summary: "Error",
-            detail: err.message,
-            life: 3000,
-        });
+        showToast(err.message, "error");
     }
 }
 // =====================
@@ -893,7 +893,6 @@ watch(
 </script>
 
 <template>
-    <Toast />
     <!-- ============ debugging info for checkpoint 10 ============ -->
     <!-- <div
             class="fixed top-2 left-2 z-50 bg-red-600 text-white px-4 py-2 text-lg"
@@ -1014,6 +1013,7 @@ watch(
         @cancel="showAdminConfirm = false"
         @confirm="executeAdminAction"
     />
+    <KioskToast v-if="toastMessage" :message="toastMessage" :type="toastType" />
     <div
         v-if="showAdminScanModal"
         class="fixed inset-0 bg-black/70 flex items-center justify-center z-50"

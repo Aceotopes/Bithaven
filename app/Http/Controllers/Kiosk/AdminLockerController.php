@@ -187,7 +187,13 @@ class AdminLockerController extends Controller
                 'student' => [
                     'id' => $rental->student->id,
                     'student_number' => $rental->student->student_number,
-                    'name' => $rental->student->first_name . ' ' . $rental->student->last_name,
+                    'first_name' => $rental->student->first_name,
+                    'last_name' => $rental->student->last_name,
+                    'year_level' => $rental->student->year_level,
+                    'department' => $rental->student->department,
+                    'photo_url' => $rental->student->photo_url
+                        ? asset('storage/' . $rental->student->photo_url)
+                        : null,
                 ],
                 'payment' => $latestPayment ? [
                     'amount' => $latestPayment->amount,

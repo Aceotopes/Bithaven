@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted, watch } from "vue";
 
 const props = defineProps({
     lockers: {
@@ -17,6 +17,15 @@ const emit = defineEmits([
     "clear-penalty",
     "end-rental",
 ]);
+
+const studentInitials = computed(() => {
+    if (!rental.value?.student) return "";
+
+    const first = rental.value.student.first_name?.[0] ?? "";
+    const last = rental.value.student.last_name?.[0] ?? "";
+
+    return (first + last).toUpperCase();
+});
 
 const selectedNumber = computed(
     () => props.selectedLockerDetails?.locker?.number ?? null
@@ -67,25 +76,25 @@ function lockerVisual(locker) {
     switch (locker.operational_state) {
         case "OUT_OF_SERVICE":
             return {
-                badge: "bg-red-500 text-white",
-                frame: "border-red-500",
-                footer: "bg-red-400",
+                badge: "bg-rose-500 text-white",
+                frame: "border-rose-500",
+                footer: "bg-rose-400",
                 label: "OUT OF SERVICE",
             };
 
         case "PENALTY":
             return {
-                badge: "bg-orange-600 text-white",
-                frame: "border-orange-500",
-                footer: "bg-orange-400",
-                label: "PENALTY",
+                badge: "bg-amber-600 text-white",
+                frame: "border-amber-500",
+                footer: "bg-amber-400",
+                label: "OVERDUE",
             };
 
         case "IN_USE":
             return {
-                badge: "bg-blue-600 text-white",
-                frame: "border-blue-500",
-                footer: "bg-blue-400",
+                badge: "bg-sky-600 text-white",
+                frame: "border-sky-500",
+                footer: "bg-sky-400",
                 label: "IN USE",
             };
 
@@ -98,6 +107,56 @@ function lockerVisual(locker) {
             };
     }
 }
+
+/* ===============================
+   TIMER
+================================ */
+const timeRemaining = ref(0);
+let timerInterval = null;
+
+function formatSeconds(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    return [
+        String(h).padStart(2, "0"),
+        String(m).padStart(2, "0"),
+        String(s).padStart(2, "0"),
+    ].join(":");
+}
+
+const formattedTimeRemaining = computed(() =>
+    formatSeconds(Math.max(0, timeRemaining.value))
+);
+
+watch(rental, (newRental) => {
+    clearInterval(timerInterval);
+
+    if (!newRental) {
+        timeRemaining.value = 0;
+        return;
+    }
+
+    timeRemaining.value = Math.floor(
+        Number(newRental.time_remaining_seconds ?? 0)
+    );
+
+    timerInterval = setInterval(() => {
+        if (timeRemaining.value > 0) {
+            timeRemaining.value--;
+        }
+    }, 1000);
+});
+watch(rental, (r) => {
+    console.log("PHOTO URL:", r?.student?.photo_url);
+});
+
+onUnmounted(() => {
+    clearInterval(timerInterval);
+});
 </script>
 
 <template>
@@ -129,15 +188,15 @@ function lockerVisual(locker) {
                 <span>Available</span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="w-4 h-4 rounded bg-blue-500"></span>
+                <span class="w-4 h-4 rounded bg-sky-500"></span>
                 <span>In Use</span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="w-4 h-4 rounded bg-orange-500"></span>
-                <span>Penalty</span>
+                <span class="w-4 h-4 rounded bg-amber-500"></span>
+                <span>Overdue</span>
             </div>
             <div class="flex items-center gap-3">
-                <span class="w-4 h-4 rounded bg-red-500"></span>
+                <span class="w-4 h-4 rounded bg-rose-500"></span>
                 <span>Out of Service</span>
             </div>
         </div>
@@ -184,32 +243,161 @@ function lockerVisual(locker) {
         <!-- Selected Locker Details -->
         <!-- ========================= -->
         <div class="text-center py-10 border-t border-black/10">
-            <div
-                class="mx-auto mb-6 w-16 h-16 rounded-full border border-cyan-300 flex items-center justify-center text-cyan-600 text-3xl font-mono"
-            >
-                {{
-                    selectedNumber
-                        ? String(selectedNumber).padStart(2, "0")
-                        : "—"
-                }}
-            </div>
+            <!-- Locker Number -->
 
-            <p class="text-[32px] font-semibold text-gray-800">
+            <!-- <p class="text-[32px] font-semibold text-gray-800">
                 {{
                     selectedNumber
                         ? `Locker ${String(selectedNumber).padStart(2, "0")}`
                         : "No Locker Selected"
                 }}
-            </p>
+            </p> -->
 
-            <div v-if="rental" class="mt-6 text-[18px] text-gray-600 space-y-2">
-                <p>Student: {{ rental.student.name }}</p>
-                <p>Status: {{ rental.status }}</p>
-                <p>Time Remaining: {{ rental.time_remaining_seconds }}s</p>
+            <!-- ========================= -->
+            <!-- OUT OF SERVICE -->
+            <!-- ========================= -->
+            <div
+                v-if="lockerStatus === 'OUT_OF_SERVICE'"
+                class="mt-10 text-rose-600 text-xl font-semibold"
+            >
+                This locker is currently out of service.
             </div>
 
-            <div v-else class="mt-6 text-[18px] text-gray-500">
-                No active rental.
+            <!-- ========================= -->
+            <!-- ACTIVE RENTAL -->
+            <!-- ========================= -->
+            <div v-else-if="rental" class="mt-5">
+                <!-- Student Info -->
+                <div class="flex items-center gap-8 justify-center">
+                    <!-- Photo -->
+                    <div
+                        class="w-28 h-28 rounded-2xl overflow-hidden border border-cyan-300 shadow-md"
+                    >
+                        <img
+                            v-if="rental.student?.photo_url"
+                            :src="rental.student.photo_url"
+                            class="w-full h-full object-cover"
+                        />
+                        <div
+                            v-else
+                            class="w-full h-full flex items-center justify-center bg-cyan-500 text-white text-4xl font-bold"
+                        >
+                            {{ studentInitials }}
+                        </div>
+                    </div>
+
+                    <!-- Text Info -->
+                    <div class="text-left">
+                        <h2 class="text-3xl font-bold text-gray-900">
+                            {{ rental.student?.first_name }}
+                            {{ rental.student?.last_name }}
+                        </h2>
+
+                        <p class="text-gray-500 text-lg">
+                            {{ rental.student?.student_number }}
+                        </p>
+
+                        <p class="text-gray-600 mt-2">
+                            {{ rental.student?.year_level }} -
+                            {{ rental.student?.department }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Rental Timing -->
+                <div class="mt-10 grid grid-cols-3 gap-6 text-center">
+                    <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                        <p
+                            class="text-sm uppercase tracking-wide text-gray-500"
+                        >
+                            Start Time
+                        </p>
+                        <p class="text-xl font-semibold">
+                            {{
+                                new Date(rental.start_time).toLocaleTimeString()
+                            }}
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-6 shadow-sm">
+                        <p
+                            class="text-sm uppercase tracking-wide text-gray-500"
+                        >
+                            End Time
+                        </p>
+                        <p class="text-xl font-semibold">
+                            {{ new Date(rental.end_time).toLocaleTimeString() }}
+                        </p>
+                    </div>
+
+                    <div class="bg-cyan-50 rounded-xl p-6 shadow-md">
+                        <p
+                            class="text-sm uppercase tracking-wide text-cyan-500"
+                        >
+                            Time Remaining
+                        </p>
+
+                        <p
+                            v-if="timeRemaining > 0"
+                            class="text-2xl font-bold text-cyan-700"
+                        >
+                            {{ formattedTimeRemaining }}
+                        </p>
+
+                        <p v-else class="text-2xl font-bold text-orange-600">
+                            EXPIRED
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ========================= -->
+                <!-- PENALTY SECTION -->
+                <!-- ========================= -->
+                <div
+                    v-if="penalty"
+                    class="mt-10 bg-amber-50 border border-orange-200 rounded-2xl p-6"
+                >
+                    <h3 class="text-xl font-semibold text-amber-700 mb-4">
+                        Penalty Active
+                    </h3>
+
+                    <div class="grid grid-cols-3 gap-6 text-center">
+                        <div>
+                            <p class="text-sm text-amber-500 uppercase">
+                                Exceeded
+                            </p>
+                            <p class="font-semibold">
+                                {{ penalty.exceeded_duration }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-amber-500 uppercase">
+                                Amount
+                            </p>
+                            <p class="font-semibold">
+                                ₱ {{ penalty.frozen_amount }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-amber-500 uppercase">
+                                Started
+                            </p>
+                            <p class="font-semibold">
+                                {{
+                                    new Date(
+                                        penalty.started_at
+                                    ).toLocaleTimeString()
+                                }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="mt-10 text-gray-500 text-xl">
+                This locker currently has no active rental.
             </div>
         </div>
 
