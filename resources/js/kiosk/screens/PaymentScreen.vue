@@ -5,9 +5,14 @@ import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
 import CancelPaymentModal from "@/kiosk/components/kiosk/CancelPaymentModal.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
 import RentalPaymentInfoCard from "@/kiosk/components/kiosk/RentalPaymentInfoCard.vue";
+
+import ProcessingScreen from "@/kiosk/screens/ProcessingScreen.vue";
+import UnlockSuccessScreen from "@/kiosk/screens/UnlockSuccessScreen.vue";
+
 import { ref } from "vue";
 
 const showCancelConfirm = ref(false); // to show/hide cancel payment confirmation modal
+const currentStage = ref("PAYMENT");
 
 const props = defineProps({
     locker: {
@@ -64,6 +69,15 @@ const emit = defineEmits([
     "end-session",
     "session-updated",
 ]);
+
+function handlePaymentComplete() {
+    currentStage.value = "PROCESSING";
+
+    // simulate unlock job processing
+    setTimeout(() => {
+        currentStage.value = "SUCCESS";
+    }, 5000);
+}
 </script>
 
 <template>
@@ -97,37 +111,53 @@ const emit = defineEmits([
         />
 
         <main class="relative z-10 px-12 pt-10">
-            <!-- PENALTY CONTEXT -->
-            <PenaltyInfoCard
-                v-if="mode === 'PENALTY' && penaltySnapshot"
-                :lockerNumber="locker"
-                :exceededDuration="penaltySnapshot.exceededDuration"
-                :breakdown="penaltySnapshot.breakdown"
-                :amount="Number(amount)"
-            />
+            <template v-if="currentStage === 'PAYMENT'">
+                <!-- PENALTY CONTEXT -->
+                <PenaltyInfoCard
+                    v-if="mode === 'PENALTY' && penaltySnapshot"
+                    :lockerNumber="locker"
+                    :exceededDuration="penaltySnapshot.exceededDuration"
+                    :breakdown="penaltySnapshot.breakdown"
+                    :amount="Number(amount)"
+                />
 
-            <RentalPaymentInfoCard
-                v-if="mode === 'RENTAL'"
-                :lockerNumber="locker"
-                :duration="duration"
-                :totalAmount="amount"
-            />
-            <PaymentPanel
+                <RentalPaymentInfoCard
+                    v-if="mode === 'RENTAL'"
+                    :lockerNumber="locker"
+                    :duration="duration"
+                    :totalAmount="amount"
+                />
+                <!-- @complete="emit('complete')" -->
+                <PaymentPanel
+                    :locker="locker"
+                    :duration="duration"
+                    :mode="mode"
+                    :amountDue="amount"
+                    :amountPaid="amountPaid"
+                    :paymentStatus="paymentStatus"
+                    @cancel="showCancelConfirm = true"
+                    @complete="handlePaymentComplete"
+                    @session-updated="emit('session-updated', $event)"
+                />
+
+                <CancelPaymentModal
+                    :show="showCancelConfirm"
+                    @close="showCancelConfirm = false"
+                    @confirm="emit('cancel')"
+                />
+            </template>
+
+            <!-- PROCESSING -->
+            <ProcessingScreen
+                v-if="currentStage === 'PROCESSING'"
                 :locker="locker"
-                :duration="duration"
-                :mode="mode"
-                :amountDue="amount"
-                :amountPaid="amountPaid"
-                :paymentStatus="paymentStatus"
-                @cancel="showCancelConfirm = true"
-                @complete="emit('complete')"
-                @session-updated="emit('session-updated', $event)"
             />
 
-            <CancelPaymentModal
-                :show="showCancelConfirm"
-                @close="showCancelConfirm = false"
-                @confirm="emit('cancel')"
+            <!-- SUCCESS -->
+            <UnlockSuccessScreen
+                v-if="currentStage === 'SUCCESS'"
+                :locker="locker"
+                @done="emit('complete')"
             />
         </main>
     </div>

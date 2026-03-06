@@ -20,7 +20,7 @@ onMounted(() => {
 
 <template>
     <header
-        class="relative z-20 w-full h-24 flex items-center bg-white/80 backdrop-blur-xl border-b border-black/10 px-8"
+        class="relative z-10 w-full h-24 flex items-center bg-white/80 backdrop-blur-xl border-b border-black/10 px-8"
     >
         <!-- Logo -->
         <div class="flex items-center gap-3">

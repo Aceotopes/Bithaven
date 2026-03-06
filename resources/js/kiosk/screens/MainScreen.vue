@@ -5,9 +5,25 @@ import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
 import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+
+import ProcessingScreen from "@/kiosk/screens/ProcessingScreen.vue";
+import UnlockSuccessScreen from "@/kiosk/screens/UnlockSuccessScreen.vue";
 import { ref } from "vue";
 
 const DEV_MODE = import.meta.env.DEV; // DEV TOOL FLAG
+
+const unlockStage = ref(null);
+
+function handleEndRental() {
+    showEndRentalConfirm.value = false;
+
+    unlockStage.value = "PROCESSING";
+
+    // simulate unlock delay
+    setTimeout(() => {
+        unlockStage.value = "SUCCESS";
+    }, 5000);
+}
 
 // ===================== End Session Modal Logic (TEMP) =====================
 const showEndSessionConfirm = ref(false); // to show/hide end session confirmation modal
@@ -213,39 +229,35 @@ defineProps({
                 </div>
             </section>
 
+            <!-- @confirm="emit('end-rental')" -->
             <EndRentalConfirmModal
                 :show="showEndRentalConfirm"
                 :lockerNumber="locker?.number"
                 @cancel="showEndRentalConfirm = false"
-                @confirm="emit('end-rental')"
+                @confirm="handleEndRental"
             />
         </main>
-        <div
+        <!-- <div
             v-if="isEndingRental"
             class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center"
         >
-            <!-- CONTAINER -->
             <div
                 class="w-[620px] bg-white rounded-[32px] border border-black/10 shadow-[0_40px_100px_rgba(0,0,0,0.35)] px-14 py-12 text-center"
             >
-                <!-- SUCCESS ICON -->
                 <div
                     class="mx-auto mb-8 w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-[48px]"
                 >
                     ✓
                 </div>
 
-                <!-- PRIMARY MESSAGE -->
                 <p class="text-[36px] font-semibold text-gray-900">
                     Rental Ended
                 </p>
 
-                <!-- SECONDARY MESSAGE -->
                 <p class="mt-4 text-[22px] text-gray-600">
                     Locker access has been released successfully.
                 </p>
 
-                <!-- COUNTDOWN -->
                 <div class="mt-8 text-[20px] text-gray-500">
                     Returning to start screen in
                     <span class="font-mono font-semibold text-gray-900">
@@ -254,7 +266,20 @@ defineProps({
                     seconds
                 </div>
             </div>
-        </div>
+        </div> -->
+
+        <ProcessingScreen
+            v-if="unlockStage === 'PROCESSING'"
+            :locker="locker?.number"
+        />
+
+        <!-- SUCCESS SCREEN -->
+        <UnlockSuccessScreen
+            v-if="unlockStage === 'SUCCESS'"
+            :locker="locker?.number"
+            mode="END_RENTAL"
+            @done="emit('end-session')"
+        />
         <!-- ================= DEV PANEL ================= -->
         <div
             v-if="DEV_MODE"

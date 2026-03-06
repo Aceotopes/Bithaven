@@ -1,21 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
-/**
- * usePenalty
- * ----------
- * Owns penalty lifecycle logic.
- *
- * Responsibilities:
- * - apply penalty on expiry
- * - expose penalty state
- * - settle penalty
- *
- * Does NOT own:
- * - timers
- * - rentals
- * - payments (mock only)
- */
-
 /* ------------------------------------
  * Penalty Logic (FRONTEND MOCK ONLY)
  * ------------------------------------ */

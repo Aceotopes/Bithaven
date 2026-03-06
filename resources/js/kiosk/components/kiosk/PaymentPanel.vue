@@ -64,7 +64,7 @@ async function insertCoinUI(value) {
     try {
         const res = await insertCoin("KIOSK-01", value);
 
-        // 🔑 Update session via parent (temporary local emit)
+        // Update session via parent (temporary local emit)
         emit("session-updated", res.session);
         console.log("COIN RESPONSE:", res);
     } catch (err) {
@@ -75,20 +75,25 @@ async function insertCoinUI(value) {
 /* =============================
    WATCHERS
 ============================= */
+// watch(isPaid, (paid) => {
+//     if (!paid || hasCompleted.value) return;
+
+//     hasCompleted.value = true;
+//     successCountdown.value = 3;
+
+//     countdownTimer = setInterval(() => {
+//         successCountdown.value--;
+
+//         if (successCountdown.value === 0) {
+//             clearInterval(countdownTimer);
+//             emit("complete");
+//         }
+//     }, 1000);
+// });
 watch(isPaid, (paid) => {
-    if (!paid || hasCompleted.value) return;
+    if (!paid) return;
 
-    hasCompleted.value = true;
-    successCountdown.value = 3;
-
-    countdownTimer = setInterval(() => {
-        successCountdown.value--;
-
-        if (successCountdown.value === 0) {
-            clearInterval(countdownTimer);
-            emit("complete");
-        }
-    }, 1000);
+    emit("complete");
 });
 
 /* =============================
@@ -271,7 +276,7 @@ onBeforeUnmount(() => {
         <!-- ========================= -->
         <!-- SUCCESS OVERLAY -->
         <!-- ========================= -->
-        <div
+        <!-- <div
             v-if="isPaid"
             class="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-[24px]"
         >
@@ -298,7 +303,7 @@ onBeforeUnmount(() => {
                     second<span v-if="successCountdown !== 1">s</span>.
                 </p>
             </div>
-        </div>
+        </div> -->
     </section>
     <div class="text-[55px] text-red-500">
         mode={{ mode }} due={{ amountDue }} paid={{ amountPaid }} status={{
