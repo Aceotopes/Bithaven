@@ -34,6 +34,12 @@ class UnlockTokenController extends Controller
             ], 409);
         }
 
+        if ($token->expires_at <= now()) {
+            return response()->json([
+                'message' => 'Token expired'
+            ], 410);
+        }
+
         $token->update([
             'consumed_at' => now()
         ]);

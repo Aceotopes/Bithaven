@@ -88,9 +88,6 @@ defineProps({
         type: Boolean,
         required: true,
     },
-    isEndingRental: {
-        type: Boolean,
-    },
     endCountdown: {
         type: Number,
     },
@@ -234,7 +231,7 @@ defineProps({
                 :show="showEndRentalConfirm"
                 :lockerNumber="locker?.number"
                 @cancel="showEndRentalConfirm = false"
-                @confirm="handleEndRental"
+                @confirm="emit('end-rental')"
             />
         </main>
         <!-- <div

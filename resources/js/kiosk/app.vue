@@ -16,6 +16,8 @@ import MainScreen from "./screens/MainScreen.vue";
 import LockerSelectScreen from "./screens/LockerSelectScreen.vue";
 import PaymentScreen from "./screens/PaymentScreen.vue";
 import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
+import ProcessingScreen from "./screens/ProcessingScreen.vue";
+import UnlockSuccessScreen from "./screens/UnlockSuccessScreen.vue";
 
 import KioskToast from "@/kiosk/components/kiosk/KioskToast.vue";
 
@@ -51,16 +53,19 @@ const session = useKioskSession(); // kiosk session state manager
 const flow = useKioskFlow(session.state); // kiosk flow state manager
 const penalty = usePenalty(session.state); // penalty manager
 const actions = useKioskActions(session.state); // kiosk action handlers
-const isEndingRental = ref(false); // rental ending state
-const endCountdown = ref(3); // rental end countdown
-const TOTAL_LOCKERS = 15; //mock total lockers
+// const isEndingRental = ref(false); // rental ending state
+// const endCountdown = ref(3); // rental end countdown
+// const TOTAL_LOCKERS = 15; //mock total lockers
 const lockers = ref([]);
+
+const unlockStage = ref(null);
+const activeLockerNumber = ref(null);
 
 const rfid = useRFIDService();
 const scanResult = ref(null);
 const paymentSession = ref(null);
 
-let endTimer = null;
+// let endTimer = null;
 
 const penaltySnapshot = ref(null);
 
@@ -802,7 +807,14 @@ async function handleEndRental() {
     try {
         const rentalId = session.state.locker?.rentalId;
         const lockerNumber = session.state.locker?.number;
+
         if (!rentalId) return;
+
+        activeLockerNumber.value = lockerNumber;
+
+        unlockStage.value = "PROCESSING";
+
+        const startTime = Date.now();
 
         await fetch(`/api/kiosk/rentals/${rentalId}/end`, {
             method: "POST",
@@ -817,25 +829,44 @@ async function handleEndRental() {
         rental.endRental();
         await fetchLockerStatuses();
 
-        // Show success overlay
-        isEndingRental.value = true;
-        endCountdown.value = 3;
+        //TEMPORARY TIMER TO SIMULATE PROCESSING TIME (ENSURE SUCCESS OVERLAY IS VISIBLE)
+        const elapsed = Date.now() - startTime;
+        const minDuration = 5000; // 5 seconds
 
-        endTimer = setInterval(() => {
-            endCountdown.value--;
+        if (elapsed < minDuration) {
+            await new Promise((resolve) =>
+                setTimeout(resolve, minDuration - elapsed)
+            );
+        }
 
-            if (endCountdown.value === 0) {
-                clearInterval(endTimer);
-                isEndingRental.value = false;
-                session.clearSession();
-                flow.goToIdle();
-            }
-        }, 1000);
+        unlockStage.value = "SUCCESS";
+
+        // // Show success overlay
+        // isEndingRental.value = true;
+        // endCountdown.value = 3;
+
+        // endTimer = setInterval(() => {
+        //     endCountdown.value--;
+
+        //     if (endCountdown.value === 0) {
+        //         clearInterval(endTimer);
+        //         isEndingRental.value = false;
+        //         session.clearSession();
+        //         flow.goToIdle();
+        //     }
+        // }, 1000);
     } catch (err) {
         console.error("Failed to end rental", err);
+        unlockStage.value = null;
         return;
     }
 }
+function finishEndRental() {
+    unlockStage.value = null;
+    session.clearSession();
+    flow.goToIdle();
+}
+
 function debugDump(label) {
     console.group(`🧪 DEBUG DUMP — ${label}`);
     console.log("kioskState:", session.state.kioskState);
@@ -947,8 +978,6 @@ watch(
             :canEndRental="actions.canEndRental.value"
             :canSettlePenalty="actions.canSettlePenalty.value"
             :canEndSession="actions.canEndSession.value"
-            :isEndingRental="isEndingRental"
-            :endCountdown="endCountdown"
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
             @end-rental="handleEndRental"
@@ -1000,6 +1029,21 @@ watch(
             "
         />
     </transition>
+    <div>
+        <!-- PROCESSING SCREEN -->
+        <ProcessingScreen
+            v-if="unlockStage === 'PROCESSING'"
+            :locker="activeLockerNumber"
+        />
+
+        <!-- SUCCESS SCREEN -->
+        <UnlockSuccessScreen
+            v-if="unlockStage === 'SUCCESS'"
+            :locker="activeLockerNumber"
+            mode="END_RENTAL"
+            @done="finishEndRental"
+        />
+    </div>
     <IdleWarningModal
         v-if="idle.showIdleWarning"
         :show="idle.showIdleWarning.value"

@@ -12,8 +12,14 @@ class UnlockJobController extends Controller
     public function pending()
     {
         $jobs = LockerUnlockJob::where('status', 'PENDING')
+            ->whereHas('token', function ($q) {
+                $q->whereNull('consumed_at')
+                    ->where('expires_at', '>', now());
+            })
+            ->with('token')
             ->orderBy('created_at')
             ->get();
+        \Log::info("Expired unlock jobs skipped: " . $jobs);
 
         return response()->json([
             'jobs' => $jobs
@@ -25,6 +31,18 @@ class UnlockJobController extends Controller
     {
         if ($job->status !== 'PENDING') {
             return response()->json(['message' => 'Invalid state'], 409);
+        }
+
+        if ($job->token->isExpired()) {
+            return response()->json([
+                'message' => 'Unlock token expired'
+            ], 410);
+        }
+
+        if ($job->token->isConsumed()) {
+            return response()->json([
+                'message' => 'Token already consumed'
+            ], 409);
         }
 
         $job->update([

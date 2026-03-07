@@ -29,6 +29,20 @@ const popupActionLabel = ref("Continue");
 
 let countdownTimer = null;
 
+// MANUAL UID ENTRY (for testing/demo purposes)
+const manualUid = ref("");
+function submitManualUid() {
+    if (!manualUid.value.trim()) return;
+
+    const uid = manualUid.value.trim();
+
+    console.log("Manual UID entered:", uid);
+
+    emit("start-scan", uid);
+
+    manualUid.value = "";
+}
+
 function triggerPopup({
     type,
     title,
@@ -195,9 +209,25 @@ onBeforeMount(() => {
         <div
             class="relative z-10 w-full h-full flex flex-col items-center justify-end pb-24 bg-black/30"
         >
-            <p class="text-white text-3xl font-semibold tracking-wide">
+            <!-- <p class="text-white text-3xl font-semibold tracking-wide">
                 Tap your ID to begin
-            </p>
+            </p> -->
+            <div class="flex gap-2">
+                <input
+                    v-model="manualUid"
+                    type="text"
+                    placeholder="Enter UID (testing)"
+                    class="px-4 py-2 rounded bg-white text-black text-6xl"
+                    @keyup.enter="submitManualUid"
+                />
+
+                <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded"
+                    @click="submitManualUid"
+                >
+                    Scan
+                </button>
+            </div>
         </div>
 
         <!-- Status Popup -->

@@ -1,5 +1,6 @@
 import time
 import requests
+import datetime
 from adapters.hardware import get_relay_controller
 
 API_BASE = "http://127.0.0.1:8000/api/kiosk"
@@ -97,6 +98,16 @@ def send_heartbeat():
 
 
 # -------------------------------
+# EXPIRED TOKEN CHECK
+# -------------------------------
+def is_expired(job):
+    if not job.get("token") or not job["token"].get("expires_at"):
+        return False
+
+    expires = datetime.datetime.fromisoformat(job["token"]["expires_at"])
+    return expires <= datetime.datetime.now(datetime.timezone.utc)
+
+# -------------------------------
 # MAIN LOOP
 # -------------------------------
 def main():
@@ -116,6 +127,9 @@ def main():
         jobs = fetch_pending_jobs()
 
         for job in jobs:
+            if is_expired(job):
+                print(f"[DAEMON] Skipping expired job {job['id']}")
+                continue
             process_job(job)
 
         time.sleep(POLL_INTERVAL)
