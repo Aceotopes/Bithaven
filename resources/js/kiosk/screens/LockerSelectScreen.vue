@@ -2,9 +2,10 @@
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import LockerSelectionPanel from "../components/kiosk/LockerSelectionPanel.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+import SystemFooter from "@/kiosk/components/kiosk/SystemFooter.vue";
+
 import { ref } from "vue";
 // UI-only screen
-// Logic will be wired later
 
 const props = defineProps({
     show: {
@@ -28,19 +29,29 @@ const emit = defineEmits(["back", "confirm", "end-session"]);
     >
         <!-- Background: Geometric Gradient -->
         <div class="absolute inset-0 pointer-events-none overflow-hidden">
-            <!-- Base Gradient -->
+            <!-- Base Light Surface -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300"
+                class="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-slate-100"
             ></div>
 
-            <!-- Large Geometric Pattern -->
+            <!-- Top Cyan Atmosphere -->
             <div
-                class="absolute inset-0 bg-[linear-gradient( 135deg, rgba(0,0,0,0.04) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.04) 75%, transparent 75%, transparent )] bg-[size:240px_240px] opacity-25"
+                class="absolute -top-[5%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-cyan-300/15 rounded-full blur-[200px]"
             ></div>
 
-            <!-- Accent Glow -->
+            <!-- Mid Soft Light Column -->
             <div
-                class="absolute -top-[20%] left-[10%] w-[700px] h-[700px] bg-emerald-400/20 rounded-full blur-[180px]"
+                class="absolute top-[55%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/40 rounded-full blur-[220px]"
+            ></div>
+
+            <!-- Bottom Cyan Accent -->
+            <div
+                class="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-cyan-400/12 rounded-full blur-[220px]"
+            ></div>
+
+            <!-- Subtle Vertical Texture -->
+            <div
+                class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_120px] opacity-25"
             ></div>
         </div>
 
@@ -63,5 +74,6 @@ const emit = defineEmits(["back", "confirm", "end-session"]);
                 @confirm="$emit('confirm', $event)"
             />
         </main>
+        <SystemFooter />
     </div>
 </template>

@@ -157,9 +157,9 @@ function lockerStatus(n) {
         <!-- ========================= -->
         <!-- Selected Locker Feedback -->
         <!-- ========================= -->
-        <div class="text-center py-10 border-t border-black/10">
+        <div class="text-center py-5 border-t border-black/10">
             <div
-                class="mx-auto mb-6 w-16 h-16 rounded-full border border-emerald-300 flex items-center justify-center text-emerald-600 text-3xl font-mono"
+                class="mx-auto mb-3 w-16 h-16 rounded-full border border-emerald-300 flex items-center justify-center text-emerald-600 text-3xl font-mono"
             >
                 —
             </div>

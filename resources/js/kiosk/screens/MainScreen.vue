@@ -5,6 +5,7 @@ import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
 import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+import SystemFooter from "@/kiosk/components/kiosk/SystemFooter.vue";
 
 import ProcessingScreen from "@/kiosk/screens/ProcessingScreen.vue";
 import UnlockSuccessScreen from "@/kiosk/screens/UnlockSuccessScreen.vue";
@@ -104,39 +105,36 @@ defineProps({
         class="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200"
     >
         <!-- Ambient Background -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden">
-            <!-- Base Vertical Gradient (Depth) -->
-            <div
-                class="absolute inset-0 bg-gradient-to-b from-slate-100 via-slate-200 to-slate-300"
-            ></div>
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-slate-100"
+        ></div>
 
-            <!-- Top System Glow (Entry Focus) -->
-            <div
-                class="absolute -top-[30%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-emerald-400/25 rounded-full blur-[180px]"
-            ></div>
+        <!-- Top Cyan Atmosphere -->
+        <div
+            class="absolute -top-[35%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-cyan-300/15 rounded-full blur-[200px]"
+        ></div>
 
-            <!-- Mid Vertical Light Column (Guides Eye Down) -->
-            <div
-                class="absolute top-[25%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/20 rounded-full blur-[220px]"
-            ></div>
+        <!-- Mid Soft Light Column -->
+        <div
+            class="absolute top-[25%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/40 rounded-full blur-[220px]"
+        ></div>
 
-            <!-- Bottom System Glow (Weight + Balance) -->
-            <div
-                class="absolute bottom-[-40%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-blue-400/18 rounded-full blur-[200px]"
-            ></div>
+        <!-- Bottom Cyan Accent -->
+        <div
+            class="absolute bottom-[-40%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-cyan-400/12 rounded-full blur-[220px]"
+        ></div>
 
-            <!-- Subtle Vertical Texture (No Grid) -->
-            <div
-                class="absolute inset-0 bg-[linear-gradient( to bottom, rgba(0,0,0,0.035) 1px, transparent 1px )] bg-[size:100%_120px] opacity-30"
-            ></div>
-        </div>
+        <!-- Subtle Vertical Texture -->
+        <div
+            class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_120px] opacity-25"
+        ></div>
 
         <!-- Header -->
         <SystemHeader @end-session="openEndSessionConfirm" />
 
         <!-- Main Content Area -->
         <main
-            class="relative z-10 w-full max-w-[1040px] mx-auto px-8 pt-10 space-y-12"
+            class="relative z-10 w-full max-w-[1040px] mx-auto px-8 pt-10 space-y-12 pb-24"
         >
             <HowToUseLockerModal
                 :show="showHowTo"
@@ -234,6 +232,8 @@ defineProps({
                 @confirm="emit('end-rental')"
             />
         </main>
+        <SystemFooter />
+
         <!-- <div
             v-if="isEndingRental"
             class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center"
@@ -280,7 +280,7 @@ defineProps({
         <!-- ================= DEV PANEL ================= -->
         <div
             v-if="DEV_MODE"
-            class="fixed bottom-6 right-6 z-[9999] w-[240px] rounded-2xl bg-black/80 backdrop-blur border border-white/10 shadow-xl px-5 py-4 text-white"
+            class="fixed bottom-20 right-6 z-[9999] w-[240px] rounded-2xl bg-black/80 backdrop-blur border border-white/10 shadow-xl px-5 py-4 text-white"
         >
             <p class="text-[12px] tracking-widest uppercase text-white/60 mb-3">
                 DEV MODE

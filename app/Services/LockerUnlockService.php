@@ -12,20 +12,20 @@ class LockerUnlockService
     {
         return DB::transaction(function () use ($data) {
 
-            // 1️⃣ Create token
+            // Create token
             $token = LockerUnlockToken::create([
                 'locker_id' => $data['locker_id'],
                 'reason' => $data['reason'],
                 'authorized_by' => $data['authorized_by'] ?? 'SYSTEM',
                 'issued_at' => now(),
-                'expires_at' => now()->addSeconds(30),
+                'expires_at' => now()->addMinutes(3),
                 'rental_id' => $data['rental_id'] ?? null,
                 'penalty_id' => $data['penalty_id'] ?? null,
                 'admin_id' => $data['admin_id'] ?? null,
                 'admin_card_id' => $data['admin_card_id'] ?? null,
             ]);
 
-            // 2️⃣ Immediately create execution job
+            // Immediately create execution job
             LockerUnlockJob::create([
                 'unlock_token_id' => $token->id,
                 'locker_id' => $token->locker_id,

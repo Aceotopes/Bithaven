@@ -325,7 +325,7 @@ async function handleStartScan(uid) {
     console.log("📟 RFID scanned:", uid);
 
     // -------------------------------------------------
-    // 1️⃣ ADMIN POLLING SESSION COMPLETION (KEEP THIS)
+    // ADMIN POLLING SESSION COMPLETION (KEEP THIS)
     // -------------------------------------------------
     await pollScanSession();
 
@@ -353,7 +353,7 @@ async function handleStartScan(uid) {
     }
 
     // -------------------------------------------------
-    // 2️⃣ CHECK IF ADMIN CARD (DIRECT ADMIN TAP)
+    // CHECK IF ADMIN CARD (DIRECT ADMIN TAP)
     // -------------------------------------------------
     try {
         const adminRes = await fetch("/api/kiosk/admin/scan", {
@@ -387,7 +387,7 @@ async function handleStartScan(uid) {
     }
 
     // -------------------------------------------------
-    // 3️⃣ STUDENT CHECK
+    // STUDENT CHECK
     // -------------------------------------------------
     try {
         const res = await fetch("/api/kiosk/scan", {
@@ -527,7 +527,7 @@ async function handleLockerSelectConfirm(payload) {
 //         penaltyId: penalty.id,
 //         locker: locker.number,
 //         amount: penalty.amount, // backend-authoritative
-//         penalty: null, // ❌ no snapshot
+//         penalty: null, // no snapshot
 //     };
 
 //     flow.goToPayment();
@@ -537,7 +537,7 @@ async function handleSettlePenalty() {
     const penaltyState = session.state.penalty;
     if (!penaltyState) return;
 
-    // 🧊 stop live penalty accumulation
+    // stop live penalty accumulation
     penalty.stopLivePenalty();
 
     const res = await fetch("/api/kiosk/payment-sessions/start", {

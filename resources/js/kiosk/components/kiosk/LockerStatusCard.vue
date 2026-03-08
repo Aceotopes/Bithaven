@@ -212,7 +212,7 @@ const exceededTimeFormatted = computed(() => {
                 </p>
             </div>
 
-            <div class="my-12 h-px bg-black/10"></div>
+            <div class="my-5 h-px bg-black/10"></div>
 
             <!-- Expired Message -->
             <div class="text-center py-12">
@@ -227,7 +227,7 @@ const exceededTimeFormatted = computed(() => {
                 </p>
 
                 <!-- Exceeded Timer -->
-                <div class="mt-10">
+                <div class="mt-5">
                     <p
                         class="font-mono text-[120px] tracking-[0.3em] text-amber-600 leading-none"
                     >
@@ -250,9 +250,7 @@ const exceededTimeFormatted = computed(() => {
             </div>
 
             <!-- Penalty Summary -->
-            <div
-                class="mt-12 grid grid-cols-2 gap-24 text-center text-gray-700"
-            >
+            <div class="grid grid-cols-2 gap-24 text-center text-gray-700">
                 <div>
                     <p
                         class="text-[14px] tracking-widest uppercase text-gray-500"
