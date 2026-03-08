@@ -171,6 +171,8 @@ function handlePaymentComplete() {
                 @done="emit('complete')"
             />
         </main>
-        <SystemFooter />
+        <SystemFooter
+            v-if="currentStage !== 'PROCESSING' && currentStage !== 'SUCCESS'"
+        />
     </div>
 </template>

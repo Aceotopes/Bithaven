@@ -64,7 +64,7 @@ onMounted(() => {
 
             <!-- End Session -->
             <button
-                class="px-5 py-2.5 rounded-xl border border-black/10 bg-white/70 backdrop-blur text-gray-600 text-[15px] font-semibold transition hover:bg-white hover:text-gray-800 active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
+                class="px-5 py-2.5 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
                 @click.stop="emit('end-session')"
             >
                 End Session

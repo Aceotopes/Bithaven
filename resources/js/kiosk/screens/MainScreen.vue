@@ -105,29 +105,32 @@ defineProps({
         class="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-slate-50 via-slate-100 to-slate-200"
     >
         <!-- Ambient Background -->
-        <div
-            class="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-slate-100"
-        ></div>
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <!-- Base Light Surface -->
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-slate-100"
+            ></div>
 
-        <!-- Top Cyan Atmosphere -->
-        <div
-            class="absolute -top-[35%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-cyan-300/15 rounded-full blur-[200px]"
-        ></div>
+            <!-- Top Cyan Atmosphere -->
+            <div
+                class="absolute -top-[5%] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] bg-cyan-300/15 rounded-full blur-[200px]"
+            ></div>
 
-        <!-- Mid Soft Light Column -->
-        <div
-            class="absolute top-[25%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/40 rounded-full blur-[220px]"
-        ></div>
+            <!-- Mid Soft Light Column -->
+            <div
+                class="absolute top-[55%] left-1/2 -translate-x-1/2 w-[700px] h-[1200px] bg-white/40 rounded-full blur-[220px]"
+            ></div>
 
-        <!-- Bottom Cyan Accent -->
-        <div
-            class="absolute bottom-[-40%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-cyan-400/12 rounded-full blur-[220px]"
-        ></div>
+            <!-- Bottom Cyan Accent -->
+            <div
+                class="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] bg-cyan-400/12 rounded-full blur-[220px]"
+            ></div>
 
-        <!-- Subtle Vertical Texture -->
-        <div
-            class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_120px] opacity-25"
-        ></div>
+            <!-- Subtle Vertical Texture -->
+            <div
+                class="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_120px] opacity-25"
+            ></div>
+        </div>
 
         <!-- Header -->
         <SystemHeader @end-session="openEndSessionConfirm" />

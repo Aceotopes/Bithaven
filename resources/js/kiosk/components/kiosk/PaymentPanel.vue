@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
         <!-- ========================= -->
         <!-- COIN INPUT (SIMULATION) -->
         <!-- ========================= -->
-        <!-- <div class="mt-12 grid grid-cols-3 gap-6">
+        <div class="mt-12 grid grid-cols-3 gap-6">
             <button
                 class="h-20 rounded-2xl bg-gray-200 text-[22px] font-semibold active:scale-[0.97] transition"
                 @click="insertCoinUI(1)"
@@ -256,7 +256,7 @@ onBeforeUnmount(() => {
             >
                 +₱10
             </button>
-        </div> -->
+        </div>
 
         <!-- ========================= -->
         <!--           CANCEL          -->
@@ -305,9 +305,9 @@ onBeforeUnmount(() => {
             </div>
         </div> -->
     </section>
-    <!-- <div class="text-[55px] text-red-500">
+    <div class="text-[55px] text-red-500">
         mode={{ mode }} due={{ amountDue }} paid={{ amountPaid }} status={{
             paymentStatus
         }}
-    </div> -->
+    </div>
 </template>

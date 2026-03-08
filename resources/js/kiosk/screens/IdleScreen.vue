@@ -144,7 +144,7 @@ watch(
                 });
                 break;
 
-            // 🔵 Future: Admin
+            // Admin
             case "admin":
                 triggerPopup({
                     type: "admin",
@@ -156,11 +156,11 @@ watch(
                 startCountdown();
                 break;
 
-            // 🟡 Future: Suspended
+            // Suspended
             case "suspended":
                 triggerPopup({
                     type: "warning",
-                    title: "ACCOUNT SUSPENDED",
+                    title: "ACCESS SUSPENDED",
                     message:
                         "Your ID has been suspended. Please contact administration.",
                 });

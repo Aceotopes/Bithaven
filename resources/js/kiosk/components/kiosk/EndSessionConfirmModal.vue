@@ -53,12 +53,12 @@ defineProps({
                     <p
                         class="mt-4 text-[20px] text-gray-600 leading-relaxed max-w-[480px] mx-auto"
                     >
-                        This will cancel the current session and return the
-                        kiosk to the start screen.
+                        Are you sure you want to end the current session?
                     </p>
 
                     <p class="mt-2 text-[18px] text-gray-500">
-                        Any progress made will not be saved.
+                        The system will end your session and prepare the kiosk
+                        for the next user.
                     </p>
 
                     <!-- ACTIONS -->

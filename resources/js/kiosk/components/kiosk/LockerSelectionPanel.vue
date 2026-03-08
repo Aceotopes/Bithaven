@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-// UI-only panel
-// Logic, state, and emits will be wired later
+
 const emit = defineEmits(["back", "confirm"]);
 const selectedLocker = ref(null);
 const selectedDuration = ref(null);
@@ -29,18 +28,33 @@ function isOccupied(n) {
     return props.lockers.find((l) => l.number === n)?.status === "OCCUPIED";
 }
 
+function isOutOfService(n) {
+    return (
+        props.lockers.find((l) => l.number === n)?.status === "OUT_OF_SERVICE"
+    );
+}
 function lockerStatus(n) {
-    return isOccupied(n)
-        ? {
-              label: "OCCUPIED",
-              badge: "bg-gray-500 text-white",
-              frame: "border-gray-400",
-          }
-        : {
-              label: "AVAILABLE",
-              badge: "bg-emerald-600 text-white",
-              frame: "border-emerald-400",
-          };
+    if (isOutOfService(n)) {
+        return {
+            label: "OUT OF SERVICE",
+            badge: "bg-rose-600 text-white",
+            frame: "border-rose-400",
+        };
+    }
+
+    if (isOccupied(n)) {
+        return {
+            label: "OCCUPIED",
+            badge: "bg-gray-500 text-white",
+            frame: "border-gray-400",
+        };
+    }
+
+    return {
+        label: "AVAILABLE",
+        badge: "bg-emerald-600 text-white",
+        frame: "border-emerald-400",
+    };
 }
 </script>
 
@@ -82,6 +96,11 @@ function lockerStatus(n) {
                 <span class="inline-block w-4 h-4 rounded bg-gray-400"></span>
                 <span class="tracking-wide uppercase">Occupied</span>
             </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-block w-4 h-4 rounded bg-rose-500"></span>
+                <span class="tracking-wide uppercase">Out of Service</span>
+            </div>
         </div>
 
         <!-- ========================= -->
@@ -91,15 +110,21 @@ function lockerStatus(n) {
             <div
                 v-for="n in 15"
                 :key="n"
-                @click="!isOccupied(n) && (selectedLocker = n)"
+                @click="
+                    !isOccupied(n) && !isOutOfService(n) && (selectedLocker = n)
+                "
                 class="relative h-56 rounded-2xl border-2 transition-all duration-150 select-none flex flex-col justify-between overflow-hidden"
                 :class="[
-                    isOccupied(n)
+                    isOutOfService(n)
+                        ? 'bg-rose-100 border-rose-300 cursor-not-allowed'
+                        : isOccupied(n)
                         ? 'bg-gray-100 border-gray-300 cursor-not-allowed'
                         : selectedLocker === n
                         ? 'bg-emerald-50 border-emerald-600 ring-4 ring-emerald-300 shadow-[0_16px_40px_rgba(16,185,129,0.35)]'
                         : 'bg-white border-black/10 shadow-md cursor-pointer',
-                    !isOccupied(n) && 'active:scale-[0.97]',
+                    !isOccupied(n) &&
+                        !isOutOfService(n) &&
+                        'active:scale-[0.97]',
                 ]"
             >
                 <!-- STATUS STRIP -->
@@ -123,7 +148,9 @@ function lockerStatus(n) {
                     <p
                         class="font-mono text-[52px] font-bold"
                         :class="
-                            isOccupied(n)
+                            isOutOfService(n)
+                                ? 'text-rose-500'
+                                : isOccupied(n)
                                 ? 'text-gray-500'
                                 : selectedLocker === n
                                 ? 'text-emerald-800'
@@ -144,7 +171,9 @@ function lockerStatus(n) {
                 <div
                     class="h-4"
                     :class="[
-                        isOccupied(n)
+                        isOutOfService(n)
+                            ? 'bg-rose-400'
+                            : isOccupied(n)
                             ? 'bg-gray-300'
                             : selectedLocker === n
                             ? 'bg-emerald-600'

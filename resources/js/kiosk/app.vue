@@ -396,20 +396,21 @@ async function handleStartScan(uid) {
             body: JSON.stringify({ rfid_uid: uid }),
         });
 
+        const data = await res.json();
+
+        // suspended
+        if (data.status === "suspended") {
+            scanResult.value = { status: "suspended" };
+            return;
+        }
+
+        // unknown card
         if (!res.ok) {
             scanResult.value = { status: "error" };
             return;
         }
 
-        const data = await res.json();
-
-        // Example: suspended
-        if (data.student?.status === "SUSPENDED") {
-            scanResult.value = { status: "suspended" };
-            return;
-        }
-
-        // Valid student
+        // success
         scanResult.value = {
             status: "success",
             student: data.student,

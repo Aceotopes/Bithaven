@@ -1,12 +1,4 @@
 <script setup>
-// UI-ONLY SAMPLE DATA
-// ----------------------------------------
-// Replace these values later with
-// props or store data when backend exists.
-// ----------------------------------------
-
-//mock student data
-
 defineProps({
     student: Object,
 });
@@ -19,7 +11,7 @@ defineProps({
         <!-- Header -->
         <div class="flex justify-between items-center">
             <p
-                class="text-[20px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
+                class="text-[20px] tracking-[0.4em] uppercase text-cyan-500 font-semibold"
             >
                 Student Information
             </p>
@@ -31,7 +23,7 @@ defineProps({
         </div>
 
         <!-- Divider -->
-        <div class="my-8 h-px bg-black/10"></div>
+        <div class="my-8 h-px bg-cyan-300"></div>
 
         <!-- Content -->
         <div class="grid grid-cols-[auto_1fr] gap-14 items-center">
@@ -39,7 +31,7 @@ defineProps({
             <div
                 class="w-36 h-36 rounded-full bg-gray-100 border border-black/10 flex items-center justify-center text-gray-400 text-[44px] font-mono"
             >
-                AV
+                {{ student.first_name[0] }}{{ student.last_name[0] }}
             </div>
 
             <!-- Student Details -->

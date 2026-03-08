@@ -13,17 +13,23 @@ class LockerController extends Controller
 {
     public function status()
     {
-        // locker IDs that are currently occupied
         $occupiedLockerIds = Rental::whereIn('status', ['ACTIVE', 'EXPIRED'])
             ->pluck('locker_id')
             ->toArray();
 
         $lockers = Locker::all()->map(function ($locker) use ($occupiedLockerIds) {
+
+            if ($locker->status === 'OUT_OF_SERVICE') {
+                $status = 'OUT_OF_SERVICE';
+            } elseif (in_array($locker->id, $occupiedLockerIds)) {
+                $status = 'OCCUPIED';
+            } else {
+                $status = 'AVAILABLE';
+            }
+
             return [
                 'number' => $locker->locker_number,
-                'status' => in_array($locker->id, $occupiedLockerIds)
-                    ? 'OCCUPIED'
-                    : 'AVAILABLE',
+                'status' => $status,
             ];
         });
 

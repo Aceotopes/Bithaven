@@ -20,6 +20,17 @@ class ScanController extends Controller
             return response()->json(['error' => 'STUDENT_NOT_FOUND'], 404);
         }
 
+        if ($student->status === 'SUSPENDED') {
+            return response()->json([
+                'status' => 'suspended',
+                'student' => [
+                    'id' => $student->id,
+                    'first_name' => $student->first_name,
+                    'last_name' => $student->last_name,
+                ]
+            ]);
+        }
+
         if ($student->status !== 'ACTIVE') {
             return response()->json(['error' => 'STUDENT_INACTIVE'], 403);
         }

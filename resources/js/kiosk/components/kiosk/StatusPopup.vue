@@ -39,7 +39,7 @@ defineEmits(["close", "action"]);
             @click.stop
         >
             <div
-                class="relative w-[780px] rounded-[36px] px-16 py-14 text-center bg-white/75 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.25)] animate-modal-in"
+                class="relative w-[780px] rounded-[36px] px-16 py-14 text-center bg-gray-200 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.25)] animate-modal-in"
                 :class="type === 'error' ? 'animate-shake' : ''"
                 @click.stop
             >
@@ -93,6 +93,8 @@ defineEmits(["close", "action"]);
                                 d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
                             />
                         </svg>
+
+                        <!-- admin icon -->
                         <svg
                             v-if="type === 'admin'"
                             xmlns="http://www.w3.org/2000/svg"
@@ -108,6 +110,8 @@ defineEmits(["close", "action"]);
                                 d="M12 9v3m0 0v3m0-3h3m-3 0H9m9 9H6a2 2 0 01-2-2V8a2 2 0 012-2h3l1-2h4l1 2h3a2 2 0 012 2v11a2 2 0 01-2 2z"
                             />
                         </svg>
+
+                        <!-- suspended icon -->
                         <svg
                             v-if="type === 'warning'"
                             xmlns="http://www.w3.org/2000/svg"
@@ -158,8 +162,11 @@ defineEmits(["close", "action"]);
                             in the system.
                         </span>
 
-                        <span v-else>
-                            {{ message }}
+                        <span v-if="type === 'warning'">
+                            This account is currently
+                            <span class="font-semibold text-amber-600">
+                                Suspended </span
+                            >.
                         </span>
                     </p>
                     <p
@@ -175,7 +182,7 @@ defineEmits(["close", "action"]);
 
                     <!-- Secondary Instruction -->
                     <p
-                        class="text-[22px] leading-[1.45]"
+                        class="text-[22px] leading-[1.45] mt-8 font-medium"
                         :class="
                             type === 'success'
                                 ? 'text-gray-600'
@@ -192,8 +199,11 @@ defineEmits(["close", "action"]);
                             for further assistance.
                         </span>
 
-                        <span v-else>
-                            {{ message }}
+                        <span v-else-if="type === 'warning'">
+                            Access to the system has been temporarily disabled.
+                            Please contact the
+                            <span class="font-bold">administrator</span>
+                            to resolve this issue.
                         </span>
                     </p>
                 </div>
@@ -202,6 +212,13 @@ defineEmits(["close", "action"]);
                 <button
                     v-if="type === 'error'"
                     class="mt-16 w-full py-6 text-2xl font-semibold rounded-2xl text-white bg-gradient-to-r from-rose-500 to-red-600 shadow-[0_12px_30px_rgba(239,68,68,0.45)] transition-transform duration-150 active:scale-95"
+                    @click="$emit('close')"
+                >
+                    Try Again
+                </button>
+                <button
+                    v-if="type === 'warning'"
+                    class="mt-16 w-full py-6 text-2xl font-semibold rounded-2xl text-white bg-gradient-to-r from-amber-500 to-amber-600 shadow-[0_12px_30px_rgba(239,68,68,0.45)] transition-transform duration-150 active:scale-95"
                     @click="$emit('close')"
                 >
                     Try Again
