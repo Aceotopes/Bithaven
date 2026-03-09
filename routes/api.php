@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\LiveOperationsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\RfidController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\FinancialController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -118,6 +119,11 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::post('/admin/profile/update', [AdminProfileController::class, 'update']);
     Route::post('/admin/profile/change-password', [AdminProfileController::class, 'changePassword']);
+
+    Route::get('/admin/financials/transactions', [FinancialController::class, 'transactions']);
+    Route::get('/admin/financials/summary', [FinancialController::class, 'summary']);
+    Route::get('/admin/financials/locker-revenue', [FinancialController::class, 'lockerRevenue']);
+    Route::get('/admin/financials/penalties', [FinancialController::class, 'penalties']);
 });
 Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 

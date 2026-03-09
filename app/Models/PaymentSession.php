@@ -39,4 +39,9 @@ class PaymentSession extends Model
     {
         return $this->belongsTo(Rental::class);
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
 }

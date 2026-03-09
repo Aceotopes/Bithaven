@@ -4,6 +4,8 @@ import Card from "primevue/card";
 import FloatLabel from "primevue/floatlabel";
 import ProgressSpinner from "primevue/progressspinner";
 
+import TransactionsTable from "@/admin/components/financials/TransactionsTable.vue";
+
 const activeTab = ref("transactions");
 
 const loading = ref(false);
@@ -20,6 +22,12 @@ function resetFilters() {
         end_date: null,
         type: "ALL",
     };
+}
+
+const appliedFilters = ref({ ...filters.value });
+
+function applyFilters() {
+    appliedFilters.value = { ...filters.value };
 }
 </script>
 
@@ -88,6 +96,7 @@ function resetFilters() {
                             icon="pi pi-filter"
                             severity="secondary"
                             outlined
+                            @click="applyFilters"
                         />
                         <Button
                             label="Reset"
@@ -205,7 +214,9 @@ function resetFilters() {
                                         </div>
 
                                         <div class="table-body">
-                                            <!-- DataTable will go here -->
+                                            <TransactionsTable
+                                                :filters="appliedFilters"
+                                            />
                                         </div>
                                     </template>
                                 </Card>
