@@ -86,3 +86,115 @@
     opacity: 0.4;
     cursor: not-allowed;
 }
+
+/* -------------------------------
+   GLOBAL CARD SYSTEM
+-------------------------------- */
+
+.ui-card {
+    @apply rounded-lg
+           border border-gray-200 dark:border-gray-700
+           bg-white dark:bg-gray-800
+           shadow-sm;
+}
+
+.ui-card-body {
+    @apply px-5 py-4;
+}
+
+/* Card header layout */
+.ui-card-header {
+    @apply flex items-center justify-between mb-4;
+}
+
+/* Title used in cards */
+.ui-card-title {
+    @apply text-[15px] uppercase tracking-wide
+           text-gray-800 dark:text-gray-200
+           font-medium;
+}
+
+/* Subtitle / description */
+.ui-card-subtitle {
+    @apply text-xs
+           text-gray-500 dark:text-gray-400
+           mt-0.5;
+}
+
+/* Optional icon area */
+.ui-card-icon {
+    @apply text-base;
+}
+
+/* Section spacing inside cards */
+.ui-card-section {
+    @apply mt-4;
+}
+
+/* -------------------------------
+   TABLE CARD
+-------------------------------- */
+
+.table-card {
+    @apply rounded-lg
+           border border-gray-200 dark:border-gray-700
+           bg-white dark:bg-gray-800
+           shadow-sm;
+}
+
+.table-body {
+    @apply px-5 py-4 p-0;
+}
+
+.table-header {
+    @apply px-5 py-4 border-b
+           border-gray-200 dark:border-gray-700;
+}
+
+/* -------------------------------
+   GLOBAL DATATABLE STYLE
+-------------------------------- */
+
+/* Table wrapper */
+.p-datatable {
+    @apply text-sm;
+}
+
+/* Table header */
+.p-datatable-thead > tr > th {
+    @apply bg-gray-50 dark:bg-gray-800
+           text-gray-600 dark:text-gray-300
+           text-xs uppercase tracking-wide
+           font-medium
+           border-b border-gray-200 dark:border-gray-700
+           px-4 py-3;
+}
+
+/* Table rows */
+.p-datatable-tbody > tr {
+    @apply border-b border-gray-200 dark:border-gray-700
+           transition-colors;
+}
+
+/* Hover row */
+.p-datatable-tbody > tr:hover {
+    @apply bg-gray-50 dark:bg-gray-700/40;
+}
+
+/* Table cells */
+.p-datatable-tbody > tr > td {
+    @apply px-4 py-3
+           text-gray-700 dark:text-gray-200;
+}
+
+/* Empty state */
+.p-datatable-empty-message {
+    @apply text-gray-400 py-10;
+}
+
+/* Pagination */
+.p-paginator {
+    @apply px-4 py-3 border-t
+           border-gray-200 dark:border-gray-700
+           bg-white dark:bg-gray-800;
+}

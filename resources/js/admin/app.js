@@ -24,6 +24,7 @@ import Menu from "primevue/menu";
 import Avatar from "primevue/avatar";
 import Tag from "primevue/tag";
 import Password from "primevue/password";
+import DatePicker from "primevue/datepicker";
 
 import Chart from "primevue/chart";
 import "chart.js/auto";
@@ -68,5 +69,6 @@ app.component("Avatar", Avatar);
 app.component("Dialog", Dialog);
 app.component("Tag", Tag);
 app.component("Password", Password);
+app.component("DatePicker", DatePicker);
 
 app.mount("#admin-app");

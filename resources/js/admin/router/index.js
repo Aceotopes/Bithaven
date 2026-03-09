@@ -6,6 +6,7 @@ import AppLayout from "../layout/AppLayout.vue";
 import HomeView from "../views/homeview.vue";
 import LiveOperationsView from "../views/LiveOperationsView.vue";
 import StudentsView from "../views/StudentsView.vue";
+import FinancialsView from "../views/FinancialsView.vue";
 
 const routes = [
     {
@@ -32,6 +33,10 @@ const routes = [
             {
                 path: "students",
                 component: StudentsView,
+            },
+            {
+                path: "financials",
+                component: FinancialsView,
             },
         ],
     },

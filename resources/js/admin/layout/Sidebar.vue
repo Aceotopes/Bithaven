@@ -67,6 +67,19 @@ const route = useRoute();
                 <i class="pi pi-users text-lg"></i>
                 <span>Students</span>
             </RouterLink>
+
+            <RouterLink
+                to="/admin/financials"
+                class="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200"
+                :class="
+                    route.path.startsWith('/admin/financials')
+                        ? 'bg-cyan-500 text-white shadow-lg'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700'
+                "
+            >
+                <i class="pi pi-wallet text-lg"></i>
+                <span>Financials</span>
+            </RouterLink>
         </nav>
 
         <!-- Bottom -->
