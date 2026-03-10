@@ -211,25 +211,23 @@ onMounted(fetchTrend);
                                 class="text-xs font-semibold px-2 py-0.5 rounded"
                                 :class="
                                     growth >= 0
-                                        ? 'bg-emerald-100 text-emerald-700'
-                                        : 'bg-red-100 text-red-700'
+                                        ? 'text-emerald-700'
+                                        : 'text-red-700'
                                 "
                             >
-                                <i
-                                    :class="
-                                        growth >= 0
-                                            ? 'pi pi-arrow-up'
-                                            : 'pi pi-arrow-down'
-                                    "
-                                    class="mr-1"
-                                ></i>
+                                <span v-if="growth >= 0">▲</span>
+                                <span v-else>▼</span>
 
                                 {{ Math.abs(growth || 0).toFixed(1) }}%
+                                <span class="text-gray-400">
+                                    vs previous period
+                                </span>
                             </span>
-                            <i
+
+                            <!-- <i
                                 class="pi pi-info-circle text-gray-400 text-xs ml-1"
                                 v-tooltip="'Compared to the previous period'"
-                            ></i>
+                            ></i> -->
                         </div>
                     </div>
 

@@ -1,11 +1,12 @@
 <script setup>
 import { computed } from "vue";
-
+import MomentumIndicator from "@/admin/components/financials/summary/MomentumIndicator.vue";
 const props = defineProps({
     daily: {
         type: Array,
         default: () => [],
     },
+    momentum: Number,
 });
 
 /*
@@ -175,7 +176,7 @@ const chartOptions = {
                 </div>
 
                 <!-- Donut Chart -->
-                <div class="flex justify-center items-center h-62">
+                <div class="flex justify-center items-center h-65">
                     <Chart
                         type="doughnut"
                         :data="breakdownData"
@@ -186,7 +187,7 @@ const chartOptions = {
                 </div>
 
                 <!-- Revenue Sources -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4 mt-5">
                     <div class="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
                         <div class="text-xs text-gray-500">Rental Revenue</div>
 
@@ -215,53 +216,106 @@ const chartOptions = {
                 <!-- Additional Analytics -->
 
                 <hr class="my-4 border-gray-200 dark:border-gray-700" />
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <div class="text-gray-500 text-xs">Total Revenue</div>
-                        <div class="font-semibold">
+
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-1 text-sm"
+                >
+                    <!-- Total Revenue -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                        >
+                            <i class="pi pi-wallet text-gray-400"></i>
+                            <span>Total Revenue</span>
+                        </div>
+
+                        <div class="text-lg font-semibold">
                             ₱{{ totalRevenue.toLocaleString() }}
                         </div>
                     </div>
 
-                    <div>
-                        <div class="text-gray-500 text-xs">Transactions</div>
-                        <div class="font-semibold">
+                    <!-- Transactions -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                        >
+                            <i class="pi pi-shopping-cart text-gray-400"></i>
+                            <span>Transactions</span>
+                        </div>
+
+                        <div class="text-lg font-semibold">
                             {{ totalTransactions }}
                         </div>
                     </div>
-                </div>
 
-                <hr class="my-4 border-gray-200 dark:border-gray-700" />
+                    <!-- Primary Source -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                        >
+                            <i class="pi pi-star text-gray-400"></i>
+                            <span>Primary Source</span>
+                        </div>
 
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <div class="text-gray-500 text-xs">Primary Source</div>
-                        <div class="font-semibold">
+                        <div class="text-lg font-semibold">
                             {{ dominantSource }}
                         </div>
                     </div>
 
-                    <div>
-                        <div class="text-gray-500 text-xs">
-                            Rental : Penalty
+                    <!-- Rental : Penalty -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1 whitespace-nowrap"
+                        >
+                            <i class="pi pi-chart-bar text-gray-400"></i>
+                            <span>Rental : Penalty</span>
                         </div>
-                        <div class="font-semibold">{{ revenueRatio }} : 1</div>
+
+                        <div class="text-lg font-semibold">
+                            {{ revenueRatio }} : 1
+                        </div>
                     </div>
 
-                    <div>
-                        <div class="text-gray-500 text-xs">
-                            Penalty Dependence
+                    <!-- Penalty Dependence -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                        >
+                            <i
+                                class="pi pi-exclamation-circle text-gray-400"
+                            ></i>
+                            <span>Penalty Dependence</span>
                         </div>
-                        <div class="font-semibold">
+
+                        <div class="text-lg font-semibold">
                             {{ penaltyDependence }}
                         </div>
                     </div>
 
-                    <div>
-                        <div class="text-gray-500 text-xs">
-                            Avg Revenue / Transaction
+                    <!-- Avg Revenue / Txn -->
+                    <div
+                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                        >
+                            <i class="pi pi-calculator text-gray-400"></i>
+                            <span>Avg Revenue / Txn</span>
                         </div>
-                        <div class="font-semibold">₱{{ avgRevenuePerTxn }}</div>
+
+                        <div class="text-lg font-semibold">
+                            ₱{{ avgRevenuePerTxn }}
+                        </div>
                     </div>
                 </div>
             </div>

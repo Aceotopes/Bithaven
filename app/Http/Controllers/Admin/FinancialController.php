@@ -305,7 +305,8 @@ class FinancialController extends Controller
             'hourly' => $hourly,
             'total_revenue' => $totalRevenue,
             'transactions' => $transactions,
-            'growth' => round($growth ?? 0, 2)
+            'growth' => round($growth ?? 0, 2),
+            'momentum' => round($momentum ?? 0, 2)
         ]);
     }
 }
