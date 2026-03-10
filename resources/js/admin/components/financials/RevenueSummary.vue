@@ -98,13 +98,13 @@ const peakDay = computed(() => {
 <template>
     <div class="space-y-4">
         <!-- Row 1 -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 gap-4">
             <RevenueTrendChart :filters="filters" />
-            <RevenueBreakdownChart :daily="daily" />
         </div>
 
         <!-- Row 2 -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <RevenueBreakdownChart :daily="daily" />
             <!-- Hourly Revenue -->
             <Card class="ui-card">
                 <template #content>
@@ -130,7 +130,7 @@ const peakDay = computed(() => {
             </Card>
 
             <!-- Insights -->
-            <Card class="ui-card">
+            <!-- <Card class="ui-card">
                 <template #content>
                     <div class="ui-card-body">
                         <div class="ui-card-header">
@@ -171,39 +171,91 @@ const peakDay = computed(() => {
                         </div>
                     </div>
                 </template>
-            </Card>
+            </Card> -->
         </div>
 
         <!-- Row 3 -->
-        <Card class="table-card">
-            <template #content>
-                <div class="table-header">
-                    <h3 class="ui-card-title">Daily Revenue</h3>
-                    <p class="ui-card-subtitle">Detailed revenue breakdown</p>
-                </div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <!-- Revenue Insights -->
+            <Card class="ui-card">
+                <template #content>
+                    <div class="ui-card-body">
+                        <div class="ui-card-header">
+                            <div>
+                                <h3 class="ui-card-title">Revenue Insights</h3>
+                                <p class="ui-card-subtitle">Derived metrics</p>
+                            </div>
+                            <i class="pi pi-chart-bar text-emerald-500"></i>
+                        </div>
 
-                <div class="table-body">
-                    <DataTable
-                        :value="daily"
-                        stripedRows
-                        responsiveLayout="scroll"
-                    >
-                        <Column field="date" header="Date" />
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500"
+                                    >Average Revenue / Day</span
+                                >
+                                <span class="font-semibold">
+                                    ₱{{ avgRevenue }}
+                                </span>
+                            </div>
 
-                        <Column field="transactions" header="Transactions" />
+                            <div class="flex justify-between" v-if="peakDay">
+                                <span class="text-gray-500"
+                                    >Peak Revenue Day</span
+                                >
+                                <span class="font-semibold">
+                                    {{ peakDay.date }} — ₱{{ peakDay.revenue }}
+                                </span>
+                            </div>
 
-                        <Column header="Revenue">
-                            <template #body="slotProps">
-                                ₱{{
-                                    Number(
-                                        slotProps.data.revenue
-                                    ).toLocaleString()
-                                }}
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
-            </template>
-        </Card>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500"
+                                    >Total Days Recorded</span
+                                >
+                                <span class="font-semibold">
+                                    {{ daily.length }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Card>
+
+            <!-- Daily Revenue Table -->
+            <Card class="table-card">
+                <template #content>
+                    <div class="table-header">
+                        <h3 class="ui-card-title">Daily Revenue</h3>
+                        <p class="ui-card-subtitle">
+                            Detailed revenue breakdown
+                        </p>
+                    </div>
+
+                    <div class="table-body">
+                        <DataTable
+                            :value="daily"
+                            stripedRows
+                            responsiveLayout="scroll"
+                        >
+                            <Column field="date" header="Date" />
+
+                            <Column
+                                field="transactions"
+                                header="Transactions"
+                            />
+
+                            <Column header="Revenue">
+                                <template #body="slotProps">
+                                    ₱{{
+                                        Number(
+                                            slotProps.data.revenue
+                                        ).toLocaleString()
+                                    }}
+                                </template>
+                            </Column>
+                        </DataTable>
+                    </div>
+                </template>
+            </Card>
+        </div>
     </div>
 </template>

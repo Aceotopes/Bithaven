@@ -195,7 +195,7 @@ onMounted(fetchTrend);
 </script>
 
 <template>
-    <Card class="ui-card xl:col-span-2">
+    <Card class="ui-card">
         <template #content>
             <div class="ui-card-body">
                 <div class="ui-card-header">
@@ -250,7 +250,7 @@ onMounted(fetchTrend);
                     </div>
                 </div>
 
-                <div class="h-72">
+                <div class="h-80">
                     <Chart
                         type="bar"
                         :data="chartData"
