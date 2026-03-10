@@ -16,14 +16,24 @@ const search = ref("");
 const sortField = ref("created_at");
 const sortOrder = ref(-1);
 
+function formatDate(date) {
+    if (!date) return null;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
 async function fetchTransactions() {
     loading.value = true;
 
     try {
         const response = await axios.get("/admin/financials/transactions", {
             params: {
-                start_date: props.filters.start_date,
-                end_date: props.filters.end_date,
+                start_date: formatDate(props.filters.start_date),
+                end_date: formatDate(props.filters.end_date),
                 type: props.filters.type,
                 search: search.value,
                 sort_field: sortField.value,

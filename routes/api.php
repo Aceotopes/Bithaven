@@ -124,6 +124,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/financials/summary', [FinancialController::class, 'summary']);
     Route::get('/admin/financials/locker-revenue', [FinancialController::class, 'lockerRevenue']);
     Route::get('/admin/financials/penalties', [FinancialController::class, 'penalties']);
+
+    Route::get('/admin/financials/revenue-summary', [FinancialController::class, 'revenueSummary']);
 });
 Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 

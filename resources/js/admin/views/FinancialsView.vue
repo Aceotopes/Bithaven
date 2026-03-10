@@ -1,19 +1,29 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch } from "vue";
 import Card from "primevue/card";
 import FloatLabel from "primevue/floatlabel";
 import ProgressSpinner from "primevue/progressspinner";
+import axios from "axios";
 
 import TransactionsTable from "@/admin/components/financials/TransactionsTable.vue";
+import RevenueSummary from "@/admin/components/financials/RevenueSummary.vue";
 
 const activeTab = ref("transactions");
-
 const loading = ref(false);
+const summaryLoading = ref(false);
 
 const filters = ref({
     start_date: null,
     end_date: null,
     type: "ALL",
+});
+const appliedFilters = ref({ ...filters.value });
+
+const summary = ref({
+    total_revenue: 0,
+    rental_revenue: 0,
+    penalty_revenue: 0,
+    transactions: 0,
 });
 
 function resetFilters() {
@@ -22,13 +32,56 @@ function resetFilters() {
         end_date: null,
         type: "ALL",
     };
-}
 
-const appliedFilters = ref({ ...filters.value });
+    appliedFilters.value = { ...filters.value };
+
+    fetchSummary();
+}
 
 function applyFilters() {
     appliedFilters.value = { ...filters.value };
 }
+
+function formatDate(date) {
+    if (!date) return null;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+async function fetchSummary() {
+    summaryLoading.value = true;
+
+    try {
+        const response = await axios.get("/admin/financials/summary", {
+            params: {
+                start_date: formatDate(appliedFilters.value.start_date),
+                end_date: formatDate(appliedFilters.value.end_date),
+                type: appliedFilters.value.type,
+            },
+        });
+
+        summary.value = response.data;
+    } catch (error) {
+        console.error(error);
+    } finally {
+        summaryLoading.value = false;
+    }
+}
+watch(
+    appliedFilters,
+    () => {
+        fetchSummary();
+    },
+    { deep: true }
+);
+
+onMounted(() => {
+    fetchSummary();
+});
 </script>
 
 <template>
@@ -115,7 +168,13 @@ function applyFilters() {
                             <div class="kpi-card">
                                 <div class="kpi-body">
                                     <span class="kpi-label">Total Revenue</span>
-                                    <div class="kpi-value">₱0</div>
+                                    <div class="kpi-value">
+                                        ₱{{
+                                            Number(
+                                                summary.total_revenue
+                                            ).toLocaleString()
+                                        }}
+                                    </div>
                                 </div>
                             </div>
 
@@ -124,7 +183,13 @@ function applyFilters() {
                                     <span class="kpi-label"
                                         >Rental Revenue</span
                                     >
-                                    <div class="kpi-value">₱0</div>
+                                    <div class="kpi-value">
+                                        ₱{{
+                                            Number(
+                                                summary.rental_revenue
+                                            ).toLocaleString()
+                                        }}
+                                    </div>
                                 </div>
                             </div>
 
@@ -133,14 +198,22 @@ function applyFilters() {
                                     <span class="kpi-label"
                                         >Penalty Revenue</span
                                     >
-                                    <div class="kpi-value">₱0</div>
+                                    <div class="kpi-value">
+                                        ₱{{
+                                            Number(
+                                                summary.penalty_revenue
+                                            ).toLocaleString()
+                                        }}
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="kpi-card">
                                 <div class="kpi-body">
                                     <span class="kpi-label">Transactions</span>
-                                    <div class="kpi-value">0</div>
+                                    <div class="kpi-value">
+                                        {{ summary.transactions }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -227,15 +300,17 @@ function applyFilters() {
                                     <template #content>
                                         <div class="table-header">
                                             <h3 class="ui-card-title">
-                                                Revenue
+                                                Revenue Summary
                                             </h3>
                                             <p class="ui-card-subtitle">
-                                                Completed payment sessions
+                                                Revenue analytics and trends
                                             </p>
                                         </div>
 
                                         <div class="table-body">
-                                            <!-- DataTable will go here -->
+                                            <RevenueSummary
+                                                :filters="appliedFilters"
+                                            />
                                         </div>
                                     </template>
                                 </Card>

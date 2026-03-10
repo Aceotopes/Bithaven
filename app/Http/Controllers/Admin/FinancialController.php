@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentSession;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class FinancialController extends Controller
 {
@@ -15,11 +16,11 @@ class FinancialController extends Controller
             ->with(['student', 'locker', 'penalty.rental.locker']);
 
         if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+            $query->where('created_at', '>=', Carbon::parse($request->start_date)->startOfDay());
         }
 
         if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+            $query->where('created_at', '<=', Carbon::parse($request->end_date)->endOfDay());
         }
 
         if ($request->type && $request->type !== 'ALL') {
@@ -92,11 +93,11 @@ class FinancialController extends Controller
             ->where('status', 'COMPLETED');
 
         if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+            $query->where('created_at', '>=', Carbon::parse($request->start_date)->startOfDay());
         }
 
         if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+            $query->where('created_at', '<=', Carbon::parse($request->end_date)->endOfDay());
         }
 
         $totalRevenue = (clone $query)->sum('amount_paid');
@@ -142,5 +143,169 @@ class FinancialController extends Controller
             ->paginate(20);
 
         return response()->json($penalties);
+    }
+
+    public function revenueSummary(Request $request)
+    {
+        $query = PaymentSession::query()
+            ->where('status', 'COMPLETED');
+
+        /*
+        |--------------------------------------
+        | RANGE FILTER (7D / 30D / 3M / 1Y)
+        |--------------------------------------
+        */
+
+        $days = null;
+
+        if ($request->range) {
+
+            switch ($request->range) {
+
+                case '7D':
+                    $days = 7;
+                    break;
+
+                case '30D':
+                    $days = 30;
+                    break;
+
+                case '3M':
+                    $days = 90;
+                    break;
+
+                case '1Y':
+                    $days = 365;
+                    break;
+            }
+
+            if ($days) {
+                $query->where('created_at', '>=', now()->subDays($days));
+            }
+        }
+
+        /*
+        |--------------------------------------
+        | MANUAL DATE FILTER
+        |--------------------------------------
+        */
+
+        if ($request->start_date) {
+            $query->where('created_at', '>=', Carbon::parse($request->start_date)->startOfDay());
+        }
+
+        if ($request->end_date) {
+            $query->where('created_at', '<=', Carbon::parse($request->end_date)->endOfDay());
+        }
+
+        /*
+        |--------------------------------------
+        | DAILY TREND
+        |--------------------------------------
+        */
+
+        $daily = (clone $query)
+            ->selectRaw('
+            DATE(created_at) as date,
+            COUNT(*) as transactions,
+            SUM(amount_paid) as revenue,
+            SUM(CASE WHEN context_type="RENTAL" THEN amount_paid ELSE 0 END) as rental,
+            SUM(CASE WHEN context_type="PENALTY" THEN amount_paid ELSE 0 END) as penalty
+        ')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        /*
+        |--------------------------------------
+        | HOURLY REVENUE
+        |--------------------------------------
+        */
+
+        $hourly = (clone $query)
+            ->selectRaw('
+            HOUR(created_at) as hour,
+            COUNT(*) as transactions,
+            SUM(amount_paid) as revenue
+        ')
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get();
+
+        /*
+        |--------------------------------------
+        | TOTAL METRICS
+        |--------------------------------------
+        */
+
+        $totalRevenue = (clone $query)->sum('amount_paid');
+        $transactions = (clone $query)->count();
+
+        /*
+/*
+|--------------------------------------
+| REVENUE GROWTH (LAST DAY VS PREVIOUS DAY)
+|--------------------------------------
+*/
+
+        /*
+ |--------------------------------------------------------------------------
+ | REVENUE GROWTH (ADAPTIVE PERIOD)
+ |--------------------------------------------------------------------------
+ */
+
+        $growth = 0;
+
+        $start = null;
+        $end = now();
+
+        /*
+        | Determine current period
+        */
+
+        if ($request->start_date && $request->end_date) {
+
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
+
+        } elseif ($days) {
+
+            $start = now()->subDays($days);
+
+        }
+
+        /*
+        | Calculate previous period
+        */
+
+        if ($start) {
+
+            $periodLength = $start->diffInDays($end);
+
+            $previousStart = (clone $start)->subDays($periodLength + 1);
+            $previousEnd = (clone $start)->subDay();
+
+            $currentRevenue = PaymentSession::query()
+                ->where('status', 'COMPLETED')
+                ->whereBetween('created_at', [$start, $end])
+                ->sum('amount_paid');
+
+            $previousRevenue = PaymentSession::query()
+                ->where('status', 'COMPLETED')
+                ->whereBetween('created_at', [$previousStart, $previousEnd])
+                ->sum('amount_paid');
+
+            if ($previousRevenue > 0) {
+                $growth = (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
+            }
+        }
+
+        return response()->json([
+            'daily' => $daily,
+            'hourly' => $hourly,
+            'total_revenue' => $totalRevenue,
+            'transactions' => $transactions,
+            'growth' => round($growth ?? 0, 2)
+        ]);
     }
 }
