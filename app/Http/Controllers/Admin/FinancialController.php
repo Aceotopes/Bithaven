@@ -163,7 +163,7 @@ class FinancialController extends Controller
             switch ($request->range) {
 
                 case '7D':
-                    $days = 7;
+                    $days = 6;
                     break;
 
                 case '30D':
@@ -215,6 +215,63 @@ class FinancialController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
+
+        // Generate complete date range for chart (even if no transactions)
+        $start = null;
+        $end = now();
+
+        /*
+        |--------------------------------------
+        | Determine start date
+        |--------------------------------------
+        */
+
+        if ($request->start_date && $request->end_date) {
+
+            $start = Carbon::parse($request->start_date)->startOfDay();
+            $end = Carbon::parse($request->end_date)->endOfDay();
+
+        } elseif ($days) {
+
+            $start = now()->subDays($days)->startOfDay();
+
+        } elseif ($daily->count()) {
+
+            $start = Carbon::parse($daily->first()->date)->startOfDay();
+        }
+        // Generate complete date range
+        $period = collect();
+
+        if ($start && $end) {
+            $date = $start->copy();
+
+            while ($date <= $end) {
+                $period->push($date->format('Y-m-d'));
+                $date->addDay();
+            }
+        }
+
+        /*
+        |--------------------------------------
+        | FILL MISSING DAYS WITH ZERO VALUES
+        |--------------------------------------
+        */
+
+        $daily = $period->map(function ($date) use ($daily) {
+
+            $record = $daily->firstWhere('date', $date);
+
+            return [
+                'date' => $date,
+                'transactions' => $record->transactions ?? 0,
+                'revenue' => $record->revenue ?? 0,
+                'rental' => $record->rental ?? 0,
+                'penalty' => $record->penalty ?? 0,
+            ];
+
+        });
+
+        $daily = $daily->sortBy('date')->values();
 
         /*
         |--------------------------------------
@@ -306,7 +363,7 @@ class FinancialController extends Controller
             'total_revenue' => $totalRevenue,
             'transactions' => $transactions,
             'growth' => round($growth ?? 0, 2),
-            'momentum' => round($momentum ?? 0, 2)
+            // 'momentum' => round($momentum ?? 0, 2)
         ]);
     }
 }

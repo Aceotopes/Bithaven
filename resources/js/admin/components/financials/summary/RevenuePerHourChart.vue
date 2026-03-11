@@ -100,79 +100,83 @@ const peakWindow = computed(() => {
 </script>
 
 <template>
-    <Card class="ui-card">
+    <Card class="border border-gray-200 dark:border-gray-700 shadow-sm">
         <template #content>
-            <div class="ui-card-body">
-                <!-- HEADER -->
-
-                <div class="ui-card-header">
+            <div class="p-4 space-y-5">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="ui-card-title">Hourly Revenue Heatmap</h3>
+                        <h3
+                            class="text-base font-semibold text-gray-800 dark:text-gray-100"
+                        >
+                            Hourly Revenue
+                        </h3>
 
-                        <p class="ui-card-subtitle">
-                            Locker activity distribution
+                        <p class="text-xs text-gray-500">
+                            Revenue activity throughout the day
                         </p>
                     </div>
 
-                    <i class="pi pi-clock text-cyan-500 text-xl"></i>
+                    <i class="pi pi-clock text-cyan-500 text-lg"></i>
                 </div>
 
-                <!-- HEATMAP -->
+                <!-- Heatmap -->
 
-                <div class="grid grid-cols-6 gap-2 mt-2">
+                <div class="grid grid-cols-12 gap-1">
                     <div
                         v-for="h in hours"
                         :key="h.hour"
-                        class="rounded-lg p-3 text-center transition-all duration-200 hover:scale-105"
+                        class="rounded-md p-2 text-center transition-transform hover:scale-105"
                         :style="{ backgroundColor: getColor(h.revenue) }"
                     >
-                        <div class="text-[11px] text-gray-500">
+                        <div class="text-[10px] text-gray-500">
                             {{ formatHour(h.hour) }}
                         </div>
 
-                        <div class="font-semibold text-sm">
+                        <div class="text-xs font-semibold">
                             ₱{{ h.revenue }}
                         </div>
                     </div>
                 </div>
 
-                <!-- LEGEND -->
+                <!-- Legend -->
 
                 <div
-                    class="flex items-center justify-between mt-4 text-xs text-gray-500"
+                    class="flex items-center justify-between text-xs text-gray-500"
                 >
                     <div class="flex items-center gap-2">
                         <span>Low</span>
 
                         <div class="flex gap-1">
-                            <div class="w-4 h-4 rounded bg-cyan-100"></div>
-                            <div class="w-4 h-4 rounded bg-cyan-300"></div>
-                            <div class="w-4 h-4 rounded bg-cyan-500"></div>
+                            <div class="w-3 h-3 rounded bg-cyan-100"></div>
+                            <div class="w-3 h-3 rounded bg-cyan-300"></div>
+                            <div class="w-3 h-3 rounded bg-cyan-500"></div>
                         </div>
 
                         <span>High</span>
                     </div>
                 </div>
 
-                <hr class="my-4 border-gray-200 dark:border-gray-700" />
-
-                <!-- ANALYTICS GRID -->
+                <!-- Divider -->
 
                 <div
-                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-1 text-sm"
-                >
+                    class="border-t border-gray-200 dark:border-gray-700"
+                ></div>
+
+                <!-- Analytics -->
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                     <!-- Peak Hour -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-clock text-gray-400"></i>
-                            <span>Peak Hour</span>
+                            Peak Hour
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ formatHour(peakHour.hour) }}
                         </div>
 
@@ -181,18 +185,17 @@ const peakWindow = computed(() => {
                         </div>
                     </div>
 
-                    <!-- Least Active Hour -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <!-- Least Active -->
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-moon text-gray-400"></i>
-                            <span>Least Active Hour</span>
+                            Least Active
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ formatHour(leastHour.hour) }}
                         </div>
 
@@ -201,77 +204,67 @@ const peakWindow = computed(() => {
                         </div>
                     </div>
 
-                    <!-- Peak Activity Window -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <!-- Peak Window -->
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-bolt text-gray-400"></i>
-                            <span>Peak Activity Window</span>
+                            Peak Window
                         </div>
 
-                        <div class="text-sm font-semibold">
+                        <div class="font-semibold text-xs">
                             {{ formatHour(peakWindow.start) }} –
                             {{ formatHour(peakWindow.start + 2) }}
                         </div>
 
                         <div class="text-xs text-gray-500">
-                            ₱{{ peakWindow.revenue.toLocaleString() }} revenue
+                            ₱{{ peakWindow.revenue.toLocaleString() }}
                         </div>
                     </div>
 
-                    <!-- Average Revenue per Hour -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <!-- Avg / Hour -->
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-chart-line text-gray-400"></i>
-                            <span>Avg Revenue / Hour</span>
+                            Avg / Hour
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             ₱{{ avgRevenue.toLocaleString() }}
                         </div>
                     </div>
 
                     <!-- Active Hours -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-clock text-gray-400"></i>
-                            <span>Active Hours</span>
+                            Active Hours
                         </div>
 
-                        <div class="text-lg font-semibold">
-                            {{ activeHours }} / 24
-                        </div>
-
-                        <div class="text-xs text-gray-500">locker usage</div>
+                        <div class="font-semibold">{{ activeHours }} / 24</div>
                     </div>
 
-                    <!-- Hourly Activity -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <!-- Activity Rate -->
+
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-percentage text-gray-400"></i>
-                            <span>Hourly Activity</span>
+                            Activity Rate
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ Math.round((activeHours / 24) * 100) }}%
                         </div>
-
-                        <div class="text-xs text-gray-500">usage rate</div>
                     </div>
                 </div>
             </div>

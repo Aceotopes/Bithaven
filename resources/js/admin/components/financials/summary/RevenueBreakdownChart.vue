@@ -158,138 +158,149 @@ const chartOptions = {
 </script>
 
 <template>
-    <Card class="ui-card">
+    <Card class="border border-gray-200 dark:border-gray-700 shadow-sm">
         <template #content>
-            <div class="ui-card-body">
-                <div class="ui-card-header">
+            <div class="p-4 space-y-5">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="ui-card-title">Revenue Breakdown</h3>
-                        <p class="ui-card-subtitle">
+                        <h3
+                            class="text-base font-semibold text-gray-800 dark:text-gray-100"
+                        >
+                            Revenue Breakdown
+                        </h3>
+                        <p class="text-xs text-gray-500">
                             Rental vs Penalty income distribution
                         </p>
                     </div>
 
-                    <i
-                        class="pi pi-chart-pie text-amber-500"
-                        style="font-size: 1.5rem"
-                    ></i>
+                    <i class="pi pi-chart-pie text-amber-500 text-lg"></i>
                 </div>
 
-                <!-- Donut Chart -->
-                <div class="flex justify-center items-center h-65">
-                    <Chart
-                        type="doughnut"
-                        :data="breakdownData"
-                        :options="chartOptions"
-                        :plugins="[centerTextPlugin]"
-                        class="w-full h-full"
-                    />
-                </div>
-
-                <!-- Revenue Sources -->
-                <div class="grid grid-cols-2 gap-4 mt-5">
-                    <div class="p-3 rounded-lg bg-gray-100 dark:bg-gray-800">
-                        <div class="text-xs text-gray-500">Rental Revenue</div>
-
-                        <div class="text-lg font-semibold text-cyan-600">
-                            ₱{{ rentalRevenue.toLocaleString() }}
-                        </div>
-
-                        <div class="text-xs text-gray-400">
-                            {{ rentalPercent }}%
+                <!-- Chart + Revenue Sources -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                    <!-- Donut Chart -->
+                    <div class="flex justify-center">
+                        <div class="h-44 w-44">
+                            <Chart
+                                type="doughnut"
+                                :data="breakdownData"
+                                :options="chartOptions"
+                                :plugins="[centerTextPlugin]"
+                                class="w-full h-full"
+                            />
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div class="text-xs text-gray-500">Penalty Revenue</div>
+                    <!-- Revenue Sources -->
+                    <div class="space-y-4">
+                        <!-- Rental -->
+                        <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div
+                                class="flex items-center justify-between text-xs text-gray-500 mb-1"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="w-3 h-3 rounded-full bg-cyan-400"
+                                    ></span>
+                                    Rental Revenue
+                                </div>
+                                <span>{{ rentalPercent }}%</span>
+                            </div>
 
-                        <div class="text-lg font-semibold text-amber-500">
-                            ₱{{ penaltyRevenue.toLocaleString() }}
+                            <div class="text-lg font-semibold text-cyan-600">
+                                ₱{{ rentalRevenue.toLocaleString() }}
+                            </div>
                         </div>
 
-                        <div class="text-xs text-gray-400">
-                            {{ penaltyPercent }}%
+                        <!-- Penalty -->
+                        <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div
+                                class="flex items-center justify-between text-xs text-gray-500 mb-1"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="w-3 h-3 rounded-full bg-amber-400"
+                                    ></span>
+                                    Penalty Revenue
+                                </div>
+                                <span>{{ penaltyPercent }}%</span>
+                            </div>
+
+                            <div class="text-lg font-semibold text-amber-500">
+                                ₱{{ penaltyRevenue.toLocaleString() }}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Additional Analytics -->
-
-                <hr class="my-4 border-gray-200 dark:border-gray-700" />
-
+                <!-- Divider -->
                 <div
-                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-1 text-sm"
-                >
+                    class="border-t border-gray-200 dark:border-gray-700"
+                ></div>
+
+                <!-- Analytics Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                     <!-- Total Revenue -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-wallet text-gray-400"></i>
                             <span>Total Revenue</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div
+                            class="font-semibold text-gray-900 dark:text-gray-100"
+                        >
                             ₱{{ totalRevenue.toLocaleString() }}
                         </div>
                     </div>
 
                     <!-- Transactions -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-shopping-cart text-gray-400"></i>
                             <span>Transactions</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ totalTransactions }}
                         </div>
                     </div>
 
                     <!-- Primary Source -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-star text-gray-400"></i>
                             <span>Primary Source</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ dominantSource }}
                         </div>
                     </div>
 
-                    <!-- Rental : Penalty -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <!-- Revenue Ratio -->
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1 whitespace-nowrap"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-chart-bar text-gray-400"></i>
                             <span>Rental : Penalty</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
-                            {{ revenueRatio }} : 1
-                        </div>
+                        <div class="font-semibold">{{ revenueRatio }} : 1</div>
                     </div>
 
                     <!-- Penalty Dependence -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i
                                 class="pi pi-exclamation-circle text-gray-400"
@@ -297,25 +308,21 @@ const chartOptions = {
                             <span>Penalty Dependence</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
+                        <div class="font-semibold">
                             {{ penaltyDependence }}
                         </div>
                     </div>
 
                     <!-- Avg Revenue / Txn -->
-                    <div
-                        class="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
-                    >
+                    <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div
-                            class="flex items-center gap-2 text-gray-500 text-xs mb-1"
+                            class="flex items-center gap-2 text-xs text-gray-500 mb-1"
                         >
                             <i class="pi pi-calculator text-gray-400"></i>
                             <span>Avg Revenue / Txn</span>
                         </div>
 
-                        <div class="text-lg font-semibold">
-                            ₱{{ avgRevenuePerTxn }}
-                        </div>
+                        <div class="font-semibold">₱{{ avgRevenuePerTxn }}</div>
                     </div>
                 </div>
             </div>
