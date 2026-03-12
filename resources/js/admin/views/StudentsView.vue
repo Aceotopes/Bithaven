@@ -189,39 +189,83 @@ onMounted(() => {
                     />
                 </div>
 
-                <!-- Summary -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="kpi-card">
-                        <div class="kpi-body">
-                            <div class="kpi-label">Total Students</div>
-                            <div class="kpi-value text-cyan-600">
+                <!-- Student Summary -->
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+                >
+                    <!-- Total Students -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-900/20"
+                    >
+                        <div
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-500/10"
+                        >
+                            <i class="pi pi-users text-slate-600"></i>
+                        </div>
+
+                        <div>
+                            <div class="text-s text-gray-600">
+                                Total Students
+                            </div>
+                            <div
+                                class="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                            >
                                 {{ summary.total_students }}
                             </div>
                         </div>
                     </div>
 
-                    <div class="kpi-card">
-                        <div class="kpi-body">
-                            <div class="kpi-label">Registered (RFID)</div>
-                            <div class="kpi-value text-cyan-600">
+                    <!-- Registered -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-cyan-50 dark:bg-cyan-900/20"
+                    >
+                        <div
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-cyan-500/10"
+                        >
+                            <i class="pi pi-id-card text-cyan-600"></i>
+                        </div>
+
+                        <div>
+                            <div class="text-s text-gray-600">
+                                Registered (RFID)
+                            </div>
+                            <div class="text-xl font-semibold">
                                 {{ summary.total_registered }}
                             </div>
                         </div>
                     </div>
 
-                    <div class="kpi-card">
-                        <div class="kpi-body">
-                            <div class="kpi-label">Active</div>
-                            <div class="kpi-value text-cyan-600">
+                    <!-- Active -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20"
+                    >
+                        <div
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-emerald-500/10"
+                        >
+                            <i class="pi pi-check-circle text-emerald-600"></i>
+                        </div>
+
+                        <div>
+                            <div class="text-s text-gray-600">Active</div>
+                            <div class="text-xl font-semibold">
                                 {{ summary.total_active }}
                             </div>
                         </div>
                     </div>
 
-                    <div class="kpi-card">
-                        <div class="kpi-body">
-                            <div class="kpi-label">Suspended</div>
-                            <div class="kpi-value text-cyan-600">
+                    <!-- Suspended -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/20"
+                    >
+                        <div
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-red-500/10"
+                        >
+                            <i class="pi pi-ban text-red-600"></i>
+                        </div>
+
+                        <div>
+                            <div class="text-s text-gray-600">Suspended</div>
+                            <div class="text-xl font-semibold">
                                 {{ summary.total_suspended }}
                             </div>
                         </div>

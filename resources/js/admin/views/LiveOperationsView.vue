@@ -104,53 +104,95 @@ onBeforeUnmount(() => {
                     <span class="text-xs text-gray-400"> Auto-refreshing </span>
                 </div>
 
-                <!-- SUMMARY BAR -->
-                <div class="grid grid-cols-4 gap-4 mb-6">
+                <!-- LIVE STATUS SUMMARY -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <!-- Available -->
                     <div
-                        class="rounded-lg p-3 bg-emerald-50 dark:bg-emerald-900/20"
+                        class="flex items-center gap-4 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20"
                     >
                         <div
-                            class="text-xs text-emerald-600 uppercase tracking-wide"
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-emerald-500/10"
                         >
-                            Available
+                            <i class="pi pi-check text-emerald-600"></i>
                         </div>
-                        <div class="text-2xl font-semibold text-emerald-700">
-                            {{ summary.available }}
+
+                        <div>
+                            <div
+                                class="text-xs text-emerald-600 uppercase tracking-wide"
+                            >
+                                Available
+                            </div>
+                            <div
+                                class="text-2xl font-semibold text-emerald-700"
+                            >
+                                {{ summary.available }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="rounded-lg p-3 bg-blue-50 dark:bg-blue-900/20">
-                        <div
-                            class="text-xs text-blue-600 uppercase tracking-wide"
-                        >
-                            Occupied
-                        </div>
-                        <div class="text-2xl font-semibold text-blue-700">
-                            {{ summary.occupied }}
-                        </div>
-                    </div>
-
+                    <!-- Occupied -->
                     <div
-                        class="rounded-lg p-3 bg-amber-50 dark:bg-amber-900/20"
+                        class="flex items-center gap-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20"
                     >
                         <div
-                            class="text-xs text-amber-600 uppercase tracking-wide"
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-500/10"
                         >
-                            Overdue
+                            <i class="pi pi-lock text-blue-600"></i>
                         </div>
-                        <div class="text-2xl font-semibold text-amber-700">
-                            {{ summary.overdue }}
+
+                        <div>
+                            <div
+                                class="text-xs text-blue-600 uppercase tracking-wide"
+                            >
+                                Occupied
+                            </div>
+                            <div class="text-2xl font-semibold text-blue-700">
+                                {{ summary.occupied }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="rounded-lg p-3 bg-red-50 dark:bg-red-900/20">
+                    <!-- Overdue -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20"
+                    >
                         <div
-                            class="text-xs text-red-600 uppercase tracking-wide"
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/10"
                         >
-                            Out of Service
+                            <i class="pi pi-clock text-amber-600"></i>
                         </div>
-                        <div class="text-2xl font-semibold text-red-700">
-                            {{ summary.out }}
+
+                        <div>
+                            <div
+                                class="text-xs text-amber-600 uppercase tracking-wide"
+                            >
+                                Overdue
+                            </div>
+                            <div class="text-2xl font-semibold text-amber-700">
+                                {{ summary.overdue }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Out of Service -->
+                    <div
+                        class="flex items-center gap-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/20"
+                    >
+                        <div
+                            class="w-10 h-10 flex items-center justify-center rounded-lg bg-red-500/10"
+                        >
+                            <i class="pi pi-wrench text-red-600"></i>
+                        </div>
+
+                        <div>
+                            <div
+                                class="text-xs text-red-600 uppercase tracking-wide"
+                            >
+                                Out of Service
+                            </div>
+                            <div class="text-2xl font-semibold text-red-700">
+                                {{ summary.out }}
+                            </div>
                         </div>
                     </div>
                 </div>

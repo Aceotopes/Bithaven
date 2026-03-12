@@ -120,17 +120,42 @@ class FinancialController extends Controller
         ]);
     }
 
-    public function lockerRevenue()
+    public function lockerRevenue(Request $request)
     {
-        $data = PaymentSession::query()
-            ->where('status', 'COMPLETED')
-            ->where('context_type', 'RENTAL')
-            ->selectRaw('locker_id, COUNT(*) as rentals, SUM(amount_paid) as revenue')
-            ->groupBy('locker_id')
-            ->with('locker')
+        $query = PaymentSession::query()
+            ->where('payment_sessions.status', 'COMPLETED')
+            ->leftJoin('penalties', 'payment_sessions.penalty_id', '=', 'penalties.id')
+            ->leftJoin('rentals', 'penalties.rental_id', '=', 'rentals.id');
+
+        if ($request->start_date) {
+            $query->where('payment_sessions.created_at', '>=', Carbon::parse($request->start_date)->startOfDay());
+        }
+
+        if ($request->end_date) {
+            $query->where('payment_sessions.created_at', '<=', Carbon::parse($request->end_date)->endOfDay());
+        }
+
+        $lockers = $query
+            ->selectRaw('
+        COALESCE(payment_sessions.locker_id, rentals.locker_id) as resolved_locker_id,
+
+        COUNT(CASE WHEN payment_sessions.context_type="RENTAL" THEN 1 END) as rentals,
+
+        COUNT(CASE WHEN payment_sessions.context_type="PENALTY" THEN 1 END) as penalties,
+
+        SUM(CASE WHEN payment_sessions.context_type="RENTAL" THEN payment_sessions.amount_paid ELSE 0 END) as rental_revenue,
+
+        SUM(CASE WHEN payment_sessions.context_type="PENALTY" THEN payment_sessions.amount_paid ELSE 0 END) as penalty_revenue,
+
+        SUM(payment_sessions.amount_paid) as total_revenue
+    ')
+            ->groupBy('resolved_locker_id')
+            ->orderByRaw('CAST(resolved_locker_id AS UNSIGNED)')
             ->get();
 
-        return response()->json($data);
+        return response()->json([
+            'lockers' => $lockers
+        ]);
     }
 
     public function penalties()
@@ -366,4 +391,6 @@ class FinancialController extends Controller
             // 'momentum' => round($momentum ?? 0, 2)
         ]);
     }
+
+
 }

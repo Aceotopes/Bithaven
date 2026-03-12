@@ -86,6 +86,10 @@ watch(
         <!-- Row 3 -->
         <div class="grid grid-cols-1 gap-4">
             <RevenueInsights :daily="daily" />
+        </div>
+
+        <!-- Row 4 -->
+        <div class="grid grid-cols-1 gap-4">
             <DailyRevenueTable :daily="daily" />
         </div>
     </div>

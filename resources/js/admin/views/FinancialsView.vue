@@ -7,6 +7,7 @@ import axios from "axios";
 
 import TransactionsTable from "@/admin/components/financials/TransactionsTable.vue";
 import RevenueSummary from "@/admin/components/financials/RevenueSummary.vue";
+import LockerRevenue from "@/admin/components/financials/LockerRevenue.vue";
 
 const activeTab = ref("transactions");
 const loading = ref(false);
@@ -163,12 +164,27 @@ onMounted(() => {
                     <!-- KPIs -->
                     <div class="ui-card-section">
                         <div
-                            class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
+                            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
                         >
-                            <div class="kpi-card">
-                                <div class="kpi-body">
-                                    <span class="kpi-label">Total Revenue</span>
-                                    <div class="kpi-value">
+                            <!-- Total Revenue -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20"
+                            >
+                                <div
+                                    class="w-10 h-10 flex items-center justify-center rounded-lg bg-emerald-500/10"
+                                >
+                                    <i
+                                        class="pi pi-wallet text-emerald-500"
+                                    ></i>
+                                </div>
+
+                                <div>
+                                    <div class="text-xs text-gray-500">
+                                        Total Revenue
+                                    </div>
+                                    <div
+                                        class="text-xl font-semibold text-gray-900 dark:text-gray-100"
+                                    >
                                         ₱{{
                                             Number(
                                                 summary.total_revenue
@@ -178,12 +194,21 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <div class="kpi-card">
-                                <div class="kpi-body">
-                                    <span class="kpi-label"
-                                        >Rental Revenue</span
-                                    >
-                                    <div class="kpi-value">
+                            <!-- Rental Revenue -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-cyan-50 dark:bg-cyan-900/20"
+                            >
+                                <div
+                                    class="w-10 h-10 flex items-center justify-center rounded-lg bg-cyan-500/10"
+                                >
+                                    <i class="pi pi-box text-cyan-500"></i>
+                                </div>
+
+                                <div>
+                                    <div class="text-xs text-gray-500">
+                                        Rental Revenue
+                                    </div>
+                                    <div class="text-xl font-semibold">
                                         ₱{{
                                             Number(
                                                 summary.rental_revenue
@@ -193,12 +218,23 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <div class="kpi-card">
-                                <div class="kpi-body">
-                                    <span class="kpi-label"
-                                        >Penalty Revenue</span
-                                    >
-                                    <div class="kpi-value">
+                            <!-- Penalty Revenue -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20"
+                            >
+                                <div
+                                    class="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-500/10"
+                                >
+                                    <i
+                                        class="pi pi-exclamation-circle text-amber-500"
+                                    ></i>
+                                </div>
+
+                                <div>
+                                    <div class="text-xs text-gray-500">
+                                        Penalty Revenue
+                                    </div>
+                                    <div class="text-xl font-semibold">
                                         ₱{{
                                             Number(
                                                 summary.penalty_revenue
@@ -208,10 +244,23 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <div class="kpi-card">
-                                <div class="kpi-body">
-                                    <span class="kpi-label">Transactions</span>
-                                    <div class="kpi-value">
+                            <!-- Transactions -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20"
+                            >
+                                <div
+                                    class="w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-500/10"
+                                >
+                                    <i
+                                        class="pi pi-shopping-cart text-indigo-500"
+                                    ></i>
+                                </div>
+
+                                <div>
+                                    <div class="text-xs text-gray-500">
+                                        Transactions
+                                    </div>
+                                    <div class="text-xl font-semibold">
                                         {{ summary.transactions }}
                                     </div>
                                 </div>
@@ -256,7 +305,7 @@ onMounted(() => {
                             Locker Revenue
                         </button>
 
-                        <button
+                        <!-- <button
                             @click="activeTab = 'penalties'"
                             :class="
                                 activeTab === 'penalties'
@@ -265,7 +314,7 @@ onMounted(() => {
                             "
                         >
                             Penalty Collections
-                        </button>
+                        </button> -->
                     </div>
 
                     <!-- Tab Content -->
@@ -321,15 +370,17 @@ onMounted(() => {
                                     <template #content>
                                         <div class="table-header">
                                             <h3 class="ui-card-title">
-                                                Lockers
+                                                Locker Revenue
                                             </h3>
                                             <p class="ui-card-subtitle">
-                                                Completed payment sessions
+                                                Revenue analytics per locker
                                             </p>
                                         </div>
 
                                         <div class="table-body">
-                                            <!-- DataTable will go here -->
+                                            <LockerRevenue
+                                                :filters="appliedFilters"
+                                            />
                                         </div>
                                     </template>
                                 </Card>
@@ -351,7 +402,7 @@ onMounted(() => {
                                         </div>
 
                                         <div class="table-body">
-                                            <!-- DataTable will go here -->
+                                            DataTable will go here
                                         </div>
                                     </template>
                                 </Card>
