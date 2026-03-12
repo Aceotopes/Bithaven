@@ -6,6 +6,7 @@ import RevenueTrendChart from "@/admin/components/financials/summary/RevenueTren
 import RevenueBreakdownChart from "@/admin/components/financials/summary/RevenueBreakdownChart.vue";
 import RevenuePerHourChart from "@/admin/components/financials/summary/RevenuePerHourChart.vue";
 import RevenueInsights from "@/admin/components/financials/summary/RevenueInsights.vue";
+import DailyRevenueTable from "@/admin/components/financials/summary/DailyRevenueTable.vue";
 
 const props = defineProps({
     filters: {
@@ -85,41 +86,7 @@ watch(
         <!-- Row 3 -->
         <div class="grid grid-cols-1 gap-4">
             <RevenueInsights :daily="daily" />
-
-            <Card class="table-card">
-                <template #content>
-                    <div class="table-header">
-                        <h3 class="ui-card-title">Daily Revenue</h3>
-                        <p class="ui-card-subtitle">
-                            Detailed revenue breakdown
-                        </p>
-                    </div>
-
-                    <div class="table-body">
-                        <DataTable
-                            :value="daily"
-                            stripedRows
-                            responsiveLayout="scroll"
-                        >
-                            <Column field="date" header="Date" />
-                            <Column
-                                field="transactions"
-                                header="Transactions"
-                            />
-
-                            <Column header="Revenue">
-                                <template #body="slotProps">
-                                    ₱{{
-                                        Number(
-                                            slotProps.data.revenue
-                                        ).toLocaleString()
-                                    }}
-                                </template>
-                            </Column>
-                        </DataTable>
-                    </div>
-                </template>
-            </Card>
+            <DailyRevenueTable :daily="daily" />
         </div>
     </div>
 </template>
