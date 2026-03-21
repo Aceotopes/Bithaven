@@ -72,6 +72,7 @@ def process_job(job):
     mark_job_processing(job_id)
 
     success = relay.unlock(locker_id)
+    # success = False
     print(f"[DAEMON] unlock() returned: {success}")
 
     if success:

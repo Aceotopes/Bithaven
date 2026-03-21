@@ -5,24 +5,77 @@ namespace App\Http\Controllers\Kiosk;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LockerUnlockJob;
+use App\Services\KioskEventService;
 
 
 class UnlockJobController extends Controller
 {
+
+    protected $events;
+    public function __construct(KioskEventService $events)
+    {
+        $this->events = $events;
+    }
+
+    // public function pending()
+    // {
+    //     $jobs = LockerUnlockJob::where('status', 'PENDING')
+    //         ->whereHas('token', function ($q) {
+    //             $q->whereNull('consumed_at')
+    //                 ->where('expires_at', '>', now());
+    //         })
+    //         ->with('token')
+    //         ->orderBy('created_at')
+    //         ->get();
+    //     \Log::info("Expired unlock jobs skipped: " . $jobs);
+
+    //     return response()->json([
+    //         'jobs' => $jobs
+    //     ]);
+    // }
+
     public function pending()
     {
         $jobs = LockerUnlockJob::where('status', 'PENDING')
-            ->whereHas('token', function ($q) {
-                $q->whereNull('consumed_at')
-                    ->where('expires_at', '>', now());
-            })
             ->with('token')
             ->orderBy('created_at')
             ->get();
-        \Log::info("Expired unlock jobs skipped: " . $jobs);
+
+        // dd(
+        //     get_class($jobs->first()),
+        //     $jobs->first()
+        // );
+
+        $validJobs = [];
+
+        foreach ($jobs as $job) {
+
+            if (!$job->token || $job->token->isExpired()) {
+
+                LockerUnlockJob::where('id', $job->id)->update([
+                    'status' => 'FAILED',
+                    'failed_at' => now(),
+                    'attempts' => $job->attempts + 1,
+                ]);
+
+                $this->events->log(
+                    'UNLOCK_JOB_EXPIRED',
+                    [
+                        'locker_id' => $job->locker_id,
+                        'unlock_token_id' => optional($job->token)->id,
+                    ],
+                    'WARNING',
+                    'Unlock job expired before execution'
+                );
+
+                continue;
+            }
+
+            $validJobs[] = $job;
+        }
 
         return response()->json([
-            'jobs' => $jobs
+            'jobs' => $validJobs
         ]);
     }
 
@@ -34,12 +87,31 @@ class UnlockJobController extends Controller
         }
 
         if ($job->token->isExpired()) {
+            $this->events->log(
+                'UNLOCK_JOB_REJECTED',
+                [
+                    'locker_id' => $job->token->locker_id,
+                    'unlock_token_id' => $job->token->id,
+                ],
+                'ERROR',
+                'Unlock rejected: token expired'
+            );
+
             return response()->json([
                 'message' => 'Unlock token expired'
             ], 410);
         }
 
         if ($job->token->isConsumed()) {
+            $this->events->log(
+                'UNLOCK_JOB_REJECTED',
+                [
+                    'locker_id' => $job->token->locker_id,
+                    'unlock_token_id' => $job->token->id,
+                ],
+                'ERROR',
+                'Unlock rejected: token already used'
+            );
             return response()->json([
                 'message' => 'Token already consumed'
             ], 409);
@@ -49,6 +121,16 @@ class UnlockJobController extends Controller
             'status' => 'PROCESSING',
             'last_attempt_at' => now(),
         ]);
+
+        $this->events->log(
+            'UNLOCK_JOB_PROCESSING',
+            [
+                'locker_id' => $job->token->locker_id,
+                'unlock_token_id' => $job->token->id,
+            ],
+            'INFO',
+            'Unlock job processing started'
+        );
 
         return response()->json(['success' => true]);
     }
@@ -76,22 +158,53 @@ class UnlockJobController extends Controller
                 'consumed_at' => now()
             ]);
 
+            $this->events->log(
+                'UNLOCK_JOB_SUCCEEDED',
+                [
+                    'locker_id' => $job->token->locker_id,
+                    'unlock_token_id' => $job->token->id,
+                ],
+                'INFO',
+                'Locker successfully unlocked'
+            );
+
         } else {
 
             $attempts = $job->attempts + 1;
 
             if ($attempts >= $job->max_attempts) {
+
                 $job->update([
                     'status' => 'FAILED',
                     'failed_at' => now(),
                     'attempts' => $attempts,
                 ]);
+
+                $this->events->log(
+                    'UNLOCK_JOB_FAILED',
+                    [
+                        'locker_id' => $job->token->locker_id,
+                        'unlock_token_id' => $job->token->id,
+                    ],
+                    'ERROR',
+                    'Unlock job failed after max attempts'
+                );
             } else {
                 $job->update([
                     'status' => 'PENDING',
                     'attempts' => $attempts,
                     'last_attempt_at' => now(),
                 ]);
+                $this->events->log(
+                    'UNLOCK_JOB_RETRY',
+                    [
+                        'locker_id' => $job->token->locker_id,
+                        'unlock_token_id' => $job->token->id,
+                        'attempts' => $attempts,
+                    ],
+                    'WARNING',
+                    'Unlock job retry attempt'
+                );
             }
         }
 

@@ -44,4 +44,20 @@ class KioskEvent extends Model
     {
         return $this->belongsTo(Locker::class);
     }
+
+    public function penalty()
+    {
+        return $this->belongsTo(Penalty::class);
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
+    }
+
+    public function adminCard()
+    {
+        return $this->belongsTo(AdminCard::class);
+    }
+
 }

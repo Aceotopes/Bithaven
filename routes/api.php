@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\RfidController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\FinancialController;
+use App\Http\Controllers\Admin\LogsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -124,8 +125,11 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/financials/summary', [FinancialController::class, 'summary']);
     Route::get('/admin/financials/locker-revenue', [FinancialController::class, 'lockerRevenue']);
     Route::get('/admin/financials/penalties', [FinancialController::class, 'penalties']);
-
     Route::get('/admin/financials/revenue-summary', [FinancialController::class, 'revenueSummary']);
+
+    Route::get('/admin/logs', [LogsController::class, 'index']);
+    Route::get('/admin/logs/events', [LogsController::class, 'events']);
+    Route::get('/admin/logs/security', [LogsController::class, 'security']);
 });
 Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 

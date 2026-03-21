@@ -151,6 +151,7 @@ onMounted(() => {
                             severity="secondary"
                             outlined
                             @click="applyFilters"
+                            class="!bg-cyan-500 !hover:bg-cyan-600 !border-none !text-white"
                         />
                         <Button
                             label="Reset"
@@ -158,6 +159,7 @@ onMounted(() => {
                             severity="secondary"
                             outlined
                             @click="resetFilters"
+                            class="!bg-cyan-500 !hover:bg-cyan-600 !border-none !text-white"
                         />
                     </div>
 

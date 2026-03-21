@@ -7,6 +7,7 @@ import HomeView from "../views/homeview.vue";
 import LiveOperationsView from "../views/LiveOperationsView.vue";
 import StudentsView from "../views/StudentsView.vue";
 import FinancialsView from "../views/FinancialsView.vue";
+import LogsEvents from "../views/LogsEvents.vue";
 
 const routes = [
     {
@@ -37,6 +38,10 @@ const routes = [
             {
                 path: "financials",
                 component: FinancialsView,
+            },
+            {
+                path: "logs",
+                component: LogsEvents,
             },
         ],
     },
