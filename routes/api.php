@@ -82,7 +82,7 @@ Route::get('/kiosk/admin/lockers/{locker}', [AdminLockerController::class, 'show
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);
 Route::post('/kiosk/unlock-tokens/{token}/confirm', [UnlockTokenController::class, 'confirm']);
 Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
-
+// Route::get('/admin/daemon/status', [DaemonController::class, 'status']);
 // ADMIN ROUTES
 //TEMP
 // Route::get('/admin/dashboard/summary', [DashboardController::class, 'summary']);
@@ -130,6 +130,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/logs', [LogsController::class, 'index']);
     Route::get('/admin/logs/events', [LogsController::class, 'events']);
     Route::get('/admin/logs/security', [LogsController::class, 'security']);
+
+    Route::get('/admin/daemon/status', [DaemonController::class, 'status']);
+
 });
 Route::middleware(['auth:admin', 'superadmin'])->group(function () {
 

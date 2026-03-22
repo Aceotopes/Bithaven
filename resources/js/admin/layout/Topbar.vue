@@ -1,9 +1,10 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/admin/stores/auth";
 import { useRouter } from "vue-router";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import axios from "axios";
 
 const emit = defineEmits([
     "toggle-sidebar",
@@ -11,6 +12,8 @@ const emit = defineEmits([
     "open-super-admin",
     "open-account-settings",
 ]);
+
+let interval = null;
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -20,6 +23,9 @@ const toast = useToast();
 const menu = ref(null);
 
 const adminName = computed(() => auth.admin?.name || "Admin");
+
+const daemonStatus = ref("OFFLINE");
+const lastSeenHuman = ref(null);
 
 function toggleMenu(event) {
     menu.value.toggle(event);
@@ -46,6 +52,18 @@ function confirmLogout() {
     });
 }
 
+async function fetchDaemonStatus() {
+    try {
+        const res = await axios.get("/admin/daemon/status");
+
+        daemonStatus.value = res.data.status;
+        lastSeenHuman.value = res.data.last_seen_human;
+    } catch (e) {
+        daemonStatus.value = "OFFLINE";
+        lastSeenHuman.value = null;
+    }
+}
+
 const items = computed(() => [
     {
         label: "Account Settings",
@@ -65,6 +83,18 @@ const items = computed(() => [
         command: confirmLogout,
     },
 ]);
+
+onMounted(() => {
+    fetchDaemonStatus();
+
+    interval = setInterval(() => {
+        fetchDaemonStatus();
+    }, 5000); // every 5 seconds
+});
+
+onUnmounted(() => {
+    clearInterval(interval);
+});
 </script>
 
 <template>
@@ -88,6 +118,27 @@ const items = computed(() => [
             <button @click="$emit('toggle-dark')">
                 <i class="pi pi-moon text-lg"></i>
             </button>
+            <div class="flex items-center gap-2 text-sm">
+                <span
+                    class="w-2.5 h-2.5 rounded-full"
+                    :class="{
+                        'bg-green-500': daemonStatus === 'ONLINE',
+                        'bg-yellow-500': daemonStatus === 'STALE',
+                        'bg-red-500': daemonStatus === 'OFFLINE',
+                    }"
+                ></span>
+
+                <div class="flex flex-col leading-tight">
+                    <span class="text-gray-600 dark:text-gray-300">
+                        {{ daemonStatus }}
+                    </span>
+                    <small class="text-gray-500">Daemon Status</small>
+
+                    <!-- <small v-if="lastSeenHuman" class="text-xs text-gray-400">
+                        {{ lastSeenHuman }}
+                    </small> -->
+                </div>
+            </div>
 
             <span class="hidden sm:block">
                 {{ adminName }}
