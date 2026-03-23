@@ -3,7 +3,9 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useConfirm } from "primevue/useconfirm";
 import axios from "axios";
 import Dialog from "primevue/dialog";
+import { useToast } from "primevue/usetoast";
 
+const toast = useToast();
 const confirm = useConfirm();
 
 const props = defineProps({
@@ -108,17 +110,37 @@ const canEnableLocker = computed(() => isOutOfService.value);
    CONFIRMED ACTION CALLER
 ------------------------ */
 
-function confirmAction(message, endpoint) {
+async function confirmAction(message, endpoint) {
     confirm.require({
+        group: "action",
         message,
         header: "Confirm Action",
         icon: "pi pi-exclamation-triangle",
         acceptClass: "p-button-danger",
+
         accept: async () => {
             loadingAction.value = true;
+
             try {
                 await axios.post(endpoint);
+
+                toast.add({
+                    severity: "success",
+                    summary: "Success",
+                    detail: "Action completed successfully",
+                    life: 5000,
+                });
+
                 emit("refresh");
+            } catch (e) {
+                toast.add({
+                    severity: "error",
+                    summary: "Error",
+                    detail: "Something went wrong",
+                    life: 5000,
+                });
+
+                console.error(e);
             } finally {
                 loadingAction.value = false;
             }
@@ -171,7 +193,7 @@ function enableLocker() {
         :visible="visible"
         modal
         :autoFocus="false"
-        class="w-[560px] rounded-2xl"
+        class="w-[550px] rounded-2xl"
         @update:visible="emit('update:visible', $event)"
     >
         <div v-if="locker" class="space-y-8">
@@ -183,33 +205,40 @@ function enableLocker() {
                     >
                         Locker
                     </div>
-                    <div class="text-4xl font-semibold tracking-tight">
-                        {{ String(locker.locker_number).padStart(2, "0") }}
-                    </div>
-                </div>
 
-                <div
-                    class="text-xs font-medium px-3 py-1 rounded-full"
-                    :class="{
-                        'bg-emerald-100 text-gray-600':
-                            locker.status === 'AVAILABLE',
-                        'bg-blue-50 text-blue-600': isActiveRental,
-                        'bg-amber-50 text-amber-600': isPenaltyActive,
-                        'bg-red-50 text-red-600': isOutOfService,
-                    }"
-                >
-                    {{
-                        isPenaltyActive
-                            ? "Overdue"
-                            : isActiveRental
-                            ? "Occupied"
-                            : locker.status
-                    }}
+                    <div
+                        class="text-4xl font-semibold tracking-tight flex items-center gap-3"
+                    >
+                        {{ String(locker.locker_number).padStart(2, "0") }}
+
+                        <span
+                            class="text-xs px-3 py-1 rounded-full font-medium"
+                            :class="{
+                                'bg-emerald-100 text-emerald-700':
+                                    locker.status === 'AVAILABLE',
+                                'bg-blue-100 text-blue-700': isActiveRental,
+                                'bg-amber-100 text-amber-700': isPenaltyActive,
+                                'bg-red-100 text-red-700': isOutOfService,
+                            }"
+                        >
+                            {{
+                                isPenaltyActive
+                                    ? "Overdue"
+                                    : isActiveRental
+                                    ? "Occupied"
+                                    : locker.status
+                            }}
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <!-- STUDENT SECTION -->
-            <div v-if="locker.rental" class="flex items-center gap-4">
+            <div
+                v-if="locker.rental"
+                class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800"
+            >
+                <!-- Avatar -->
                 <div
                     class="w-14 h-14 rounded-full bg-cyan-500 flex items-center justify-center text-base font-semibold text-white overflow-hidden"
                 >
@@ -221,23 +250,30 @@ function enableLocker() {
                     <span v-else>{{ initials }}</span>
                 </div>
 
+                <!-- Info -->
                 <div class="flex-1">
-                    <div class="font-medium text-lg">
+                    <div class="font-semibold text-base">
                         {{ fullName }}
                     </div>
-                    <div class="text-sm text-gray-400">
-                        {{ locker.rental.section }}
-                        • Year {{ locker.rental.year_level }}
+
+                    <div class="text-xs text-gray-500">
+                        {{ locker.rental.section }} • Year
+                        {{ locker.rental.year_level }}
                     </div>
                 </div>
 
-                <div class="text-right text-sm">
-                    <div v-if="isActiveRental" class="text-gray-600">
+                <!-- Time -->
+                <div class="text-right">
+                    <div
+                        v-if="isActiveRental"
+                        class="text-sm font-medium text-blue-600"
+                    >
                         {{ remainingTime }}
                     </div>
+
                     <div
                         v-if="isPenaltyActive"
-                        class="text-amber-600 font-medium"
+                        class="text-sm font-semibold text-amber-600"
                     >
                         {{ overdueTime }} overdue
                     </div>
@@ -245,82 +281,86 @@ function enableLocker() {
             </div>
 
             <!-- TELEMETRY -->
-            <div
-                v-if="locker.rental"
-                class="grid grid-cols-2 gap-y-3 text-sm border-t pt-5"
-            >
-                <div class="text-gray-400">Start</div>
-                <div class="text-right">
-                    {{
-                        new Date(locker.rental.start_time).toLocaleTimeString()
-                    }}
+            <div v-if="locker.rental" class="grid grid-cols-2 gap-3 text-sm">
+                <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <div class="text-xs text-gray-500">Start Time</div>
+                    <div class="font-medium">
+                        {{
+                            new Date(
+                                locker.rental.start_time
+                            ).toLocaleTimeString()
+                        }}
+                    </div>
                 </div>
 
-                <div class="text-gray-400">End</div>
-                <div class="text-right">
-                    {{ new Date(locker.rental.end_time).toLocaleTimeString() }}
+                <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <div class="text-xs text-gray-500">End Time</div>
+                    <div class="font-medium">
+                        {{
+                            new Date(
+                                locker.rental.end_time
+                            ).toLocaleTimeString()
+                        }}
+                    </div>
                 </div>
             </div>
 
             <!-- ACTIONS -->
-            <div class="border-t pt-6 space-y-3">
-                <div class="text-xs uppercase tracking-wider text-gray-400">
+            <div class="space-y-3">
+                <div class="text-xs uppercase tracking-wide text-gray-400">
                     Actions
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- END RENTAL -->
-                    <div v-tooltip="canEndRental ? null : 'No active rental'">
-                        <button
-                            class="action-btn"
-                            :disabled="!canEndRental"
-                            @click="endRental"
-                        >
-                            End Rental
-                        </button>
-                    </div>
-
-                    <!-- CLEAR PENALTY -->
-                    <div
-                        v-tooltip="canClearPenalty ? null : 'No active penalty'"
+                <div class="grid grid-cols-2 gap-2">
+                    <!-- End Rental (Primary / Destructive) -->
+                    <button
+                        @click="endRental"
+                        :disabled="!canEndRental"
+                        class="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition border-red-200 text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50"
                     >
-                        <button
-                            class="action-btn"
-                            :disabled="!canClearPenalty"
-                            @click="clearPenalty"
-                        >
-                            Clear Penalty
-                        </button>
-                    </div>
+                        <i class="pi pi-stop text-xs"></i>
+                        End Rental
+                    </button>
 
-                    <!-- FORCE UNLOCK -->
-                    <div v-tooltip="'Force unlock hardware'">
-                        <button class="action-btn" @click="forceUnlock">
-                            Force Unlock
-                        </button>
-                    </div>
-
-                    <!-- ENABLE/DISABLE -->
-                    <div
-                        v-tooltip="
-                            canDisableLocker
-                                ? null
-                                : 'Cannot disable while rental or penalty active'
-                        "
+                    <!-- Clear Penalty -->
+                    <button
+                        @click="clearPenalty"
+                        :disabled="!canClearPenalty"
+                        class="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
-                        <button
-                            v-if="!isOutOfService"
-                            class="action-btn"
-                            :disabled="!canDisableLocker"
-                            @click="disableLocker"
-                        >
-                            Disable Locker
-                        </button>
+                        <i class="pi pi-times text-xs"></i>
+                        Clear Penalty
+                    </button>
 
-                        <button v-else class="action-btn" @click="enableLocker">
-                            Enable Locker
-                        </button>
-                    </div>
+                    <!-- Force Unlock -->
+                    <button
+                        @click="forceUnlock"
+                        class="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                        <i class="pi pi-unlock text-xs"></i>
+                        Unlock
+                    </button>
+
+                    <!-- Disable Locker -->
+                    <button
+                        v-if="!isOutOfService"
+                        @click="disableLocker"
+                        :disabled="!canDisableLocker"
+                        class="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    >
+                        <i class="pi pi-ban text-xs"></i>
+                        Disable
+                    </button>
+
+                    <!-- Enable Locker -->
+                    <button
+                        v-else
+                        @click="enableLocker"
+                        class="flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition border-emerald-200 text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                    >
+                        <i class="pi pi-check text-xs"></i>
+                        Enable
+                    </button>
                 </div>
             </div>
         </div>

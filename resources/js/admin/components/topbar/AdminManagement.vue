@@ -182,7 +182,12 @@ function deleteAdmin(admin) {
     <div class="space-y-6">
         <div class="flex justify-between items-center">
             <h3 class="text-xl font-semibold">Manage Admins</h3>
-            <Button label="New Admin" icon="pi pi-plus" @click="openCreate" />
+            <Button
+                label="New Admin"
+                icon="pi pi-plus"
+                @click="openCreate"
+                class="!bg-cyan-500"
+            />
         </div>
 
         <DataTable
@@ -264,10 +269,15 @@ function deleteAdmin(admin) {
                 <div class="flex justify-end gap-2 pt-4">
                     <Button
                         label="Cancel"
+                        severity="secondary"
                         text
                         @click="dialogVisible = false"
                     />
-                    <Button label="Save" @click="saveAdmin" />
+                    <Button
+                        label="Save"
+                        @click="saveAdmin"
+                        class="!bg-cyan-500"
+                    />
                 </div>
             </div>
         </Dialog>

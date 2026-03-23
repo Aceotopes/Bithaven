@@ -60,11 +60,30 @@ function timeIndicator(locker) {
 
     const minutes = Math.floor(Math.abs(diff) / 60000);
 
+    const readable = formatDuration(minutes);
+
     if (diff <= 0) {
-        return `Overdue by ${minutes}m`;
+        return `Overdue by ${readable}`;
     }
 
-    return `Ends in ${minutes}m`;
+    return `Ends in ${readable}`;
+}
+
+function formatDuration(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours > 0 && mins > 0) {
+        return `${hours} hour${hours > 1 ? "s" : ""} ${mins} min${
+            mins > 1 ? "s" : ""
+        }`;
+    }
+
+    if (hours > 0) {
+        return `${hours} hour${hours > 1 ? "s" : ""}`;
+    }
+
+    return `${mins} min${mins > 1 ? "s" : ""}`;
 }
 </script>
 
@@ -107,9 +126,16 @@ function timeIndicator(locker) {
             </div>
 
             <div class="text-xs text-gray-600 dark:text-gray-300">
-                <div v-if="locker.rental">
+                <!-- OCCUPIED / OVERDUE -->
+                <div
+                    v-if="
+                        ['OCCUPIED', 'OVERDUE'].includes(
+                            effectiveStatus(locker)
+                        )
+                    "
+                >
                     <div class="font-semibold">
-                        {{ locker.rental.student_name }}
+                        {{ locker.rental?.student_name }}
                     </div>
 
                     <div class="text-[11px]">
@@ -117,7 +143,21 @@ function timeIndicator(locker) {
                     </div>
                 </div>
 
-                <div v-else class="text-gray-400">Available</div>
+                <!-- AVAILABLE -->
+                <div
+                    v-else-if="effectiveStatus(locker) === 'AVAILABLE'"
+                    class="text-gray-400"
+                >
+                    Available
+                </div>
+
+                <!-- OUT OF SERVICE -->
+                <div
+                    v-else-if="effectiveStatus(locker) === 'OUT_OF_SERVICE'"
+                    class="text-gray-400 font-medium"
+                >
+                    Unavailable for Rental
+                </div>
             </div>
         </div>
     </div>

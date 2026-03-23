@@ -64,7 +64,7 @@ class PaymentService
 
         $start = now();
         $end = $start->copy()->addHours($session->duration_hours);
-        // $end = $start->copy()->addSeconds(10);
+        // $end = $start->copy()->addSeconds(20);
 
         if ($locker->status !== 'AVAILABLE') {
             abort(response()->json([

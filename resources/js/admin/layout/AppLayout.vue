@@ -56,7 +56,9 @@ onMounted(() => {
         <main
             class="absolute top-14 left-0 lg:left-70 right-0 bottom-0 overflow-y-auto p-8"
         >
-            <router-view />
+            <div class="min-h-full flex flex-col">
+                <router-view />
+            </div>
         </main>
     </div>
 </template>

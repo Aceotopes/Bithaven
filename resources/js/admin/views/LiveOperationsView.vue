@@ -91,9 +91,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Card class="kpi-card bg-white dark:bg-gray-800">
+    <Card class="kpi-card bg-white dark:bg-gray-800 h-full flex flex-col">
         <template #content>
-            <div class="kpi-body space-y-6">
+            <div class="p-5 flex flex-col flex-1 space-y-6">
                 <!-- HEADER -->
                 <div class="flex justify-between items-center">
                     <div>
@@ -221,11 +221,13 @@ onBeforeUnmount(() => {
                 </div>
 
                 <!-- GRID -->
-                <LiveLockerGrid
-                    :lockers="filteredLockers"
-                    :loading="loading"
-                    @open="openLocker"
-                />
+                <div class="flex-1">
+                    <LiveLockerGrid
+                        :lockers="filteredLockers"
+                        :loading="loading"
+                        @open="openLocker"
+                    />
+                </div>
             </div>
         </template>
     </Card>
@@ -236,5 +238,4 @@ onBeforeUnmount(() => {
         :locker="selectedLocker"
         @refresh="refreshLockers"
     />
-    <ConfirmDialog />
 </template>

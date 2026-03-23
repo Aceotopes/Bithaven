@@ -90,6 +90,21 @@ function onPage(event) {
     fetchLogs();
 }
 
+function getSeverity(level) {
+    switch (level) {
+        case "INFO":
+            return "info";
+        case "SUCCESS":
+            return "success";
+        case "WARNING":
+            return "warn";
+        case "ERROR":
+            return "danger";
+        default:
+            return null;
+    }
+}
+
 onMounted(() => {
     fetchLogs();
     fetchEvents();
@@ -187,25 +202,85 @@ onMounted(() => {
                                     paginator
                                     stripedRows
                                     responsiveLayout="scroll"
+                                    class="text-sm"
                                     @page="onPage"
                                 >
-                                    <Column
-                                        field="timestamp"
-                                        header="Timestamp"
-                                    />
+                                    <!-- Timestamp -->
+                                    <Column header="Time">
+                                        <template #body="slotProps">
+                                            <div class="text-xs text-gray-500">
+                                                {{ slotProps.data.timestamp }}
+                                            </div>
+                                        </template>
+                                    </Column>
 
-                                    <Column field="actor" header="Actor" />
+                                    <!-- Actor -->
+                                    <Column header="Actor">
+                                        <template #body="slotProps">
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span class="font-medium">
+                                                    {{
+                                                        slotProps.data.actor ||
+                                                        "System"
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </Column>
 
-                                    <Column field="event" header="Event" />
+                                    <!-- Event -->
+                                    <Column header="Event">
+                                        <template #body="slotProps">
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span class="font-medium">
+                                                    {{ slotProps.data.event }}
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </Column>
 
-                                    <Column field="target" header="Target" />
+                                    <!-- Target -->
+                                    <Column header="Target">
+                                        <template #body="slotProps">
+                                            <span
+                                                class="text-gray-600 dark:text-gray-300"
+                                            >
+                                                {{
+                                                    slotProps.data.target || "-"
+                                                }}
+                                            </span>
+                                        </template>
+                                    </Column>
 
-                                    <Column field="level" header="Level" />
+                                    <!-- Level (IMPORTANT) -->
+                                    <Column header="Level">
+                                        <template #body="slotProps">
+                                            <Tag
+                                                :value="slotProps.data.level"
+                                                :severity="
+                                                    getSeverity(
+                                                        slotProps.data.level
+                                                    )
+                                                "
+                                                rounded
+                                            />
+                                        </template>
+                                    </Column>
 
-                                    <Column
-                                        field="description"
-                                        header="Description"
-                                    />
+                                    <!-- Description -->
+                                    <Column header="Description">
+                                        <template #body="slotProps">
+                                            <div
+                                                class="text-xs text-gray-600 dark:text-gray-300 max-w-xs truncate"
+                                            >
+                                                {{ slotProps.data.description }}
+                                            </div>
+                                        </template>
+                                    </Column>
                                 </DataTable>
                             </div>
                         </template>

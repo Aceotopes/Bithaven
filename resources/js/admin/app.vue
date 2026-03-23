@@ -49,4 +49,44 @@ import ConfirmDialog from "primevue/confirmdialog";
             </div>
         </template>
     </ConfirmDialog>
+
+    <ConfirmDialog group="action">
+        <template #container="{ message, acceptCallback, rejectCallback }">
+            <div
+                class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 text-center"
+            >
+                <!-- ICON -->
+                <div
+                    class="mx-auto w-16 h-16 rounded-full bg-cyan-100 flex items-center justify-center mb-6"
+                >
+                    <i
+                        class="pi pi-exclamation-triangle text-cyan-500 text-2xl"
+                        style="font-size: 2rem"
+                    ></i>
+                </div>
+
+                <h3 class="text-lg font-semibold">
+                    {{ message.header }}
+                </h3>
+
+                <p class="text-sm text-gray-500 mt-2">
+                    {{ message.message }}
+                </p>
+
+                <div class="flex justify-center gap-4 mt-8">
+                    <Button
+                        label="Cancel"
+                        outlined
+                        severity="secondary"
+                        @click="rejectCallback"
+                    />
+                    <Button
+                        label="Confirm"
+                        class="!bg-cyan-500 hover:!bg-cyan-600 !text-white"
+                        @click="acceptCallback"
+                    />
+                </div>
+            </div>
+        </template>
+    </ConfirmDialog>
 </template>

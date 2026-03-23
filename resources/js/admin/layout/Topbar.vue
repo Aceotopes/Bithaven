@@ -33,6 +33,7 @@ function toggleMenu(event) {
 
 function confirmLogout() {
     confirm.require({
+        group: "action",
         message: "Are you sure you want to logout?",
         header: "Confirm Logout",
         icon: "pi pi-exclamation-triangle",

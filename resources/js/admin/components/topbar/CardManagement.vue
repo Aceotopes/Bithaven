@@ -178,8 +178,9 @@ async function saveCard() {
 
 function deleteCard(card) {
     confirm.require({
+        group: "action",
         message: "Delete this card?",
-        header: "Confirm",
+        header: "Confirm Action",
         icon: "pi pi-exclamation-triangle",
         acceptClass: "p-button-danger",
         accept: async () => {
@@ -239,6 +240,7 @@ watch(showDialog, (val) => {
                 icon="pi pi-plus"
                 label="Register Card"
                 @click="openCreate"
+                class="!bg-cyan-500 hover:!bg-cyan-600 text-white"
             />
         </div>
 
