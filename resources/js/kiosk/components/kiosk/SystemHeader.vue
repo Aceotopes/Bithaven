@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import BithavenLogo from "@/kiosk/assets/idle/BithavenLogo.png";
+import BithavenLogo from "@/kiosk/assets/idle/BithavenLogo.svg";
+import BithavenLogo1 from "@/kiosk/assets/idle/BithavenLogo1.svg";
 const time = ref("");
 const emit = defineEmits(["end-session"]);
 
@@ -24,47 +25,40 @@ onMounted(() => {
     >
         <!-- Logo -->
         <div class="flex items-center gap-3">
-            <div class="w-30 h-30">
-                <img
-                    src="@/kiosk/assets/idle/BithavenLogo.png"
-                    alt="BithavenLogo"
-                />
+            <div class="w-20 h-20">
+                <img :src="BithavenLogo1" alt="BithavenLogo" />
             </div>
-            <span class="sr-only">Bithaven</span>
         </div>
 
         <!-- Center Title -->
-        <div class="absolute left-1/2 -translate-x-1/2 text-center">
-            <h1
-                class="text-[26px] font-semibold tracking-[0.12em] text-gray-900"
-            >
-                BITHAVEN SMART LOCKER
-            </h1>
-            <p
-                class="mt-1 text-[12px] tracking-[0.25em] text-gray-500 uppercase"
-            >
-                A SAFE HAVEN FOR BELONGINGS, TIED TO COMPUTER BITS.
-            </p>
+        <div
+            class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
+        >
+            <img
+                :src="BithavenLogo"
+                alt="Bithaven"
+                class="h-115 w-115 object-contain"
+            />
         </div>
 
         <!-- Time + End Session-->
         <div class="ml-auto flex items-center gap-6">
             <!-- Time -->
-            <div class="text-right">
+            <!-- <div class="text-right">
                 <p class="text-[22px] font-medium text-gray-800">
                     {{ time }}
                 </p>
                 <p class="text-xs tracking-wide text-gray-500 uppercase">
                     System Time
                 </p>
-            </div>
+            </div> -->
 
             <!-- Divider -->
             <div class="w-px h-10 bg-black/10"></div>
 
             <!-- End Session -->
             <button
-                class="px-5 py-2.5 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
+                class="px-2 py-1 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
                 @click.stop="emit('end-session')"
             >
                 End Session

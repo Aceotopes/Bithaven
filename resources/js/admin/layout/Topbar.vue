@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import axios from "axios";
+import BithavenLogo from "@/kiosk/assets/idle/BithavenLogo2.svg";
 
 const emit = defineEmits([
     "toggle-sidebar",
@@ -111,7 +112,11 @@ onUnmounted(() => {
                 <i class="pi pi-bars text-xl"></i>
             </button>
 
-            <h1 class="text-lg font-semibold">Bithaven Admin</h1>
+            <div class="flex items-center gap-3">
+                <div class="w-70 h-12">
+                    <img :src="BithavenLogo" alt="BithavenLogo" />
+                </div>
+            </div>
         </div>
 
         <!-- Right -->

@@ -11,7 +11,7 @@ defineProps({
         <!-- Header -->
         <div class="flex justify-between items-center">
             <p
-                class="text-[20px] tracking-[0.4em] uppercase text-cyan-500 font-semibold"
+                class="text-[20px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
             >
                 Student Information
             </p>
@@ -23,7 +23,7 @@ defineProps({
         </div>
 
         <!-- Divider -->
-        <div class="my-8 h-px bg-cyan-300"></div>
+        <div class="my-8 h-px bg-gray-300"></div>
 
         <!-- Content -->
         <div class="grid grid-cols-[auto_1fr] gap-14 items-center">
