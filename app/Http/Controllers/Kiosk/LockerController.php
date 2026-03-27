@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Locker;
 use App\Models\Rental;
 use App\Models\LockerUnlockToken;
+use App\Models\LockerUnlockJob;
 use Illuminate\Support\Facades\DB;
 use App\Services\KioskEventService;
 
@@ -122,6 +123,7 @@ class LockerController extends Controller
 
             $token = LockerUnlockToken::where('locker_id', $locker->id)
                 ->whereNull('consumed_at')
+                ->whereNull('expired_at')
                 ->where('expires_at', '>', now())
                 ->orderBy('issued_at')
                 ->lockForUpdate()
@@ -133,11 +135,29 @@ class LockerController extends Controller
                 ], 409);
             }
 
+            $existingJob = LockerUnlockJob::where('locker_id', $locker->id)
+                ->whereIn('status', ['PENDING', 'PROCESSING'])
+                ->first();
+
+            if ($existingJob) {
+                return response()->json([
+                    'job_id' => $existingJob->id
+                ]);
+            }
+
+            $job = LockerUnlockJob::create([
+                'unlock_token_id' => $token->id,
+                'locker_id' => $locker->id,
+                'status' => 'PENDING',
+                'attempts' => 0,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'token_id' => $token->id,
                 'locker_id' => $locker->id,
                 'reason' => $token->reason,
+                'job_id' => $job->id,
             ]);
         });
     }
@@ -167,6 +187,14 @@ class LockerController extends Controller
 
         return response()->json([
             'tokens' => $tokens
+        ]);
+    }
+
+    public function show(LockerUnlockJob $job)
+    {
+        return response()->json([
+            'id' => $job->id,
+            'status' => $job->status,
         ]);
     }
 

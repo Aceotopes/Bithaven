@@ -72,12 +72,13 @@ const emit = defineEmits([
 ]);
 
 function handlePaymentComplete() {
-    currentStage.value = "PROCESSING";
+    emit("complete");
+    // currentStage.value = "PROCESSING";
 
-    // simulate unlock job processing
-    setTimeout(() => {
-        currentStage.value = "SUCCESS";
-    }, 5000);
+    // // simulate unlock job processing
+    // setTimeout(() => {
+    //     currentStage.value = "SUCCESS";
+    // }, 5000);
 }
 </script>
 
@@ -158,18 +159,16 @@ function handlePaymentComplete() {
                 />
             </template>
 
-            <!-- PROCESSING -->
-            <ProcessingScreen
+            <!-- <ProcessingScreen
                 v-if="currentStage === 'PROCESSING'"
                 :locker="locker"
             />
 
-            <!-- SUCCESS -->
             <UnlockSuccessScreen
                 v-if="currentStage === 'SUCCESS'"
                 :locker="locker"
                 @done="emit('complete')"
-            />
+            /> -->
         </main>
         <SystemFooter
             v-if="currentStage !== 'PROCESSING' && currentStage !== 'SUCCESS'"

@@ -24,6 +24,10 @@ const routes = [
         meta: { requiresAuth: true },
         children: [
             {
+                path: "",
+                redirect: "/admin/home", // 👈 THIS FIXES IT
+            },
+            {
                 path: "home",
                 component: HomeView,
             },
@@ -58,6 +62,8 @@ router.beforeEach((to) => {
     if (to.meta.requiresAuth && !auth.token) {
         return "/admin/login";
     }
+
+    return true;
 });
 
 export default router;

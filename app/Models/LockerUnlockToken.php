@@ -16,6 +16,7 @@ class LockerUnlockToken extends Model
         'issued_at',
         'consumed_at',
         'expires_at',
+        'expired_at',
         'rental_id',
         'penalty_id',
         'admin_id',
@@ -26,6 +27,7 @@ class LockerUnlockToken extends Model
         'issued_at' => 'datetime',
         'consumed_at' => 'datetime',
         'expires_at' => 'datetime',
+        'expired_at' => 'datetime',
     ];
 
     public function rental()
@@ -40,7 +42,8 @@ class LockerUnlockToken extends Model
 
     public function isExpired(): bool
     {
-        return $this->expires_at && now()->greaterThan($this->expires_at);
+        return $this->expired_at !== null
+            || ($this->expires_at && now()->greaterThan($this->expires_at));
     }
 
     public function isConsumed(): bool

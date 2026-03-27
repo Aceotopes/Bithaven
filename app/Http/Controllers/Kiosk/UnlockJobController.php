@@ -141,6 +141,10 @@ class UnlockJobController extends Controller
             'status' => 'required|in:SUCCEEDED,FAILED'
         ]);
 
+        if ($job->status === 'PENDING') {
+            $job->update(['status' => 'PROCESSING']);
+        }
+
         if ($job->status !== 'PROCESSING') {
             return response()->json([
                 'message' => 'Job not in processing state'
@@ -209,5 +213,15 @@ class UnlockJobController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function show(LockerUnlockJob $job)
+    {
+        return response()->json([
+            'id' => $job->id,
+            'status' => $job->status,
+            'attempts' => $job->attempts,
+            'max_attempts' => $job->max_attempts,
+        ]);
     }
 }

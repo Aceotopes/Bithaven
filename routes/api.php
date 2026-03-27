@@ -60,6 +60,7 @@ Route::post('/kiosk/payments/penalty', [PaymentController::class, 'payPenalty'])
 Route::post('/kiosk/payments/rental', [PaymentController::class, 'payRental']);
 
 Route::get('/kiosk/unlock-jobs/pending', [UnlockJobController::class, 'pending']);
+Route::get('/kiosk/unlock-jobs/{job}', [UnlockJobController::class, 'show']);
 Route::post('/kiosk/unlock-jobs/{job}/status', [UnlockJobController::class, 'updateStatus']);
 Route::post('/kiosk/unlock-jobs/{job}/processing', [UnlockJobController::class, 'processing']);
 

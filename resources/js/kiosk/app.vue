@@ -18,6 +18,7 @@ import PaymentScreen from "./screens/PaymentScreen.vue";
 import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
 import ProcessingScreen from "./screens/ProcessingScreen.vue";
 import UnlockSuccessScreen from "./screens/UnlockSuccessScreen.vue";
+import ErrorScreen from "./screens/ErrorScreen.vue";
 
 import KioskToast from "@/kiosk/components/kiosk/KioskToast.vue";
 
@@ -28,6 +29,8 @@ const pendingAdminAction = ref(null);
 
 const toastMessage = ref(null);
 const toastType = ref("success");
+
+const isUnlocking = ref(false);
 
 function showToast(message, type = "success") {
     toastMessage.value = message;
@@ -460,26 +463,109 @@ function handleLockerSelectBack() {
     flow.goToStudentDashboard();
 }
 
+// async function unlockLocker(lockerNumber) {
+//     if (!lockerNumber) return;
+
+//     console.log("Authorizing locker:", lockerNumber);
+
+//     const res = await fetch(`/api/kiosk/lockers/${lockerNumber}/authorize`, {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//     });
+
+//     if (!res.ok) {
+//         const err = await res.json();
+//         console.error("Authorization failed:", err);
+//         return null;
+//     }
+
+//     const data = await res.json();
+
+//     console.log("Unlock Job Created:", data.job_id);
+//     return data.job_id;
+
+//     // console.log("Unlock Authorized. Waiting for daemon confirmation...");
+//     // return true;
+// }
+
 async function unlockLocker(lockerNumber) {
-    if (!lockerNumber) return;
+    if (!lockerNumber) return null;
 
-    console.log("Authorizing locker:", lockerNumber);
-
-    const res = await fetch(`/api/kiosk/lockers/${lockerNumber}/authorize`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+    // console.log("Authorizing locker:", lockerNumber);
+    console.log("🚨 AUTHORIZE CALLED", {
+        lockerNumber,
+        time: new Date().toISOString(),
+        stack: new Error().stack,
     });
+    try {
+        const res = await fetch(
+            `/api/kiosk/lockers/${lockerNumber}/authorize`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
 
-    if (!res.ok) {
-        const err = await res.json();
-        console.error("Authorization failed:", err);
-        return false;
+        if (!res.ok) {
+            const err = await res.json();
+            console.error("Authorization failed:", err);
+            return null;
+        }
+
+        const data = await res.json();
+
+        console.log("Unlock job created:", data.job_id);
+
+        return data.job_id;
+    } catch (err) {
+        console.error("Unlock request failed:", err);
+        return null;
     }
+}
 
-    console.log("Unlock Authorized. Waiting for daemon confirmation...");
-    return true;
+async function waitForUnlockResult(jobId) {
+    const start = Date.now();
+    const TIMEOUT = 15000;
+
+    while (true) {
+        try {
+            const res = await fetch(`/api/kiosk/unlock-jobs/${jobId}`);
+
+            if (!res.ok) {
+                console.warn("Polling failed status:", res.status);
+                throw new Error("Bad response");
+            }
+
+            const text = await res.text();
+
+            let job;
+            try {
+                job = JSON.parse(text);
+            } catch (e) {
+                console.error("Invalid JSON response:", text);
+                throw new Error("Invalid JSON");
+            }
+
+            console.log("Polling job:", job);
+
+            if (job.status === "SUCCEEDED") return "SUCCESS";
+            if (job.status === "FAILED") return "FAILED";
+        } catch (err) {
+            console.error("Polling error:", err);
+            return "FAILED";
+        }
+
+        if (Date.now() - start > TIMEOUT) {
+            console.warn("Polling timeout");
+            return "FAILED";
+        }
+
+        await new Promise((r) => setTimeout(r, 1000));
+    }
 }
 
 async function handleLockerSelectConfirm(payload) {
@@ -649,32 +735,116 @@ function handlePaymentCancel() {
 
 // ===================== payment complete handler (with backend) =====================
 
-async function handlePaymentComplete() {
-    // ===================== RENTAL PAYMENT =====================
-    console.log("PAYMENT START");
-    console.log("PAYMENT COMPLETE → Authorizing unlock");
-    console.log("locker:", session.state.locker);
-    console.log("rentalState:", session.state.rentalState);
-    console.log("paymentContext:", paymentContext.value);
+// async function handlePaymentComplete() {
+//     // ===================== RENTAL PAYMENT =====================
+//     console.log("PAYMENT START");
+//     console.log("PAYMENT COMPLETE → Authorizing unlock");
+//     console.log("locker:", session.state.locker);
+//     console.log("rentalState:", session.state.rentalState);
+//     console.log("paymentContext:", paymentContext.value);
 
-    if (paymentContext.value.mode === "RENTAL") {
-        await unlockLocker(paymentContext.value.locker);
+//     if (paymentContext.value.mode === "RENTAL") {
+//         await unlockLocker(paymentContext.value.locker);
+//         await hydrateGlobalState();
+//         await fetchLockerStatuses();
+//     }
+
+//     // ===================== PENALTY PAYMENT =====================
+//     if (paymentContext.value.mode === "PENALTY") {
+//         await unlockLocker(session.state.locker?.number);
+//         await hydrateGlobalState();
+//     }
+
+//     // CLEANUP
+//     resetPaymentContext();
+//     session.clearSession();
+//     flow.goToIdle();
+// }
+
+async function handlePaymentComplete() {
+    console.log("PAYMENT COMPLETE → Starting unlock flow");
+
+    const locker =
+        paymentContext.value.mode === "RENTAL"
+            ? paymentContext.value.locker
+            : session.state.locker?.number;
+
+    if (!locker) return;
+
+    if (unlockStage.value === "PROCESSING") {
+        console.warn("Duplicate unlock prevented");
+        return;
+    }
+    const result = await performUnlockFlow(locker);
+
+    if (result === "SUCCESS") {
         await hydrateGlobalState();
         await fetchLockerStatuses();
     }
+}
 
-    // ===================== PENALTY PAYMENT =====================
-    if (paymentContext.value.mode === "PENALTY") {
-        await unlockLocker(session.state.locker?.number);
-        await hydrateGlobalState();
+// async function performUnlockFlow(lockerNumber) {
+//     activeLockerNumber.value = lockerNumber;
+//     unlockStage.value = "PROCESSING";
+
+//     const jobId = await unlockLocker(lockerNumber);
+
+//     if (!jobId) {
+//         console.warn("❌ No jobId returned — skipping wait");
+//         unlockStage.value = "FAILED";
+//         return "FAILED";
+//     }
+
+//     const result = await waitForUnlockResult(jobId);
+
+//     unlockStage.value = result;
+
+//     return result;
+// }
+
+async function performUnlockFlow(lockerNumber) {
+    if (isUnlocking.value) return "FAILED";
+
+    isUnlocking.value = true;
+
+    activeLockerNumber.value = lockerNumber;
+    unlockStage.value = "PROCESSING";
+
+    const jobId = await unlockLocker(lockerNumber);
+
+    if (!jobId) {
+        unlockStage.value = "FAILED";
+        isUnlocking.value = false;
+        return "FAILED";
     }
 
-    // CLEANUP
-    resetPaymentContext();
+    const result = await waitForUnlockResult(jobId);
+
+    unlockStage.value = result;
+    isUnlocking.value = false;
+
+    return result;
+}
+
+async function handleRetryUnlock() {
+    if (!activeLockerNumber.value) return;
+
+    console.log("Retrying unlock...");
+
+    const result = await performUnlockFlow(activeLockerNumber.value);
+
+    if (result === "SUCCESS") {
+        await hydrateGlobalState();
+        await fetchLockerStatuses();
+    }
+}
+
+function handleUnlockFailureDone() {
+    unlockStage.value = null;
+
     session.clearSession();
     flow.goToIdle();
 }
-
 async function recoverActiveRental() {
     console.log("🔎 recoverActiveRental START");
 
@@ -804,19 +974,73 @@ async function fetchLockerStatuses() {
 //     }, 1000);
 // }
 
+// async function handleEndRental() {
+//     try {
+//         const rentalId = session.state.locker?.rentalId;
+//         const lockerNumber = session.state.locker?.number;
+
+//         if (!rentalId) return;
+
+//         activeLockerNumber.value = lockerNumber;
+
+//         unlockStage.value = "PROCESSING";
+
+//         const startTime = Date.now();
+
+//         await fetch(`/api/kiosk/rentals/${rentalId}/end`, {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json",
+//             },
+//         });
+
+//         await unlockLocker(lockerNumber);
+
+//         //stop local timer + clear rental state
+//         rental.endRental();
+//         await fetchLockerStatuses();
+
+//         //TEMPORARY TIMER TO SIMULATE PROCESSING TIME (ENSURE SUCCESS OVERLAY IS VISIBLE)
+//         const elapsed = Date.now() - startTime;
+//         const minDuration = 5000; // 5 seconds
+
+//         if (elapsed < minDuration) {
+//             await new Promise((resolve) =>
+//                 setTimeout(resolve, minDuration - elapsed)
+//             );
+//         }
+
+//         unlockStage.value = "SUCCESS";
+
+//         // // Show success overlay
+//         // isEndingRental.value = true;
+//         // endCountdown.value = 3;
+
+//         // endTimer = setInterval(() => {
+//         //     endCountdown.value--;
+
+//         //     if (endCountdown.value === 0) {
+//         //         clearInterval(endTimer);
+//         //         isEndingRental.value = false;
+//         //         session.clearSession();
+//         //         flow.goToIdle();
+//         //     }
+//         // }, 1000);
+//     } catch (err) {
+//         console.error("Failed to end rental", err);
+//         unlockStage.value = null;
+//         return;
+//     }
+// }
+
 async function handleEndRental() {
     try {
         const rentalId = session.state.locker?.rentalId;
         const lockerNumber = session.state.locker?.number;
 
-        if (!rentalId) return;
+        if (!rentalId || !lockerNumber) return;
 
-        activeLockerNumber.value = lockerNumber;
-
-        unlockStage.value = "PROCESSING";
-
-        const startTime = Date.now();
-
+        // create token (backend driven)
         await fetch(`/api/kiosk/rentals/${rentalId}/end`, {
             method: "POST",
             headers: {
@@ -824,42 +1048,18 @@ async function handleEndRental() {
             },
         });
 
-        await unlockLocker(lockerNumber);
+        // unlock flow
+        const result = await performUnlockFlow(lockerNumber);
 
-        //stop local timer + clear rental state
-        rental.endRental();
-        await fetchLockerStatuses();
-
-        //TEMPORARY TIMER TO SIMULATE PROCESSING TIME (ENSURE SUCCESS OVERLAY IS VISIBLE)
-        const elapsed = Date.now() - startTime;
-        const minDuration = 5000; // 5 seconds
-
-        if (elapsed < minDuration) {
-            await new Promise((resolve) =>
-                setTimeout(resolve, minDuration - elapsed)
-            );
+        if (result === "SUCCESS") {
+            rental.endRental();
+            await fetchLockerStatuses();
+        } else {
+            console.warn("Unlock failed during end rental");
         }
-
-        unlockStage.value = "SUCCESS";
-
-        // // Show success overlay
-        // isEndingRental.value = true;
-        // endCountdown.value = 3;
-
-        // endTimer = setInterval(() => {
-        //     endCountdown.value--;
-
-        //     if (endCountdown.value === 0) {
-        //         clearInterval(endTimer);
-        //         isEndingRental.value = false;
-        //         session.clearSession();
-        //         flow.goToIdle();
-        //     }
-        // }, 1000);
     } catch (err) {
         console.error("Failed to end rental", err);
-        unlockStage.value = null;
-        return;
+        unlockStage.value = "FAILED";
     }
 }
 function finishEndRental() {
@@ -1041,8 +1241,15 @@ watch(
         <UnlockSuccessScreen
             v-if="unlockStage === 'SUCCESS'"
             :locker="activeLockerNumber"
-            mode="END_RENTAL"
+            mode="PAYMENT"
             @done="finishEndRental"
+        />
+        <ErrorScreen
+            v-if="unlockStage === 'FAILED'"
+            :locker="activeLockerNumber"
+            message="Unable to unlock locker. Please try again."
+            @retry="handleRetryUnlock"
+            @done="handleUnlockFailureDone"
         />
     </div>
     <IdleWarningModal

@@ -30,10 +30,15 @@ class ExpireUnlockTokens extends Command
     public function handle(KioskEventService $events)
     {
         $tokens = LockerUnlockToken::whereNull('consumed_at')
+            ->whereNull('expired_at')
             ->where('expires_at', '<=', now())
             ->get();
 
         foreach ($tokens as $token) {
+
+            $token->update([
+                'expired_at' => now(),
+            ]);
 
             // LOG TOKEN EXPIRATION
             $events->log(

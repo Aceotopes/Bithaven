@@ -30,9 +30,15 @@ def fetch_pending_jobs():
 
 def mark_job_processing(job_id):
     try:
-        requests.post(f"{API_BASE}/unlock-jobs/{job_id}/processing")
+        r = requests.post(f"{API_BASE}/unlock-jobs/{job_id}/processing")
+        if r.status_code == 409:
+            print(f"[DAEMON] job {job_id} processing")
+            return True
+        r.raise_for_status()
+        return True
     except Exception as e:
         print("[DAEMON] Failed to mark processing:", e)
+        return False
 
 
 def mark_job_succeeded(job_id):
@@ -66,6 +72,10 @@ def mark_job_failed(job_id):
 def process_job(job):
     job_id = job["id"]
     locker_id = job["locker_id"]
+
+    if not mark_job_processing(job_id):
+        print(f"[DAEMON] Failed to mark job {job_id} as processing - skipping")
+        return
 
     print(f"[DAEMON] Processing job {job_id} for locker {locker_id}")
 

@@ -12,4 +12,18 @@ export default defineConfig({
         vue(),
         tailwindcss(),
     ],
+
+    server: {
+        host: true,
+        port: 5173,
+        strictPort: true,
+
+        cors: {
+            origin: "*", // Allow all origins
+        },
+
+        hmr: {
+            host: "192.168.10.121",
+        },
+    },
 });

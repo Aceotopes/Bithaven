@@ -31,7 +31,6 @@ class RfidSessionController extends Controller
             'rfid_uid' => 'required|string',
         ]);
 
-        // Reload fresh from DB to prevent stale model issues
         $session = RfidScanSession::lockForUpdate()->find($session->id);
 
         if (!$session) {

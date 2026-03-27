@@ -33,6 +33,7 @@ const props = defineProps({
     },
 });
 
+const hasEmitted = ref(false); // to prevent multiple emits on payment completion
 /* =============================
    BASE STATE
 ============================= */
@@ -91,8 +92,9 @@ async function insertCoinUI(value) {
 //     }, 1000);
 // });
 watch(isPaid, (paid) => {
-    if (!paid) return;
+    if (!paid || hasEmitted.value) return;
 
+    hasEmitted.value = true;
     emit("complete");
 });
 
