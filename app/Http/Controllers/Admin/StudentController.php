@@ -85,6 +85,10 @@ class StudentController extends Controller
 
         $student = Student::create($validated);
 
+        \Log::info('Student show endpoint HIT', [
+            'id' => $id ?? $student->id ?? null
+        ]);
+
         return response()->json($student, 201);
     }
 

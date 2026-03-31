@@ -63,6 +63,7 @@ Route::get('/kiosk/unlock-jobs/pending', [UnlockJobController::class, 'pending']
 Route::get('/kiosk/unlock-jobs/{job}', [UnlockJobController::class, 'show']);
 Route::post('/kiosk/unlock-jobs/{job}/status', [UnlockJobController::class, 'updateStatus']);
 Route::post('/kiosk/unlock-jobs/{job}/processing', [UnlockJobController::class, 'processing']);
+Route::post('/kiosk/unlock-jobs/{job}/cancel', [UnlockJobController::class, 'cancel']);
 
 // ADMIN KIOSK ROUTES
 Route::post('/kiosk/admin/scan', [AdminScanController::class, 'scan']);

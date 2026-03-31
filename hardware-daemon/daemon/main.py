@@ -1,6 +1,7 @@
 import time
 import requests
 import datetime
+import threading
 from adapters.hardware import get_relay_controller
 
 API_BASE = "http://127.0.0.1:8000/api/kiosk"
@@ -49,9 +50,11 @@ def mark_job_succeeded(job_id):
             timeout=3
         )
         r.raise_for_status()
-        print(r.status_code, r.text)
+        print(f"[DAEMON] Job {job_id} marked SUCCEEDED")
+        return True
     except Exception as e:
         print("[DAEMON] Failed to mark succeeded:", e)
+        return False
 
 
 def mark_job_failed(job_id):
@@ -62,8 +65,11 @@ def mark_job_failed(job_id):
             timeout=3
         )
         r.raise_for_status()
+        print(f"[DAEMON] Job {job_id} marked FAILED")
+        return True
     except Exception as e:
         print("[DAEMON] Failed to mark failed:", e)
+        return False
 
 
 # -------------------------------
@@ -72,25 +78,62 @@ def mark_job_failed(job_id):
 def process_job(job):
     job_id = job["id"]
     locker_id = job["locker_id"]
+    attempts = job.get("attempts", 0)
+
+    #RETRY DELAY
+    delay = min(2 ** attempts, 10)  # 1s, 2s, 4s (max 10s)
+    if attempts > 0:
+        print(f"[DAEMON] Retry #{attempts} for job {job_id} after {delay}s")
+        time.sleep(delay)
+
+    if job["status"] != "PENDING":
+        print(f"[DAEMON] Skipping job {job['id']} with status {job['status']}")
+        return
 
     if not mark_job_processing(job_id):
         print(f"[DAEMON] Failed to mark job {job_id} as processing - skipping")
         return
 
-    print(f"[DAEMON] Processing job {job_id} for locker {locker_id}")
+    print(f"[DAEMON] Processing job {job_id} (attempt {attempts + 1}) for locker {locker_id}")
 
-    mark_job_processing(job_id)
+    try:
+        success = unlock_with_timeout(locker_id)
+        # success = False
+        print(f"[DAEMON] unlock() returned: {success}")
 
-    success = relay.unlock(locker_id)
-    # success = False
-    print(f"[DAEMON] unlock() returned: {success}")
+        if success:
+            if not mark_job_succeeded(job_id):
+                print(f"[DAEMON] CRITICAL: Job {job_id} succeeded but backend update failed")
+        else:
+            if not mark_job_failed(job_id):
+                print(f"[DAEMON] CRITICAL: Job {job_id} failed but backend update failed")
 
-    if success:
-        print("[DAEMON] Unlock success - marking succeeded")
-        mark_job_succeeded(job_id)
-    else:
-        print("[DAEMON] Unlock failed - marking failed")
+    except Exception as e:
+        print(f"[DAEMON] Exception during unlock: {e}")
         mark_job_failed(job_id)
+
+
+# -------------------------------
+# UNLOCK WITH TIMEOUT 
+# -------------------------------
+def unlock_with_timeout(locker_id, timeout=3):
+    result = {"success": False}
+
+    def target():
+        try:
+            result["success"] = relay.unlock(locker_id)
+        except Exception as e:
+            print(f"[DAEMON] Unlock exception: {e}")
+
+    thread = threading.Thread(target=target)
+    thread.start()
+    thread.join(timeout)
+
+    if thread.is_alive():
+        print("[DAEMON] Unlock timeout!")
+        return False
+
+    return result["success"]
 
 
 # -------------------------------

@@ -73,12 +73,19 @@ class PaymentService
             ], 409));
         }
 
+        // $rental = Rental::create([
+        //     'student_id' => $session->student_id, // attach if needed
+        //     'locker_id' => $locker->id,
+        //     'start_time' => $start,
+        //     'end_time' => $end,
+        //     'status' => 'ACTIVE',
+        // ]);
+
         $rental = Rental::create([
-            'student_id' => $session->student_id, // attach if needed
+            'student_id' => $session->student_id,
             'locker_id' => $locker->id,
-            'start_time' => $start,
-            'end_time' => $end,
-            'status' => 'ACTIVE',
+            'duration_hours' => $session->duration_hours,
+            'status' => 'PENDING',
         ]);
 
         $payment = Payment::create([

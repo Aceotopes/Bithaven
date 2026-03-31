@@ -14,7 +14,7 @@ export default defineConfig({
     ],
 
     server: {
-        host: true,
+        // host: true,
         port: 5173,
         strictPort: true,
 
@@ -22,8 +22,8 @@ export default defineConfig({
             origin: "*", // Allow all origins
         },
 
-        hmr: {
-            host: "192.168.10.121",
-        },
+        // hmr: {
+        //     host: "192.168.10.121",
+        // },
     },
 });

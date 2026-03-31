@@ -11,6 +11,7 @@ class Rental extends Model
     protected $fillable = [
         'student_id',
         'locker_id',
+        'duration_hours',
         'start_time',
         'end_time',
         'status',
@@ -22,7 +23,14 @@ class Rental extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'ended_at' => 'datetime',
+        'duration_hours' => 'integer',
     ];
+
+    public const STATUS_PENDING = 'PENDING';
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_EXPIRED = 'EXPIRED';
+    public const STATUS_ENDED = 'ENDED';
+    public const STATUS_CANCELLED = 'CANCELLED';
 
     public function locker()
     {
@@ -42,5 +50,53 @@ class Rental extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function unlockJobs()
+    {
+        return $this->hasMany(LockerUnlockJob::class);
+    }
+
+    public function activate()
+    {
+        if ($this->status !== self::STATUS_PENDING)
+            return false;
+
+        $start = now();
+
+        $this->update([
+            'status' => self::STATUS_ACTIVE,
+            'start_time' => $start,
+            'end_time' => $start->copy()->addHours($this->duration_hours),
+            // 'end_time' => $start->copy()->addSeconds(20),
+        ]);
+
+        return true;
+    }
+
+    public function cancel()
+    {
+        if ($this->status !== self::STATUS_PENDING)
+            return false;
+
+        $this->update([
+            'status' => self::STATUS_CANCELLED,
+        ]);
+
+        return true;
+    }
+
+    public function endByUser()
+    {
+        if ($this->status !== self::STATUS_ACTIVE)
+            return false;
+
+        $this->update([
+            'status' => self::STATUS_ENDED,
+            'ended_at' => now(),
+            'ended_by' => 'USER',
+        ]);
+
+        return true;
     }
 }

@@ -9,6 +9,7 @@ class LockerUnlockJob extends Model
     protected $fillable = [
         'unlock_token_id',
         'locker_id',
+        'rental_id',
         'attempts',
         'max_attempts',
         'last_attempt_at',
@@ -20,5 +21,10 @@ class LockerUnlockJob extends Model
     public function token()
     {
         return $this->belongsTo(LockerUnlockToken::class, 'unlock_token_id');
+    }
+
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class);
     }
 }

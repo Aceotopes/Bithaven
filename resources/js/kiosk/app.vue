@@ -554,13 +554,24 @@ async function waitForUnlockResult(jobId) {
 
             if (job.status === "SUCCEEDED") return "SUCCESS";
             if (job.status === "FAILED") return "FAILED";
+            if (job.status === "CANCELLED") return "FAILED";
         } catch (err) {
             console.error("Polling error:", err);
             return "FAILED";
         }
 
+        //TIMEOUT HANDLING
         if (Date.now() - start > TIMEOUT) {
-            console.warn("Polling timeout");
+            console.warn("Polling timeout → cancelling job", jobId);
+
+            try {
+                await fetch(`/api/kiosk/unlock-jobs/${jobId}/cancel`, {
+                    method: "POST",
+                });
+            } catch (err) {
+                console.error("Failed to cancel job", err);
+            }
+
             return "FAILED";
         }
 

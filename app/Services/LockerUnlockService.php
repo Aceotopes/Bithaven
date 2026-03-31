@@ -29,6 +29,7 @@ class LockerUnlockService
             LockerUnlockJob::create([
                 'unlock_token_id' => $token->id,
                 'locker_id' => $token->locker_id,
+                'rental_id' => $token->rental_id,
                 'status' => 'PENDING',
                 'attempts' => 0,
                 'max_attempts' => 3,

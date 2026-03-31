@@ -20,6 +20,9 @@ const isReadyToConfirm = computed(() => {
     );
 });
 
+const isCustomMode = ref(false);
+const showCustomModal = ref(false);
+
 const availableCount = computed(
     () => props.lockers.filter((l) => l.status === "AVAILABLE").length
 );
@@ -188,12 +191,21 @@ function lockerStatus(n) {
         <!-- ========================= -->
         <div class="text-center py-5 border-t border-black/10">
             <div
-                class="mx-auto mb-3 w-16 h-16 rounded-full border border-emerald-300 flex items-center justify-center text-emerald-600 text-3xl font-mono"
+                class="mx-auto mb-3 w-16 h-16 rounded-full border flex items-center justify-center text-3xl font-mono"
+                :class="
+                    selectedLocker
+                        ? 'border-emerald-400 text-emerald-600'
+                        : 'border-gray-300 text-gray-400'
+                "
             >
-                —
+                {{
+                    selectedLocker
+                        ? String(selectedLocker).padStart(2, "0")
+                        : "—"
+                }}
             </div>
 
-            <p class="text-[32px] font-semibold text-gray-800">
+            <p class="text-[30px] font-semibold text-gray-800">
                 {{
                     selectedLocker
                         ? `Locker ${String(selectedLocker).padStart(2, "0")}`
@@ -201,41 +213,64 @@ function lockerStatus(n) {
                 }}
             </p>
 
-            <p class="mt-4 text-[22px] text-gray-500 max-w-[560px] mx-auto">
-                Please select an available locker from the grid above to
-                continue.
+            <p class="mt-2 text-[22px] text-gray-600">
+                {{
+                    selectedDuration
+                        ? `Duration: ${selectedDuration} Hour${
+                              selectedDuration > 1 ? "s" : ""
+                          }`
+                        : "No Duration Selected"
+                }}
+            </p>
+
+            <p class="mt-4 text-[18px] text-gray-500 max-w-[560px] mx-auto">
+                {{
+                    !selectedLocker
+                        ? "Select a locker to begin."
+                        : !selectedDuration
+                        ? "Choose a duration to continue."
+                        : "Ready to proceed. Confirm your selection below."
+                }}
             </p>
         </div>
 
         <!-- ========================= -->
         <!-- Duration Selection -->
         <!-- ========================= -->
-        <div class="mt-10 grid grid-cols-3 gap-8 text-center">
+        <!-- PRESET BUTTONS -->
+        <div class="mt-10 grid grid-cols-4 gap-8 text-center">
             <div
                 v-for="h in [1, 2, 3]"
                 :key="h"
-                @click="selectedDuration = h"
-                class="relative z-30 rounded-xl border py-8 cursor-pointer select-none transition-all duration-150 active:scale-[0.97]"
+                @click="
+                    selectedDuration = h;
+                    isCustomMode = false;
+                "
+                class="rounded-xl border py-8 cursor-pointer"
                 :class="
-                    selectedDuration === h
+                    selectedDuration === h && !isCustomMode
                         ? 'bg-emerald-50 border-emerald-400'
                         : 'bg-white/70 border-black/10'
                 "
             >
-                <p class="text-[16px] tracking-widest uppercase text-gray-500">
-                    Duration
-                </p>
-
-                <p
-                    class="mt-2 font-mono text-[30px]"
-                    :class="
-                        selectedDuration === h
-                            ? 'text-emerald-700 font-semibold'
-                            : 'text-gray-900'
-                    "
-                >
+                <p class="text-[16px] uppercase text-gray-500">Duration</p>
+                <p class="mt-2 font-mono text-[30px]">
                     {{ h }} Hour{{ h > 1 ? "s" : "" }}
                 </p>
+            </div>
+
+            <!-- CUSTOM BUTTON -->
+            <div
+                @click="showCustomModal = true"
+                class="rounded-xl border py-8 cursor-pointer"
+                :class="
+                    isCustomMode
+                        ? 'bg-emerald-50 border-emerald-400'
+                        : 'bg-white/70 border-black/10'
+                "
+            >
+                <p class="text-[16px] uppercase text-gray-500">Custom</p>
+                <p class="mt-2 font-mono text-[24px]">4–8 Hours</p>
             </div>
         </div>
 
@@ -269,4 +304,55 @@ function lockerStatus(n) {
             </button>
         </div>
     </section>
+    <!-- MODAL FOR CUSTOM TIME -->
+    <div
+        v-if="showCustomModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+    >
+        <div class="bg-white w-[600px] rounded-2xl p-8 shadow-2xl text-center">
+            <h2 class="text-[26px] font-semibold mb-2">Select Duration</h2>
+
+            <p class="text-gray-500 mb-6">Choose between 4 to 8 hours</p>
+
+            <!-- OPTIONS -->
+            <div class="grid grid-cols-5 gap-4 mb-8">
+                <div
+                    v-for="h in [4, 5, 6, 7, 8]"
+                    :key="h"
+                    @click="selectedDuration = h"
+                    class="py-4 rounded-xl border cursor-pointer transition"
+                    :class="
+                        selectedDuration === h
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                    "
+                >
+                    <p class="text-[20px] font-mono">{{ h }}h</p>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex gap-4">
+                <button
+                    class="flex-1 py-4 rounded-xl bg-gray-200 text-gray-700"
+                    @click="showCustomModal = false"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    class="flex-1 py-4 rounded-xl font-semibold"
+                    :class="
+                        selectedDuration >= 4
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-300 text-gray-400 cursor-not-allowed'
+                    "
+                    :disabled="selectedDuration < 4"
+                    @click="showCustomModal = false"
+                >
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
