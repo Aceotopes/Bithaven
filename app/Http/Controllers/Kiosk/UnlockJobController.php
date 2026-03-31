@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\LockerUnlockJob;
 use App\Services\KioskEventService;
 use Illuminate\Support\Facades\DB;
+use App\Models\Rental;
 
 class UnlockJobController extends Controller
 {
@@ -179,10 +180,13 @@ class UnlockJobController extends Controller
                     ]);
                 }
 
-                //  activate rental
-                $rental = \App\Models\Rental::find($job->rental_id);
+                $token = $job->token;
 
-                if ($rental && $rental->status === \App\Models\Rental::STATUS_PENDING) {
+                $rental = $token && $token->rental_id
+                    ? Rental::find($token->rental_id)
+                    : null;
+
+                if ($rental && $rental->status === Rental::STATUS_PENDING) {
                     $rental->activate();
                 }
             });
@@ -212,9 +216,13 @@ class UnlockJobController extends Controller
                         'attempts' => $attempts,
                     ]);
 
-                    $rental = \App\Models\Rental::find($job->rental_id);
+                    $token = $job->token;
 
-                    if ($rental && $rental->status === \App\Models\Rental::STATUS_PENDING) {
+                    $rental = $token && $token->rental_id
+                        ? Rental::find($token->rental_id)
+                        : null;
+
+                    if ($rental && $rental->status === Rental::STATUS_PENDING) {
                         $rental->cancel();
                     }
                 });

@@ -97,6 +97,29 @@ class LockerController extends Controller
             'consumed_at' => now(),
         ]);
 
+        if ($token->reason === 'RENTAL_START' && $token->rental_id) {
+
+            $rental = Rental::find($token->rental_id);
+
+            if ($rental && $rental->status === 'PENDING') {
+
+                $start = now();
+                $end = $start->copy()->addHours($rental->duration_hours);
+
+                $rental->update([
+                    'status' => 'ACTIVE',
+                    'start_time' => $start,
+                    'end_time' => $end,
+                ]);
+            }
+
+            \Log::error('CONFIRM HIT', [
+                'token_id' => $token->id,
+                'reason' => $token->reason,
+                'rental_id' => $token->rental_id,
+            ]);
+        }
+
         return response()->json([
             'success' => true
         ]);
