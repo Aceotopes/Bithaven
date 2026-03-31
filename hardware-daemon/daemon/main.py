@@ -5,7 +5,9 @@ import threading
 from adapters.hardware import get_relay_controller
 
 API_BASE = "http://127.0.0.1:8000/api/kiosk"
-POLL_INTERVAL = 1
+idle_interval = 5     # when no jobs
+active_interval = 1   # when processing jobs
+current_interval = idle_interval
 
 relay = get_relay_controller()
 
@@ -180,13 +182,19 @@ def main():
         # Fetch unlock jobs
         jobs = fetch_pending_jobs()
 
+        if jobs:
+            print(f"[DAEMON] {len(jobs)} job(s) found")
+            current_interval = active_interval
+        else:
+            current_interval = idle_interval
+
         for job in jobs:
             if is_expired(job):
                 print(f"[DAEMON] Skipping expired job {job['id']}")
                 continue
             process_job(job)
 
-        time.sleep(POLL_INTERVAL)
+        time.sleep(current_interval)
 
 
 if __name__ == "__main__":

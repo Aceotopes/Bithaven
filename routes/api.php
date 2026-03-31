@@ -84,6 +84,7 @@ Route::get('/kiosk/admin/lockers/{locker}', [AdminLockerController::class, 'show
 Route::get('/kiosk/unlock-tokens/pending', [UnlockTokenController::class, 'pending']);
 Route::post('/kiosk/unlock-tokens/{token}/confirm', [UnlockTokenController::class, 'confirm']);
 Route::post('/kiosk/daemon/heartbeat', [DaemonController::class, 'heartbeat']);
+Route::get('/kiosk/daemon/status', [DaemonController::class, 'status']);
 // Route::get('/admin/daemon/status', [DaemonController::class, 'status']);
 // ADMIN ROUTES
 //TEMP

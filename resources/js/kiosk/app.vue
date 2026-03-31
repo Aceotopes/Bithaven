@@ -19,6 +19,7 @@ import AdminAccessScreen from "./screens/AdminAccessScreen.vue";
 import ProcessingScreen from "./screens/ProcessingScreen.vue";
 import UnlockSuccessScreen from "./screens/UnlockSuccessScreen.vue";
 import ErrorScreen from "./screens/ErrorScreen.vue";
+import StatusPopup from "@/kiosk/components/kiosk/StatusPopup.vue";
 
 import KioskToast from "@/kiosk/components/kiosk/KioskToast.vue";
 
@@ -78,6 +79,8 @@ const showAdminScanModal = ref(false);
 const adminLockers = ref([]);
 const selectedAdminLocker = ref(null);
 const showAdminDetails = ref(false);
+
+const daemonStatus = ref("ONLINE"); // ONLINE | STALE | OFFLINE
 
 let scanPollTimer = null;
 // let currentPollMode = null;
@@ -456,6 +459,17 @@ async function handleIdleComplete() {
     }
 
     // suspended & error → stay idle
+}
+
+async function checkDaemonStatus() {
+    try {
+        const res = await fetch("/api/kiosk/daemon/status");
+        const data = await res.json();
+
+        daemonStatus.value = data.status;
+    } catch (err) {
+        daemonStatus.value = "OFFLINE";
+    }
 }
 
 // ===================== locker selection (back and confirm)handlers =====================
@@ -1073,6 +1087,7 @@ async function handleEndRental() {
         unlockStage.value = "FAILED";
     }
 }
+
 function finishEndRental() {
     unlockStage.value = null;
     session.clearSession();
@@ -1102,6 +1117,7 @@ onMounted(async () => {
     console.log("🔁 APP MOUNTED");
     await hydrateGlobalState();
     debugDump("after hydrateGlobalState (mount)");
+    setInterval(checkDaemonStatus, 5000);
     // startSlowPolling();
 });
 
@@ -1159,6 +1175,7 @@ watch(
             @start-scan="handleStartScan"
             @success-complete="handleIdleComplete"
             :scanResult="scanResult"
+            :daemonStatus="daemonStatus"
         />
 
         <AdminAccessScreen

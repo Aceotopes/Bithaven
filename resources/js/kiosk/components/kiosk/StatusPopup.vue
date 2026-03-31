@@ -53,6 +53,7 @@ defineEmits(["close", "action"]);
                             'bg-rose-400': type === 'error',
                             'bg-blue-400': type === 'admin',
                             'bg-amber-400': type === 'warning',
+                            'bg-red-500': type === 'daemon_offline',
                         }"
                     />
 
@@ -127,6 +128,23 @@ defineEmits(["close", "action"]);
                                 d="M12 9v4m0 4h.01M10.29 3.86l-7.17 12.42A2 2 0 004.83 19h14.34a2 2 0 001.71-3.02L13.71 3.86a2 2 0 00-3.42 0z"
                             />
                         </svg>
+
+                        <!-- DAEMON OFFLINE ICON -->
+                        <svg
+                            v-if="type === 'daemon_offline'"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="w-25 h-25 text-rose-600"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"
+                            />
+                        </svg>
                     </div>
                 </div>
 
@@ -168,6 +186,13 @@ defineEmits(["close", "action"]);
                                 Suspended </span
                             >.
                         </span>
+
+                        <span v-else-if="type === 'daemon_offline'">
+                            The system is currently
+                            <span class="font-semibold text-red-600">
+                                offline </span
+                            >.
+                        </span>
                     </p>
                     <p
                         v-if="countdown !== null"
@@ -204,6 +229,10 @@ defineEmits(["close", "action"]);
                             Please contact the
                             <span class="font-bold">administrator</span>
                             to resolve this issue.
+                        </span>
+                        <span v-else-if="type === 'daemon_offline'">
+                            The kiosk is temporarily unavailable. Please wait
+                            for the system to reconnect.
                         </span>
                     </p>
                 </div>

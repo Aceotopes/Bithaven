@@ -11,6 +11,11 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+
+    daemonStatus: {
+        type: String,
+        default: "ONLINE",
+    },
 });
 
 const rfid = useRFIDService();
@@ -31,15 +36,26 @@ let countdownTimer = null;
 
 // MANUAL UID ENTRY (for testing/demo purposes)
 const manualUid = ref("");
+// function submitManualUid() {
+//     if (!manualUid.value.trim()) return;
+
+//     const uid = manualUid.value.trim();
+
+//     console.log("Manual UID entered:", uid);
+
+//     emit("start-scan", uid);
+
+//     manualUid.value = "";
+// }
+
 function submitManualUid() {
+    if (props.daemonStatus === "OFFLINE") return;
+
     if (!manualUid.value.trim()) return;
 
     const uid = manualUid.value.trim();
-
     console.log("Manual UID entered:", uid);
-
     emit("start-scan", uid);
-
     manualUid.value = "";
 }
 
@@ -169,6 +185,23 @@ watch(
     }
 );
 
+watch(
+    () => props.daemonStatus,
+    (status) => {
+        if (status === "OFFLINE") {
+            triggerPopup({
+                type: "daemon_offline",
+                title: "SYSTEM OFFLINE",
+                message: "Kiosk is currently unavailable.",
+                showAction: false,
+            });
+        } else {
+            showPopup.value = false;
+        }
+    },
+    { immediate: true }
+);
+
 /* -----------------------------
    Lifecycle
 ------------------------------ */
@@ -178,7 +211,11 @@ onMounted(() => {
     });
 
     rfid.enable((uid) => {
-        // IdleScreen ONLY detects RFID
+        if (props.daemonStatus === "OFFLINE") {
+            console.log("Scan blocked: daemon offline");
+            return;
+        }
+
         emit("start-scan", uid);
     });
 });
