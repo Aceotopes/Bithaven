@@ -3,6 +3,7 @@ import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import AdminLockerPanel from "../components/kiosk/AdminLockerPanel.vue";
 import AdminLockerDetailsModal from "../components/kiosk/AdminLockerDetailsModal.vue";
 import { ref } from "vue";
+import axios from "axios";
 
 const props = defineProps({
     lockers: Array,
@@ -20,6 +21,30 @@ const emit = defineEmits([
     "clear-penalty",
     "end-rental",
 ]);
+
+async function handleEmergencyUnlock(pin) {
+    try {
+        // Verify PIN
+        await axios.post("/api/kiosk/admin/verify-pin", {
+            pin,
+        });
+
+        // Trigger unlock
+        await axios.post("/api/kiosk/admin/emergency-unlock");
+
+        alert("Emergency unlock started");
+    } catch (err) {
+        if (err.response?.status === 403) {
+            alert("Invalid PIN");
+        } else if (err.response?.status === 409) {
+            alert("Unlock already in progress");
+        } else if (err.response?.status === 503) {
+            alert("System offline");
+        } else {
+            alert("Something went wrong");
+        }
+    }
+}
 </script>
 
 <template>
@@ -66,6 +91,7 @@ const emit = defineEmits([
                 @enable-locker="$emit('enable-locker')"
                 @clear-penalty="$emit('clear-penalty')"
                 @end-rental="$emit('end-rental')"
+                @emergency-unlock="handleEmergencyUnlock"
             />
         </main>
 

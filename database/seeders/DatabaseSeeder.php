@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
         $this->call(LockerSeeder::class);
         $this->call(AdminSeeder::class);
         $this->call(AdminCardSeeder::class);
+        $this->call(AdminSettingSeeder::class);
     }
 }

@@ -23,6 +23,7 @@ class LockerUnlockService
                 'penalty_id' => $data['penalty_id'] ?? null,
                 'admin_id' => $data['admin_id'] ?? null,
                 'admin_card_id' => $data['admin_card_id'] ?? null,
+                'batch_id' => $data['batch_id'] ?? null,
             ]);
 
             // Immediately create execution job

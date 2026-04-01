@@ -39,7 +39,7 @@ class UnlockJobController extends Controller
     {
         $jobs = LockerUnlockJob::where('status', 'PENDING')
             ->with('token')
-            ->orderBy('created_at')
+            ->orderBy('id', 'asc')
             ->get();
 
         // dd(
@@ -74,7 +74,7 @@ class UnlockJobController extends Controller
 
             $validJobs[] = $job;
         }
-
+        // $nextJob = collect($validJobs)->first();
         return response()->json([
             'jobs' => $validJobs
         ]);
@@ -202,6 +202,29 @@ class UnlockJobController extends Controller
                 'Locker successfully unlocked'
             );
 
+            $batchId = optional($job->token)->batch_id;
+
+            if ($batchId) {
+
+                $remaining = LockerUnlockJob::whereHas('token', function ($q) use ($batchId) {
+                    $q->where('batch_id', $batchId);
+                })
+                    ->whereIn('status', ['PENDING', 'PROCESSING'])
+                    ->count();
+
+                if ($remaining === 0) {
+
+                    $this->events->log(
+                        'EMERGENCY_UNLOCK_COMPLETED',
+                        [
+                            'batch_id' => $batchId,
+                        ],
+                        'INFO',
+                        'Emergency unlock completed successfully'
+                    );
+                }
+            }
+
         } else {
 
             $attempts = $job->attempts + 1;
@@ -236,6 +259,20 @@ class UnlockJobController extends Controller
                     'ERROR',
                     'Unlock job failed after max attempts'
                 );
+
+                $batchId = optional($job->token)->batch_id;
+
+                if ($batchId) {
+                    $this->events->log(
+                        'EMERGENCY_UNLOCK_FAILED',
+                        [
+                            'batch_id' => $batchId,
+                            'locker_id' => $job->locker_id,
+                        ],
+                        'ERROR',
+                        'Emergency unlock encountered a failure'
+                    );
+                }
 
             } else {
 

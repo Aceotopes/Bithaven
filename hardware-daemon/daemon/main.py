@@ -29,6 +29,26 @@ def fetch_pending_jobs():
     except Exception as e:
         print("[DAEMON] Failed to fetch jobs:", e)
         return []
+    
+# def fetch_pending_jobs():
+#     try:
+#         r = requests.get(f"{API_BASE}/unlock-jobs/pending", timeout=3)
+#         r.raise_for_status()
+
+#         data = r.json()
+#         # print("[DAEMON] RAW RESPONSE:", data)
+#         # handle single job
+#         job = data.get("job")
+
+#         if job:
+#             return [job]  # wrap in list
+
+#         return []
+
+#     except Exception as e:
+#         print("[DAEMON] Failed to fetch jobs:", e)
+#         return []
+    
 
 
 def mark_job_processing(job_id):

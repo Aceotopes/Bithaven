@@ -15,47 +15,59 @@ const emit = defineEmits(["retry", "done"]);
 </script>
 
 <template>
-    <div class="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div class="text-center text-white">
-            <!-- Lottie Animation -->
-            <Vue3Lottie
-                :animationData="errorAnimation"
-                :height="180"
-                :width="180"
-                :loop="true"
-                :autoplay="true"
-                class="mx-auto mb-6"
-            />
+    <div
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-center pb-[20vh] bg-gradient-to-b from-red-50 via-white to-red-100 text-center px-12"
+    >
+        <!-- Animation -->
+        <Vue3Lottie
+            :animationData="errorAnimation"
+            :height="520"
+            :width="520"
+            :loop="false"
+        />
 
-            <!-- Title -->
-            <h1 class="text-2xl font-bold mb-2">Unlock Failed</h1>
+        <!-- Main Message -->
+        <p
+            class="text-[52px] font-bold tracking-wide text-red-600 leading-tight"
+        >
+            Unlock Failed
+        </p>
 
-            <!-- Message -->
-            <p class="mb-4 opacity-80">
-                {{ message }}
-            </p>
+        <!-- Locker -->
+        <p
+            v-if="locker"
+            class="mt-4 text-[42px] font-mono font-semibold text-gray-900 tracking-widest"
+        >
+            #{{ String(locker).padStart(2, "0") }}
+        </p>
 
-            <!-- Locker Info -->
-            <p v-if="locker" class="mb-6 text-sm opacity-60">
-                Locker {{ locker }}
-            </p>
+        <!-- Description -->
+        <p class="mt-6 text-[28px] text-gray-600 max-w-[720px] leading-relaxed">
+            {{ message }}
+        </p>
 
-            <!-- Buttons -->
-            <div class="flex gap-4 justify-center">
-                <button
-                    class="bg-white text-black px-6 py-2 rounded-lg"
-                    @click="$emit('retry')"
-                >
-                    Retry
-                </button>
+        <!-- Actions -->
+        <div class="mt-10 flex gap-6">
+            <!-- Retry (Primary) -->
+            <button
+                class="px-8 py-4 text-[20px] font-semibold rounded-xl bg-red-600 text-white hover:bg-red-700 active:scale-95 transition"
+                @click="$emit('retry')"
+            >
+                Try Again
+            </button>
 
-                <button
-                    class="bg-red-600 px-6 py-2 rounded-lg"
-                    @click="$emit('done')"
-                >
-                    Cancel
-                </button>
-            </div>
+            <!-- Cancel (Secondary) -->
+            <button
+                class="px-8 py-4 text-[20px] font-semibold rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 active:scale-95 transition"
+                @click="$emit('done')"
+            >
+                Cancel
+            </button>
         </div>
+
+        <!-- Footer Hint -->
+        <p class="absolute bottom-16 text-[20px] text-gray-400 tracking-wide">
+            If the issue persists, please contact support
+        </p>
     </div>
 </template>

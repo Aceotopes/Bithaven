@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onUnmounted, watch } from "vue";
+import { ref, computed, onUnmounted, watch, onMounted } from "vue";
 
 const props = defineProps({
     lockers: {
@@ -16,7 +16,13 @@ const emit = defineEmits([
     "enable-locker",
     "clear-penalty",
     "end-rental",
+    "emergency-unlock",
 ]);
+
+const showPinModal = ref(false);
+const pin = ref("");
+const loading = ref(false);
+const error = ref("");
 
 const studentInitials = computed(() => {
     if (!rental.value?.student) return "";
@@ -108,6 +114,23 @@ function lockerVisual(locker) {
     }
 }
 
+function handleEmergencyUnlock() {
+    if (!pin.value) {
+        error.value = "PIN is required";
+        return;
+    }
+
+    emit("emergency-unlock", pin.value);
+
+    closeModal();
+}
+
+function closeModal() {
+    showPinModal.value = false;
+    pin.value = "";
+    error.value = "";
+}
+
 /* ===============================
    TIMER
 ================================ */
@@ -132,9 +155,34 @@ const formattedTimeRemaining = computed(() =>
     formatSeconds(Math.max(0, timeRemaining.value))
 );
 
-watch(rental, (newRental) => {
-    clearInterval(timerInterval);
+// watch(rental, (newRental) => {
+//     clearInterval(timerInterval);
 
+//     if (!newRental) {
+//         timeRemaining.value = 0;
+//         return;
+//     }
+
+//     timeRemaining.value = Math.floor(
+//         Number(newRental.time_remaining_seconds ?? 0)
+//     );
+
+//     timerInterval = setInterval(() => {
+//         if (timeRemaining.value > 0) {
+//             timeRemaining.value--;
+//         }
+//     }, 1000);
+// });
+
+onMounted(() => {
+    timerInterval = setInterval(() => {
+        if (timeRemaining.value > 0) {
+            timeRemaining.value--;
+        }
+    }, 1000);
+});
+
+watch(rental, (newRental) => {
     if (!newRental) {
         timeRemaining.value = 0;
         return;
@@ -143,12 +191,6 @@ watch(rental, (newRental) => {
     timeRemaining.value = Math.floor(
         Number(newRental.time_remaining_seconds ?? 0)
     );
-
-    timerInterval = setInterval(() => {
-        if (timeRemaining.value > 0) {
-            timeRemaining.value--;
-        }
-    }, 1000);
 });
 watch(rental, (r) => {
     console.log("PHOTO URL:", r?.student?.photo_url);
@@ -446,6 +488,54 @@ onUnmounted(() => {
             >
                 {{ toggleLabel }}
             </button>
+
+            <button
+                class="col-span-2 h-20 rounded-xl bg-red-700 text-white active:scale-[0.97]"
+                @click="showPinModal = true"
+            >
+                Emergency Unlock All
+            </button>
         </div>
     </section>
+
+    <div
+        v-if="showPinModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+    >
+        <div class="bg-white rounded-2xl p-8 w-[420px] text-center shadow-xl">
+            <h2 class="text-xl font-semibold mb-4">Emergency Unlock</h2>
+
+            <p class="text-gray-500 mb-6">
+                Enter admin PIN to unlock all lockers
+            </p>
+
+            <input
+                type="password"
+                v-model="pin"
+                class="w-full border rounded-xl p-4 text-center text-2xl tracking-widest"
+                placeholder="••••"
+            />
+
+            <p v-if="error" class="text-red-500 mt-3 text-sm">
+                {{ error }}
+            </p>
+
+            <div class="mt-6 flex gap-4">
+                <button
+                    class="flex-1 bg-gray-200 py-3 rounded-xl"
+                    @click="closeModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    class="flex-1 bg-red-600 text-white py-3 rounded-xl"
+                    @click="handleEmergencyUnlock"
+                    :disabled="loading"
+                >
+                    {{ loading ? "Processing..." : "Confirm" }}
+                </button>
+            </div>
+        </div>
+    </div>
 </template>

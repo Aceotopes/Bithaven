@@ -21,6 +21,7 @@ class LockerUnlockToken extends Model
         'penalty_id',
         'admin_id',
         'admin_card_id',
+        'batch_id',
     ];
 
     protected $casts = [
@@ -58,5 +59,10 @@ class LockerUnlockToken extends Model
     public function adminCard()
     {
         return $this->belongsTo(AdminCard::class);
+    }
+
+    public function jobs()
+    {
+        return $this->hasMany(LockerUnlockJob::class, 'unlock_token_id');
     }
 }

@@ -17,6 +17,7 @@ use App\Http\Controllers\Kiosk\AdminPenaltyController;
 use App\Http\Controllers\Kiosk\AdminLockerController;
 use App\Http\Controllers\Kiosk\AdminScanController;
 use App\Http\Controllers\Kiosk\RfidSessionController; // for ADMIN RFID scan sessions 
+use App\Http\Controllers\Kiosk\AdminSystemController; // for verifying admin PIN at kiosk
 use App\http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
@@ -74,6 +75,8 @@ Route::post('/kiosk/admin/lockers/disable', [AdminLockerController::class, 'disa
 Route::post('/kiosk/admin/lockers/enable', [AdminLockerController::class, 'enable']);
 Route::get('/kiosk/admin/lockers', [AdminLockerController::class, 'index']);
 Route::get('/kiosk/admin/lockers/{locker}', [AdminLockerController::class, 'show']);
+Route::post('/kiosk/admin/verify-pin', [AdminSystemController::class, 'verifyPin']);
+Route::post('/kiosk/admin/emergency-unlock', [AdminSystemController::class, 'emergencyUnlock']);
 // Route::middleware('kiosk.admin')->prefix('kiosk/admin')->group(function () {
 //     Route::get('/lockers', [AdminLockerController::class, 'index']);
 //     Route::get('/lockers/{locker}', [AdminLockerController::class, 'show']);
