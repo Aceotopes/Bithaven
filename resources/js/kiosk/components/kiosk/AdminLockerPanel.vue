@@ -7,6 +7,7 @@ const props = defineProps({
         default: () => [],
     },
     selectedLockerDetails: Object,
+    isEmergencyUnlocking: Boolean,
 });
 
 const emit = defineEmits([
@@ -154,6 +155,19 @@ function formatSeconds(totalSeconds) {
 const formattedTimeRemaining = computed(() =>
     formatSeconds(Math.max(0, timeRemaining.value))
 );
+
+function appendDigit(digit) {
+    if (pin.value.length >= 20) return; // optional max length
+    pin.value += digit;
+}
+
+function deleteDigit() {
+    pin.value = pin.value.slice(0, -1);
+}
+
+function clearPin() {
+    pin.value = "";
+}
 
 // watch(rental, (newRental) => {
 //     clearInterval(timerInterval);
@@ -490,10 +504,43 @@ onUnmounted(() => {
             </button>
 
             <button
-                class="col-span-2 h-20 rounded-xl bg-red-700 text-white active:scale-[0.97]"
+                class="col-span-2 h-20 rounded-xl flex items-center justify-center gap-3"
+                :class="
+                    isEmergencyUnlocking
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-red-700 text-white active:scale-[0.97]'
+                "
+                :disabled="isEmergencyUnlocking"
                 @click="showPinModal = true"
             >
-                Emergency Unlock All
+                <!-- Spinner -->
+                <svg
+                    v-if="isEmergencyUnlocking"
+                    class="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                >
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    />
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                    />
+                </svg>
+
+                {{
+                    isEmergencyUnlocking
+                        ? "Processing..."
+                        : "Emergency Unlock All"
+                }}
             </button>
         </div>
     </section>
@@ -511,10 +558,39 @@ onUnmounted(() => {
 
             <input
                 type="password"
-                v-model="pin"
+                :value="pin"
+                readonly
                 class="w-full border rounded-xl p-4 text-center text-2xl tracking-widest"
-                placeholder="••••"
             />
+
+            <div class="grid grid-cols-3 gap-4 mt-6">
+                <button
+                    v-for="n in [1, 2, 3, 4, 5, 6, 7, 8, 9]"
+                    :key="n"
+                    class="h-16 text-xl bg-gray-100 rounded-xl active:scale-95"
+                    @click="appendDigit(n.toString())"
+                >
+                    {{ n }}
+                </button>
+
+                <button class="h-16 bg-gray-200 rounded-xl" @click="clearPin">
+                    Clear
+                </button>
+
+                <button
+                    class="h-16 text-xl bg-gray-100 rounded-xl active:scale-95"
+                    @click="appendDigit('0')"
+                >
+                    0
+                </button>
+
+                <button
+                    class="h-16 bg-gray-500 text-white rounded-xl"
+                    @click="deleteDigit"
+                >
+                    ⌫
+                </button>
+            </div>
 
             <p v-if="error" class="text-red-500 mt-3 text-sm">
                 {{ error }}
@@ -529,11 +605,26 @@ onUnmounted(() => {
                 </button>
 
                 <button
-                    class="flex-1 bg-red-600 text-white py-3 rounded-xl"
+                    class="flex-1 bg-red-600 text-white py-3 rounded-xl flex items-center justify-center gap-2"
                     @click="handleEmergencyUnlock"
-                    :disabled="loading"
+                    :disabled="isEmergencyUnlocking"
                 >
-                    {{ loading ? "Processing..." : "Confirm" }}
+                    <svg
+                        v-if="isEmergencyUnlocking"
+                        class="animate-spin h-4 w-4"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="white"
+                            stroke-width="4"
+                            fill="none"
+                        />
+                    </svg>
+
+                    {{ isEmergencyUnlocking ? "Processing..." : "Confirm" }}
                 </button>
             </div>
         </div>

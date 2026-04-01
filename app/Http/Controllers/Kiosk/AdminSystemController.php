@@ -87,7 +87,10 @@ class AdminSystemController extends Controller
                 ]);
             }
 
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'batch_id' => $batchId
+            ]);
 
         } catch (\Exception $e) {
             \Log::error($e->getMessage());

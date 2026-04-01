@@ -1191,6 +1191,7 @@ watch(
             @enable-locker="() => requestAdminAction('enableLocker')"
             @clear-penalty="() => requestAdminAction('clearPenalty')"
             @end-rental="() => requestAdminAction('endRental')"
+            @show-toast="showToast"
         />
 
         <MainScreen

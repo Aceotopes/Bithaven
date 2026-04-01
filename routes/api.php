@@ -77,6 +77,7 @@ Route::get('/kiosk/admin/lockers', [AdminLockerController::class, 'index']);
 Route::get('/kiosk/admin/lockers/{locker}', [AdminLockerController::class, 'show']);
 Route::post('/kiosk/admin/verify-pin', [AdminSystemController::class, 'verifyPin']);
 Route::post('/kiosk/admin/emergency-unlock', [AdminSystemController::class, 'emergencyUnlock']);
+Route::get('/kiosk/admin/unlock-jobs/batch/{batchId}', [UnlockJobController::class, 'batchStatus']);
 // Route::middleware('kiosk.admin')->prefix('kiosk/admin')->group(function () {
 //     Route::get('/lockers', [AdminLockerController::class, 'index']);
 //     Route::get('/lockers/{locker}', [AdminLockerController::class, 'show']);

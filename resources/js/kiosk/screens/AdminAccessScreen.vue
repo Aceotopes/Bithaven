@@ -20,29 +20,42 @@ const emit = defineEmits([
     "enable-locker",
     "clear-penalty",
     "end-rental",
+    "show-toast",
 ]);
 
+const isEmergencyUnlocking = ref(false);
+
 async function handleEmergencyUnlock(pin) {
+    if (isEmergencyUnlocking.value) return;
+
+    isEmergencyUnlocking.value = true;
+
     try {
-        // Verify PIN
-        await axios.post("/api/kiosk/admin/verify-pin", {
-            pin,
-        });
+        emit("show-toast", "Processing emergency unlock...", "warning");
 
-        // Trigger unlock
-        await axios.post("/api/kiosk/admin/emergency-unlock");
+        await axios.post("/api/kiosk/admin/verify-pin", { pin });
 
-        alert("Emergency unlock started");
-    } catch (err) {
-        if (err.response?.status === 403) {
-            alert("Invalid PIN");
-        } else if (err.response?.status === 409) {
-            alert("Unlock already in progress");
-        } else if (err.response?.status === 503) {
-            alert("System offline");
-        } else {
-            alert("Something went wrong");
+        const res = await axios.post("/api/kiosk/admin/emergency-unlock");
+
+        const batchId = res.data.batch_id;
+
+        let completed = false;
+
+        while (!completed) {
+            await new Promise((r) => setTimeout(r, 1000));
+
+            const status = await axios.get(
+                `/api/kiosk/admin/unlock-jobs/batch/${batchId}`
+            );
+
+            completed = status.data.completed;
         }
+
+        emit("show-toast", "All lockers successfully unlocked.", "success");
+    } catch (err) {
+        emit("show-toast", "Emergency unlock failed.", "error");
+    } finally {
+        isEmergencyUnlocking.value = false;
     }
 }
 </script>
@@ -92,6 +105,7 @@ async function handleEmergencyUnlock(pin) {
                 @clear-penalty="$emit('clear-penalty')"
                 @end-rental="$emit('end-rental')"
                 @emergency-unlock="handleEmergencyUnlock"
+                :isEmergencyUnlocking="isEmergencyUnlocking"
             />
         </main>
 

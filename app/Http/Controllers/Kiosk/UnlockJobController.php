@@ -336,4 +336,23 @@ class UnlockJobController extends Controller
             'success' => true
         ]);
     }
+
+    public function batchStatus($batchId)
+    {
+        $total = LockerUnlockJob::whereHas('token', function ($q) use ($batchId) {
+            $q->where('batch_id', $batchId);
+        })->count();
+
+        $remaining = LockerUnlockJob::whereHas('token', function ($q) use ($batchId) {
+            $q->where('batch_id', $batchId);
+        })
+            ->whereIn('status', ['PENDING', 'PROCESSING'])
+            ->count();
+
+        return response()->json([
+            'total' => $total,
+            'remaining' => $remaining,
+            'completed' => $remaining === 0
+        ]);
+    }
 }
