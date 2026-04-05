@@ -2,11 +2,17 @@ import time
 import requests
 import datetime
 import threading
+
 from adapters.hardware import get_relay_controller
+from adapters.hardware import get_coin_reader
+
+import signal
+import sys
 
 API_BASE = "http://127.0.0.1:8000/api/kiosk"
-idle_interval = 5     # when no jobs
-active_interval = 1   # when processing jobs
+idle_interval = 1     # when no jobs
+max_idle_interval = 3
+# active_interval = 1   # when processing jobs
 current_interval = idle_interval
 
 relay = get_relay_controller()
@@ -14,6 +20,17 @@ relay = get_relay_controller()
 KIOSK_ID = "KIOSK-01"
 HEARTBEAT_INTERVAL = 10
 last_heartbeat = 0
+
+coin_reader = None
+
+def shutdown(sig, frame):
+    print("[SYSTEM] Shutting down...")
+    relay.cleanup()
+    
+    if coin_reader:
+        coin_reader.cleanup()
+
+    sys.exit(0)
 
 # -------------------------------
 # JOB FETCHING
@@ -183,36 +200,101 @@ def is_expired(job):
     expires = datetime.datetime.fromisoformat(job["token"]["expires_at"])
     return expires <= datetime.datetime.now(datetime.timezone.utc)
 
+
+# -------------------------------
+# COIN INSERTION CALLBACK
+# -------------------------------
+def on_coin(amount):
+    try:
+        requests.post(
+            f"{API_BASE}/coins/insert",
+            json={
+                "kiosk_id": KIOSK_ID,
+                "value": amount
+            },
+            timeout=2
+        )
+        print(f"[COIN] ₱{amount} sent")
+    except Exception as e:
+        print("[COIN] Failed:", e)
+
 # -------------------------------
 # MAIN LOOP
 # -------------------------------
 def main():
     global last_heartbeat
+    global coin_reader
+
+    current_interval = idle_interval
+    
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+
+    coin_reader = get_coin_reader(on_coin)
+    print("[SYSTEM] Coin reader initialized")
 
     print("[DAEMON] Running — retry queue mode")
+
+    # while True:
+    #     now = time.time()
+
+    #     # Heartbeat
+    #     if now - last_heartbeat > HEARTBEAT_INTERVAL:
+    #         send_heartbeat()
+    #         last_heartbeat = now
+
+    #     # Fetch unlock jobs
+    #     jobs = fetch_pending_jobs()
+
+    #     if jobs:
+    #         print(f"[DAEMON] {len(jobs)} job(s) found")
+    #         current_interval = active_interval
+    #     else:
+    #         current_interval = idle_interval
+
+    #     for job in jobs:
+    #         if is_expired(job):
+    #             print(f"[DAEMON] Skipping expired job {job['id']}")
+    #             continue
+    #         process_job(job)
+
+    #     time.sleep(current_interval)
 
     while True:
         now = time.time()
 
-        # Heartbeat
+        # -----------------------
+        # HEARTBEAT
+        # -----------------------
         if now - last_heartbeat > HEARTBEAT_INTERVAL:
             send_heartbeat()
             last_heartbeat = now
 
-        # Fetch unlock jobs
+        # -----------------------
+        # FETCH JOBS
+        # -----------------------
         jobs = fetch_pending_jobs()
 
         if jobs:
             print(f"[DAEMON] {len(jobs)} job(s) found")
-            current_interval = active_interval
-        else:
+
+            # reset to fast polling
             current_interval = idle_interval
 
-        for job in jobs:
-            if is_expired(job):
-                print(f"[DAEMON] Skipping expired job {job['id']}")
-                continue
-            process_job(job)
+            for job in jobs:
+                if is_expired(job):
+                    print(f"[DAEMON] Skipping expired job {job['id']}")
+                    continue
+
+                process_job(job)
+
+            # 🔥 IMPORTANT: do NOT sleep after processing
+            continue
+
+        # -----------------------
+        # NO JOBS → BACKOFF
+        # -----------------------
+        current_interval = min(current_interval * 1.5, max_idle_interval)
 
         time.sleep(current_interval)
 

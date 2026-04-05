@@ -14,15 +14,15 @@ class AdminCardSeeder extends Seeder
     public function run(): void
     {
         $cards = [
-            ['label' => 'Admin Card 01', 'rfid_uid' => '2983705817'],
-            ['label' => 'Admin Card 02', 'rfid_uid' => '2980171417'],
-            ['label' => 'Admin Card 03', 'rfid_uid' => '2987177225'],
-            ['label' => 'Admin Card 04', 'rfid_uid' => '2973073881'],
-            ['label' => 'Admin Card 05', 'rfid_uid' => '3013598185'],
-            ['label' => 'Admin Card 06', 'rfid_uid' => '3537936698'],
-            ['label' => 'Admin Card 07', 'rfid_uid' => '2821509430'],
-            ['label' => 'Admin Card 08', 'rfid_uid' => '2989355513'],
-            ['label' => 'Admin Card 09', 'rfid_uid' => '2999516633'],
+            ['label' => '22-26001', 'rfid_uid' => '2983705817'],
+            ['label' => '22-26002', 'rfid_uid' => '2980171417'],
+            ['label' => '22-26003', 'rfid_uid' => '2987177225'],
+            ['label' => '22-26004', 'rfid_uid' => '2973073881'],
+            ['label' => '22-26005', 'rfid_uid' => '3013598185'],
+            ['label' => '22-26006', 'rfid_uid' => '3537936698'],
+            ['label' => '22-26007', 'rfid_uid' => '2821509430'],
+            ['label' => '22-26008', 'rfid_uid' => '2989355513'],
+            ['label' => '22-26009', 'rfid_uid' => '2999516633'],
         ];
 
         foreach ($cards as $card) {

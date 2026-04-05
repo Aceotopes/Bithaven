@@ -224,7 +224,7 @@ onUnmounted(() => {
         <!-- ========================= -->
         <div class="flex justify-between items-center">
             <p
-                class="text-[24px] tracking-[0.4em] uppercase text-cyan-500 font-semibold"
+                class="text-[24px] tracking-[0.4em] uppercase text-gray-500 font-semibold"
             >
                 Admin Control
             </p>
@@ -420,7 +420,7 @@ onUnmounted(() => {
                     <div class="grid grid-cols-3 gap-6 text-center">
                         <div>
                             <p class="text-sm text-amber-500 uppercase">
-                                Exceeded
+                                Exceeded (Snapshot)
                             </p>
                             <p class="font-semibold">
                                 {{ penalty.exceeded_duration }}

@@ -1,4 +1,5 @@
 <script setup>
+import { watch } from "vue";
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import PaymentPanel from "@/kiosk/components/kiosk/PaymentPanel.vue";
 import PenaltyInfoCard from "@/kiosk/components/kiosk/PenaltyInfoCard.vue";
@@ -80,6 +81,12 @@ function handlePaymentComplete() {
     //     currentStage.value = "SUCCESS";
     // }, 5000);
 }
+watch(
+    () => props.amountPaid,
+    (val) => {
+        console.log("💰 UI RECEIVED:", val);
+    }
+);
 </script>
 
 <template>
@@ -145,7 +152,7 @@ function handlePaymentComplete() {
                     :duration="duration"
                     :mode="mode"
                     :amountDue="amount"
-                    :amountPaid="amountPaid"
+                    :amountPaid="props.amountPaid"
                     :paymentStatus="paymentStatus"
                     @cancel="showCancelConfirm = true"
                     @complete="handlePaymentComplete"

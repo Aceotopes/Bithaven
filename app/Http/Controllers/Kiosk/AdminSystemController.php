@@ -100,4 +100,28 @@ class AdminSystemController extends Controller
             ], 500);
         }
     }
+
+    public function updatePin(Request $request)
+    {
+        $request->validate([
+            'current_pin' => 'required',
+            'new_pin' => 'required|min:4|max:6'
+        ]);
+
+        $setting = AdminSetting::first();
+
+        if (!$setting || !Hash::check($request->current_pin, $setting->emergency_pin)) {
+            return response()->json([
+                'message' => 'Current PIN is incorrect'
+            ], 403);
+        }
+
+        $setting->update([
+            'emergency_pin' => Hash::make($request->new_pin)
+        ]);
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
 }

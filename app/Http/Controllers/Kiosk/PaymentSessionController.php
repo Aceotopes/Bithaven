@@ -107,4 +107,11 @@ class PaymentSessionController extends Controller
             ]);
         });
     }
+
+    public function show(PaymentSession $session)
+    {
+        return response()->json([
+            'session' => $session
+        ]);
+    }
 }

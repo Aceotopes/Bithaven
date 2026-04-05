@@ -21,11 +21,11 @@ onMounted(() => {
 
 <template>
     <header
-        class="relative z-10 w-full h-24 flex items-center bg-white/80 backdrop-blur-xl border-b border-black/10 px-8"
+        class="relative z-10 w-full h-30 flex items-center bg-white/80 backdrop-blur-xl border-b border-black/10 px-8"
     >
         <!-- Logo -->
         <div class="flex items-center gap-3">
-            <div class="w-20 h-20">
+            <div class="w-23 h-26">
                 <img :src="BithavenLogo1" alt="BithavenLogo" />
             </div>
         </div>
@@ -37,7 +37,7 @@ onMounted(() => {
             <img
                 :src="BithavenLogo"
                 alt="Bithaven"
-                class="h-115 w-115 object-contain"
+                class="h-120 w-120 object-contain"
             />
         </div>
 
@@ -58,7 +58,7 @@ onMounted(() => {
 
             <!-- End Session -->
             <button
-                class="px-2 py-1 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
+                class="px-5 py-3 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
                 @click.stop="emit('end-session')"
             >
                 End Session

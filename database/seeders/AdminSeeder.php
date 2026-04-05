@@ -15,9 +15,9 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         Admin::updateOrCreate(
-            ['username' => 'Superadmin'],
+            ['username' => 'Bithaven'],
             [
-                'name' => 'Super Admin',
+                'name' => 'Willen Mark Manzanas',
                 'password' => Hash::make('pass123'),
                 'role' => 'SUPER_ADMIN',
                 'status' => 'ACTIVE',
@@ -25,7 +25,17 @@ class AdminSeeder extends Seeder
         );
 
         Admin::updateOrCreate(
-            ['username' => 'Admin01'],
+            ['username' => 'Bithaven_SuperAdmin'],
+            [
+                'name' => 'Bithaven_team',
+                'password' => Hash::make('pass123'),
+                'role' => 'SUPER_ADMIN',
+                'status' => 'ACTIVE',
+            ]
+        );
+
+        Admin::updateOrCreate(
+            ['username' => 'Bithaven_Admin'],
             [
                 'name' => 'Admin One',
                 'password' => Hash::make('pass123'),

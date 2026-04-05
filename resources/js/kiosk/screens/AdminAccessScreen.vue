@@ -1,7 +1,10 @@
 <script setup>
+import { onMounted, onUnmounted } from "vue";
 import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import AdminLockerPanel from "../components/kiosk/AdminLockerPanel.vue";
 import AdminLockerDetailsModal from "../components/kiosk/AdminLockerDetailsModal.vue";
+import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
+import IdleWarningModal from "@/kiosk/components/kiosk/IdleWarningModal.vue";
 import { ref } from "vue";
 import axios from "axios";
 
@@ -25,15 +28,75 @@ const emit = defineEmits([
 
 const isEmergencyUnlocking = ref(false);
 
+const showEndSessionConfirm = ref(false);
+
+const showIdleWarning = ref(false);
+const idleSecondsLeft = ref(10); // countdown duration
+
+let idleTimer = null;
+let countdownTimer = null;
+
+function openEndSessionConfirm() {
+    showEndSessionConfirm.value = true;
+}
+
+function cancelEndSession() {
+    showEndSessionConfirm.value = false;
+}
+
+function confirmEndSession() {
+    showEndSessionConfirm.value = false;
+    emit("exit-admin");
+}
+
+function startIdleTimer() {
+    clearTimeout(idleTimer);
+
+    idleTimer = setTimeout(() => {
+        showIdleWarning.value = true;
+        startCountdown();
+    }, 60000); // 60s inactivity (adjust as needed)
+}
+
+function startCountdown() {
+    idleSecondsLeft.value = 10;
+
+    countdownTimer = setInterval(() => {
+        idleSecondsLeft.value--;
+
+        if (idleSecondsLeft.value <= 0) {
+            clearInterval(countdownTimer);
+            confirmIdleExit();
+        }
+    }, 1000);
+}
+
+function resetIdleTimer() {
+    if (showIdleWarning.value) return; // don't reset during warning
+
+    startIdleTimer();
+}
+
+function confirmIdleExit() {
+    showIdleWarning.value = false;
+    emit("exit-admin");
+}
+
+function continueSession() {
+    showIdleWarning.value = false;
+    clearInterval(countdownTimer);
+    startIdleTimer();
+}
+
 async function handleEmergencyUnlock(pin) {
     if (isEmergencyUnlocking.value) return;
 
     isEmergencyUnlocking.value = true;
 
     try {
-        emit("show-toast", "Processing emergency unlock...", "warning");
-
         await axios.post("/api/kiosk/admin/verify-pin", { pin });
+
+        emit("show-toast", "Processing emergency unlock...", "warning");
 
         const res = await axios.post("/api/kiosk/admin/emergency-unlock");
 
@@ -53,11 +116,44 @@ async function handleEmergencyUnlock(pin) {
 
         emit("show-toast", "All lockers successfully unlocked.", "success");
     } catch (err) {
-        emit("show-toast", "Emergency unlock failed.", "error");
+        if (err.response?.status === 403) {
+            emit(
+                "show-toast",
+                err.response?.data?.message || "Incorrect PIN.",
+                "error"
+            );
+        } else if (err.response?.status === 409) {
+            emit(
+                "show-toast",
+                "Emergency unlock already in progress.",
+                "warning"
+            );
+        } else if (err.response?.status === 503) {
+            emit("show-toast", "System offline.", "error");
+        } else {
+            emit("show-toast", "Emergency unlock failed.", "error");
+        }
     } finally {
         isEmergencyUnlocking.value = false;
     }
 }
+
+onMounted(() => {
+    startIdleTimer();
+
+    window.addEventListener("click", resetIdleTimer);
+    window.addEventListener("touchstart", resetIdleTimer);
+    window.addEventListener("keydown", resetIdleTimer);
+});
+
+onUnmounted(() => {
+    clearTimeout(idleTimer);
+    clearInterval(countdownTimer);
+
+    window.removeEventListener("click", resetIdleTimer);
+    window.removeEventListener("touchstart", resetIdleTimer);
+    window.removeEventListener("keydown", resetIdleTimer);
+});
 </script>
 
 <template>
@@ -92,7 +188,7 @@ async function handleEmergencyUnlock(pin) {
             ></div>
         </div>
 
-        <SystemHeader @end-session="$emit('exit-admin')" />
+        <SystemHeader @end-session="openEndSessionConfirm" />
 
         <main class="relative z-10 w-full px-16 pt-12">
             <AdminLockerPanel
@@ -109,6 +205,18 @@ async function handleEmergencyUnlock(pin) {
             />
         </main>
 
+        <EndSessionConfirmModal
+            :show="showEndSessionConfirm"
+            @cancel="cancelEndSession"
+            @confirm="confirmEndSession"
+        />
+
+        <IdleWarningModal
+            :show="showIdleWarning"
+            :secondsLeft="idleSecondsLeft"
+            @confirm="confirmIdleExit"
+            @continue="continueSession"
+        />
         <!-- <AdminLockerDetailsModal
             :show="showDetails"
             :details="selectedLockerDetails"

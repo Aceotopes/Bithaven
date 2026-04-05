@@ -38,10 +38,13 @@ const hasEmitted = ref(false); // to prevent multiple emits on payment completio
    BASE STATE
 ============================= */
 //const pricePerHour = 5; // mock pricing
-const insertedAmount = computed(() => props.amountPaid);
+// const insertedAmount = computed(() => props.amountPaid);
+const insertedAmount = computed(() => Number(props.amountPaid));
 const hasCompleted = ref(false);
 const successCountdown = ref(3);
+const animatedPaid = ref(0);
 let countdownTimer = null;
+let animationFrameId = null;
 
 /* =============================
    COMPUTED VALUES
@@ -50,15 +53,26 @@ const amountDue = computed(() => {
     return props.amountDue || 0;
 });
 
-const isPaid = computed(() => props.paymentStatus === "COMPLETED");
+// const isPaid = computed(() => props.paymentStatus === "COMPLETED");
+
+// const isPaid = computed(() => {
+//     return (
+//         props.amountPaid >= props.amountDue ||
+//         props.paymentStatus === "COMPLETED"
+//     );
+// });
+
+const isPaid = computed(() => {
+    return props.amountPaid >= props.amountDue;
+});
 
 const progressRatio = computed(() => {
     if (amountDue.value === 0) return 0;
-    return Math.min(props.amountPaid / props.amountDue, 1);
+    return Math.min(animatedPaid.value / props.amountDue, 1);
 });
 
 const remainingAmount = computed(() =>
-    Math.max(props.amountDue - props.amountPaid, 0)
+    Math.max(props.amountDue - animatedPaid.value, 0)
 );
 
 async function insertCoinUI(value) {
@@ -73,6 +87,61 @@ async function insertCoinUI(value) {
     }
 }
 
+watch(
+    () => props.amountPaid,
+    (newVal) => {
+        const start = animatedPaid.value;
+        const end = newVal;
+
+        const duration = 300;
+        const startTime = performance.now();
+
+        function animate(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+
+            // ease-out (important for kiosk feel)
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            animatedPaid.value = start + (end - start) * eased;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    },
+    { immediate: true }
+);
+
+watch(
+    () => props.amountPaid,
+    (newVal) => {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        const start = animatedPaid.value;
+        const end = newVal;
+
+        const duration = 300;
+        const startTime = performance.now();
+
+        function animate(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            animatedPaid.value = start + (end - start) * eased;
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
+    },
+    { immediate: true }
+);
 /* =============================
    WATCHERS
 ============================= */
@@ -91,12 +160,6 @@ async function insertCoinUI(value) {
 //         }
 //     }, 1000);
 // });
-watch(isPaid, (paid) => {
-    if (!paid || hasEmitted.value) return;
-
-    hasEmitted.value = true;
-    emit("complete");
-});
 
 /* =============================
    METHODS
@@ -159,16 +222,17 @@ onBeforeUnmount(() => {
             <!-- Numeric -->
             <div class="text-center">
                 <p class="text-[115px] font-bold text-gray-900 font-mono">
-                    ₱{{ insertedAmount }}
+                    <!-- ₱{{ insertedAmount }} -->
+                    ₱{{ Math.floor(animatedPaid) }}
                     <span class="text-gray-400 text-[48px]">
-                        / ₱{{ amountDue }}
+                        <!-- / ₱{{ amountDue }} -->
+                        / ₱{{ props.amountDue }}
                     </span>
                 </p>
 
                 <p class="mt-2 text-[28px] text-gray-500">
-                    {{ remainingAmount }} peso<span v-if="remainingAmount !== 1"
-                        >s</span
-                    >
+                    {{ Math.ceil(remainingAmount) }} peso
+                    <span v-if="Math.ceil(remainingAmount) !== 1">s</span>
                     remaining
                 </p>
             </div>
@@ -200,7 +264,7 @@ onBeforeUnmount(() => {
                             :stroke-dashoffset="
                                 (1 - progressRatio) * 2 * Math.PI * 150
                             "
-                            class="transition-all duration-500"
+                            class="transition-[stroke-dashoffset] duration-300 ease-out"
                         />
                     </svg>
 
@@ -212,6 +276,11 @@ onBeforeUnmount(() => {
                             class="text-[56px] font-bold text-emerald-600 font-mono leading-none"
                         >
                             {{ Math.round(progressRatio * 100) }}%
+                            <!-- {{
+                                Math.round(
+                                    (props.amountPaid / props.amountDue) * 100
+                                )
+                            }}% -->
                         </p>
 
                         <p
@@ -307,6 +376,11 @@ onBeforeUnmount(() => {
             </div>
         </div> -->
     </section>
+
+    <div style="color: red; font-size: 30px">
+        DIRECT: {{ props.amountPaid }}
+    </div>
+
     <div class="text-[55px] text-red-500">
         mode={{ mode }} due={{ amountDue }} paid={{ amountPaid }} status={{
             paymentStatus

@@ -22,8 +22,8 @@ export default defineConfig({
             origin: "*", // Allow all origins
         },
 
-        hmr: {
-            // host: "192.168.10.124",
-        },
+        // hmr: {
+        //     host: "192.168.0.216",
+        // },
     },
 });

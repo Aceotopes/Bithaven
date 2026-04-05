@@ -3,6 +3,11 @@ import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
+import FloatLabel from "primevue/floatlabel";
+import Password from "primevue/password";
+import InputText from "primevue/inputtext";
+import Dialog from "primevue/dialog";
+import Button from "primevue/button";
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -24,6 +29,14 @@ const form = ref({
     rfid_uid: "",
     assigned_to: "",
     status: "ACTIVE",
+});
+
+const showPinDialog = ref(false);
+
+const pinForm = ref({
+    current_pin: "",
+    new_pin: "",
+    confirm_pin: "",
 });
 
 async function startScan() {
@@ -176,6 +189,47 @@ async function saveCard() {
     }
 }
 
+async function updatePin() {
+    if (pinForm.value.new_pin !== pinForm.value.confirm_pin) {
+        toast.add({
+            severity: "warn",
+            summary: "Mismatch",
+            detail: "PINs do not match.",
+            life: 3000,
+        });
+        return;
+    }
+
+    try {
+        await axios.post("/admin/settings/emergency-pin", {
+            current_pin: pinForm.value.current_pin,
+            new_pin: pinForm.value.new_pin,
+        });
+
+        toast.add({
+            severity: "success",
+            summary: "PIN Updated",
+            detail: "Emergency PIN changed successfully.",
+            life: 3000,
+        });
+
+        showPinDialog.value = false;
+
+        pinForm.value = {
+            current_pin: "",
+            new_pin: "",
+            confirm_pin: "",
+        };
+    } catch (err) {
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: err.response?.data?.message || "Failed to update PIN.",
+            life: 4000,
+        });
+    }
+}
+
 function deleteCard(card) {
     confirm.require({
         group: "action",
@@ -236,12 +290,21 @@ watch(showDialog, (val) => {
                 </p>
             </div>
 
-            <Button
-                icon="pi pi-plus"
-                label="Register Card"
-                @click="openCreate"
-                class="!bg-cyan-500 hover:!bg-cyan-600 text-white"
-            />
+            <div class="flex gap-2">
+                <Button
+                    icon="pi pi-key"
+                    label="Change PIN"
+                    class="!bg-cyan-500 hover:!bg-cyan-600 text-white"
+                    @click="showPinDialog = true"
+                />
+
+                <Button
+                    icon="pi pi-plus"
+                    label="Register Card"
+                    @click="openCreate"
+                    class="!bg-cyan-500 hover:!bg-cyan-600 text-white"
+                />
+            </div>
         </div>
 
         <!-- Search -->
@@ -369,6 +432,63 @@ watch(showDialog, (val) => {
                         label="Save"
                         @click="saveCard"
                         class="!bg-cyan-500 hover:!bg-cyan-600 !text-white border-none"
+                    />
+                </div>
+            </div>
+        </Dialog>
+
+        <!-- Change Pin -->
+        <Dialog
+            v-model:visible="showPinDialog"
+            modal
+            header="Change Emergency PIN"
+            class="w-[400px]"
+        >
+            <div class="flex flex-col items-center gap-6 mt-4">
+                <FloatLabel class="w-80" variant="on">
+                    <Password
+                        v-model="pinForm.current_pin"
+                        toggleMask
+                        class="w-full"
+                        fluid
+                        :feedback="false"
+                    />
+                    <label>Current PIN</label>
+                </FloatLabel>
+
+                <FloatLabel class="w-80" variant="on">
+                    <Password
+                        v-model="pinForm.new_pin"
+                        toggleMask
+                        class="w-full"
+                        fluid
+                        :feedback="false"
+                    />
+                    <label>New PIN</label>
+                </FloatLabel>
+
+                <FloatLabel class="w-80" variant="on">
+                    <Password
+                        v-model="pinForm.confirm_pin"
+                        toggleMask
+                        class="w-full"
+                        fluid
+                        :feedback="false"
+                    />
+                    <label>Confirm PIN</label>
+                </FloatLabel>
+
+                <div class="flex gap-3 pt-2">
+                    <Button
+                        label="Cancel"
+                        text
+                        @click="showPinDialog = false"
+                        class="!text-cyan-500"
+                    />
+                    <Button
+                        label="Update PIN"
+                        @click="updatePin"
+                        class="!bg-red-500 !text-white"
                     />
                 </div>
             </div>

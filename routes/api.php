@@ -55,6 +55,7 @@ Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']);
 Route::get('/kiosk/penalties/{penalty}/live', [PenaltyController::class, 'live']);
 
 Route::post('/kiosk/payment-sessions/start', [PaymentSessionController::class, 'start']);
+Route::get('/kiosk/payment-sessions/{session}', [PaymentSessionController::class, 'show']);
 Route::post('/kiosk/coins/insert', [CoinController::class, 'insert']);
 
 Route::post('/kiosk/payments/penalty', [PaymentController::class, 'payPenalty']);
@@ -158,4 +159,5 @@ Route::middleware(['auth:admin', 'superadmin'])->group(function () {
     Route::post('/admin/cards', [AdminCardController::class, 'store']);
     Route::put('/admin/cards/{card}', [AdminCardController::class, 'update']);
     Route::delete('/admin/cards/{card}', [AdminCardController::class, 'destroy']);
+    Route::post('/admin/settings/emergency-pin', [AdminSystemController::class, 'updatePin']);
 });

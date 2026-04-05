@@ -74,12 +74,12 @@ const emit = defineEmits(["confirm", "continue"]);
                 <!-- ACTIONS -->
                 <div class="mt-10 flex gap-8 justify-center">
                     <!-- SAFE ACTION -->
-                    <!-- <button
+                    <button
                         class="px-12 h-16 rounded-2xl bg-gray-200 text-gray-800 text-[20px] font-semibold transition active:scale-[0.97]"
                         @click="$emit('continue')"
                     >
                         Continue Session
-                    </button> -->
+                    </button>
 
                     <!-- DESTRUCTIVE ACTION -->
                     <button

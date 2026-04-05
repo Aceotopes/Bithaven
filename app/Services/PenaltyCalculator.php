@@ -108,9 +108,47 @@ class PenaltyCalculator
     //     ];
     // }
 
+    // public function calculate(Rental $rental, ?Penalty $penalty = null): array
+    // {
+    //     //return frozen values
+    //     if ($penalty && $penalty->frozen_at) {
+    //         return [
+    //             'amount' => $penalty->frozen_amount,
+    //             'breakdown' => $penalty->frozen_breakdown ?? [],
+    //             'exceeded_duration' =>
+    //                 $penalty->started_at->diffForHumans($penalty->frozen_at, true),
+    //         ];
+    //     }
+
+    //     //live calculation
+    //     $now = now();
+    //     $endTime = $rental->end_time;
+
+    //     $seconds = max(0, $endTime->diffInSeconds($now));
+    //     $tiers = intdiv($seconds, 10);
+
+    //     $amount = 5 + ($tiers * 5);
+
+    //     $breakdown = [
+    //         ['label' => 'Base penalty (expired)', 'amount' => 5],
+    //     ];
+
+    //     for ($i = 0; $i < $tiers; $i++) {
+    //         $breakdown[] = [
+    //             'label' => '+10 sec penalty',
+    //             'amount' => 5,
+    //         ];
+    //     }
+
+    //     return [
+    //         'amount' => $amount,
+    //         'breakdown' => $breakdown,
+    //         'exceeded_duration' => $endTime->diffForHumans($now, true),
+    //     ];
+    // }
+
     public function calculate(Rental $rental, ?Penalty $penalty = null): array
     {
-        //return frozen values
         if ($penalty && $penalty->frozen_at) {
             return [
                 'amount' => $penalty->frozen_amount,
@@ -120,29 +158,26 @@ class PenaltyCalculator
             ];
         }
 
-        //live calculation
         $now = now();
         $endTime = $rental->end_time;
 
         $seconds = max(0, $endTime->diffInSeconds($now));
-        $tiers = intdiv($seconds, 10);
 
-        $amount = 5 + ($tiers * 5);
+        $base = 5;
+        $tiers = intdiv($seconds, 1800); // every 30 minutes
+        $increment = $tiers * 5;
 
-        $breakdown = [
-            ['label' => 'Base penalty (expired)', 'amount' => 5],
-        ];
-
-        for ($i = 0; $i < $tiers; $i++) {
-            $breakdown[] = [
-                'label' => '+10 sec penalty',
-                'amount' => 5,
-            ];
-        }
+        $amount = $base + $increment;
 
         return [
             'amount' => $amount,
-            'breakdown' => $breakdown,
+            'breakdown' => [
+                ['label' => 'Base penalty (expired)', 'amount' => $base],
+                [
+                    'label' => "+₱5 per 30 minutes ({$tiers} intervals)",
+                    'amount' => $increment,
+                ],
+            ],
             'exceeded_duration' => $endTime->diffForHumans($now, true),
         ];
     }

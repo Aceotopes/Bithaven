@@ -82,7 +82,10 @@ const showAdminDetails = ref(false);
 
 const daemonStatus = ref("ONLINE"); // ONLINE | STALE | OFFLINE
 
+const currentSession = computed(() => paymentSession.value);
+
 let scanPollTimer = null;
+let paymentPoller = null;
 // let currentPollMode = null;
 
 // =======================================
@@ -181,6 +184,29 @@ async function executeAdminAction() {
         }
     } catch (err) {
         showToast(err.message, "error");
+    }
+}
+
+// =====================
+//    PAYMENT SESSION POLLING (with Backend)
+// =====================
+async function pollPaymentSession() {
+    if (!paymentSession.value) return;
+
+    try {
+        const res = await fetch(
+            `/api/kiosk/payment-sessions/${paymentSession.value.id}`
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        console.log("🔥 BACKEND VALUE:", data.session.amount_paid);
+
+        paymentSession.value = { ...data.session };
+    } catch (err) {
+        console.error("Polling failed", err);
     }
 }
 // =====================
@@ -614,6 +640,7 @@ async function handleLockerSelectConfirm(payload) {
 
     const data = await res.json();
     paymentSession.value = data.session;
+    startPaymentPolling();
 
     paymentContext.value = {
         mode: "RENTAL",
@@ -673,6 +700,7 @@ async function handleSettlePenalty() {
     const data = await res.json();
 
     paymentSession.value = data.session;
+    startPaymentPolling();
 
     // backend-frozen snapshot
     penaltySnapshot.value = {
@@ -689,6 +717,21 @@ async function handleSettlePenalty() {
     };
 
     flow.goToPayment();
+}
+
+function startPaymentPolling() {
+    if (paymentPoller) return;
+
+    console.log("🔄 polling...", paymentSession.value?.amount_paid);
+
+    paymentPoller = setInterval(pollPaymentSession, 500); // 0.5 sec
+}
+
+function stopPaymentPolling() {
+    if (paymentPoller) {
+        clearInterval(paymentPoller);
+        paymentPoller = null;
+    }
 }
 
 function handlEndSession() {
@@ -727,6 +770,7 @@ function handlePaymentCancel() {
 
     const mode = paymentContext.value.mode;
     resetPaymentContext();
+    stopPaymentPolling();
 
     if (mode === "RENTAL") {
         flow.goToLockerSelect();
@@ -795,6 +839,8 @@ async function handlePaymentComplete() {
             : session.state.locker?.number;
 
     if (!locker) return;
+
+    stopPaymentPolling();
 
     if (unlockStage.value === "PROCESSING") {
         console.warn("Duplicate unlock prevented");
@@ -1137,6 +1183,23 @@ watch(
     { immediate: true }
 );
 
+watch(
+    () => paymentSession.value,
+    (session) => {
+        if (!session) return;
+
+        const isPaid =
+            Number(session.amount_paid) >= Number(session.amount_due);
+
+        if (isPaid && unlockStage.value === null && !isUnlocking.value) {
+            console.log("💰 BACKEND PAYMENT CONFIRMED → starting unlock");
+
+            handlePaymentComplete();
+        }
+    },
+    { deep: true }
+);
+
 // onMounted(async () => {
 //     if (session.state.student) {
 //         await hydrateGlobalState();
@@ -1226,20 +1289,23 @@ watch(
             @end-session="handlEndSession"
         />
 
+        <!-- :amountPaid="
+                paymentSession.value
+                    ? Number(paymentSession.value.amount_paid)
+                    : 0
+            " -->
+
+        <!-- :paymentStatus="
+                paymentSession.value ? paymentSession.value.status : 'ACTIVE'
+            " -->
         <PaymentScreen
             v-else-if="session.state.kioskState === KIOSK_STATES.PAYMENT"
             :locker="paymentContext.locker"
             :duration="paymentContext.duration"
             :mode="paymentContext.mode"
             :amount="paymentContext.amount"
-            :amountPaid="
-                paymentSession.value
-                    ? Number(paymentSession.value.amount_paid)
-                    : 0
-            "
-            :paymentStatus="
-                paymentSession.value ? paymentSession.value.status : 'ACTIVE'
-            "
+            :amountPaid="currentSession?.amount_paid ?? 0"
+            :paymentStatus="currentSession?.status ?? 'ACTIVE'"
             :penalty="paymentContext.penalty"
             :lockerEndTime="session.state.locker?.endTime"
             :canEndSession="actions.canEndSession.value"
@@ -1250,7 +1316,8 @@ watch(
             @session-updated="
                 (s) => {
                     console.log('🟢 App received session:', s);
-                    paymentSession.value = s;
+                    // paymentSession.value = s;
+                    paymentSession.value = { ...s };
                     console.log(
                         '🟢 paymentSession ref is now:',
                         paymentSession.value
