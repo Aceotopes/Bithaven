@@ -21,7 +21,7 @@ const editMode = ref(false);
 
 const scanId = ref(null);
 const scanning = ref(false);
-const scanPollTimer = null;
+let scanPollTimer = null;
 
 const form = ref({
     id: null,

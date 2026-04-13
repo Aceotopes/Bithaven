@@ -232,7 +232,7 @@ onBeforeMount(() => {
         :class="loaded ? 'opacity-100' : 'opacity-0'"
     >
         <!-- Background Video -->
-        <video
+        <!-- <video
             autoplay
             muted
             loop
@@ -240,7 +240,7 @@ onBeforeMount(() => {
             class="w-full h-full object-contain"
         >
             <source :src="idleVideo" type="video/mp4" />
-        </video>
+        </video> -->
 
         <!-- Overlay -->
         <div

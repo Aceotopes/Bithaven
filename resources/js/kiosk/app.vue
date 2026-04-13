@@ -84,6 +84,8 @@ const daemonStatus = ref("ONLINE"); // ONLINE | STALE | OFFLINE
 
 const currentSession = computed(() => paymentSession.value);
 
+// const newSession = data.session;
+
 let scanPollTimer = null;
 let paymentPoller = null;
 // let currentPollMode = null;
@@ -255,7 +257,7 @@ function stopScanPolling() {
 function startScanPolling() {
     if (scanPollTimer) return;
 
-    scanPollTimer = setInterval(pollScanSession, 1000);
+    scanPollTimer = setInterval(pollScanSession, 2500); //1000 original
     console.log("🟢 Scan polling started");
 }
 
@@ -719,12 +721,24 @@ async function handleSettlePenalty() {
     flow.goToPayment();
 }
 
+// function startPaymentPolling() {
+//     if (paymentPoller) return;
+
+//     console.log("🔄 polling...", paymentSession.value?.amount_paid);
+
+//     paymentPoller = setInterval(pollPaymentSession, 1500); // 500 original
+// }
+
 function startPaymentPolling() {
     if (paymentPoller) return;
 
-    console.log("🔄 polling...", paymentSession.value?.amount_paid);
-
-    paymentPoller = setInterval(pollPaymentSession, 500); // 0.5 sec
+    paymentPoller = setInterval(() => {
+        if (!paymentSession.value) {
+            stopPaymentPolling();
+            return;
+        }
+        pollPaymentSession();
+    }, 1500);
 }
 
 function stopPaymentPolling() {
@@ -1194,10 +1208,12 @@ watch(
         if (isPaid && unlockStage.value === null && !isUnlocking.value) {
             console.log("💰 BACKEND PAYMENT CONFIRMED → starting unlock");
 
+            stopPaymentPolling(); //recently added
+
             handlePaymentComplete();
         }
     },
-    { deep: true }
+    // { deep: true }
 );
 
 // onMounted(async () => {

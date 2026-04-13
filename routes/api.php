@@ -11,14 +11,14 @@ use App\Http\Controllers\Kiosk\PaymentController;
 use App\Http\Controllers\Kiosk\UnlockTokenController;
 use App\Http\Controllers\Kiosk\PaymentSessionController;
 use App\Http\Controllers\Kiosk\UnlockJobController;
-use App\Http\Controllers\kiosk\DaemonController;
+use App\Http\Controllers\Kiosk\DaemonController;
 use App\Http\Controllers\Kiosk\AdminUnlockController;
 use App\Http\Controllers\Kiosk\AdminPenaltyController;
 use App\Http\Controllers\Kiosk\AdminLockerController;
 use App\Http\Controllers\Kiosk\AdminScanController;
 use App\Http\Controllers\Kiosk\RfidSessionController; // for ADMIN RFID scan sessions 
 use App\Http\Controllers\Kiosk\AdminSystemController; // for verifying admin PIN at kiosk
-use App\http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminManagementController;
 use App\Http\Controllers\Admin\AdminCardController;
 use App\Http\Controllers\Admin\DashboardController;
