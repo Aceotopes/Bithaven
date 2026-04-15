@@ -23,6 +23,13 @@ const isReadyToConfirm = computed(() => {
 const isCustomMode = ref(false);
 const showCustomModal = ref(false);
 
+const pricePerHour = 5;
+
+const totalAmount = computed(() => {
+    if (!selectedDuration.value) return 0;
+    return selectedDuration.value * pricePerHour;
+});
+
 const availableCount = computed(
     () => props.lockers.filter((l) => l.status === "AVAILABLE").length
 );
@@ -187,22 +194,60 @@ function lockerStatus(n) {
         </div>
 
         <!-- ========================= -->
+        <!-- Duration Selection -->
+        <!-- ========================= -->
+        <!-- PRESET BUTTONS -->
+        <div class="border-t border-black/30"></div>
+        <div class="mt-10 grid grid-cols-4 gap-8 text-center">
+            <div
+                v-for="h in [1, 2, 3]"
+                :key="h"
+                @click="
+                    selectedDuration = h;
+                    isCustomMode = false;
+                "
+                class="rounded-xl border py-8 cursor-pointer"
+                :class="
+                    selectedDuration === h && !isCustomMode
+                        ? 'bg-emerald-50 border-emerald-400'
+                        : 'bg-white/70 border-black/30'
+                "
+            >
+                <p class="text-[16px] uppercase text-gray-500">Duration</p>
+                <p class="mt-2 font-mono text-[30px]">
+                    {{ h }} Hour{{ h > 1 ? "s" : "" }}
+                </p>
+            </div>
+
+            <!-- CUSTOM BUTTON -->
+            <div
+                @click="showCustomModal = true"
+                class="rounded-xl border py-8 cursor-pointer"
+                :class="
+                    isCustomMode
+                        ? 'bg-emerald-50 border-emerald-400'
+                        : 'bg-white/70 border-black/30'
+                "
+            >
+                <p class="text-[16px] uppercase text-gray-500">Duration</p>
+                <!-- <p class="mt-2 font-mono text-[24px]">4–8 Hours</p> -->
+                <p class="mt-2 font-mono text-[34px]">Custom</p>
+            </div>
+        </div>
+
+        <!-- ========================= -->
         <!-- Selected Locker Feedback -->
         <!-- ========================= -->
-        <div class="text-center py-5 border-t border-black/10">
+        <div class="text-center py-5">
             <div
-                class="mx-auto mb-3 w-16 h-16 rounded-full border flex items-center justify-center text-3xl font-mono"
+                class="mx-auto mb-3 w-20 h-20 rounded-full border flex items-center justify-center text-[28px] font-semibold"
                 :class="
-                    selectedLocker
-                        ? 'border-emerald-400 text-emerald-600'
+                    selectedDuration
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                         : 'border-gray-300 text-gray-400'
                 "
             >
-                {{
-                    selectedLocker
-                        ? String(selectedLocker).padStart(2, "0")
-                        : "—"
-                }}
+                {{ selectedDuration ? `₱${totalAmount}` : "—" }}
             </div>
 
             <p class="text-[30px] font-semibold text-gray-800">
@@ -235,49 +280,9 @@ function lockerStatus(n) {
         </div>
 
         <!-- ========================= -->
-        <!-- Duration Selection -->
-        <!-- ========================= -->
-        <!-- PRESET BUTTONS -->
-        <div class="mt-10 grid grid-cols-4 gap-8 text-center">
-            <div
-                v-for="h in [1, 2, 3]"
-                :key="h"
-                @click="
-                    selectedDuration = h;
-                    isCustomMode = false;
-                "
-                class="rounded-xl border py-8 cursor-pointer"
-                :class="
-                    selectedDuration === h && !isCustomMode
-                        ? 'bg-emerald-50 border-emerald-400'
-                        : 'bg-white/70 border-black/10'
-                "
-            >
-                <p class="text-[16px] uppercase text-gray-500">Duration</p>
-                <p class="mt-2 font-mono text-[30px]">
-                    {{ h }} Hour{{ h > 1 ? "s" : "" }}
-                </p>
-            </div>
-
-            <!-- CUSTOM BUTTON -->
-            <div
-                @click="showCustomModal = true"
-                class="rounded-xl border py-8 cursor-pointer"
-                :class="
-                    isCustomMode
-                        ? 'bg-emerald-50 border-emerald-400'
-                        : 'bg-white/70 border-black/10'
-                "
-            >
-                <p class="text-[16px] uppercase text-gray-500">Custom</p>
-                <p class="mt-2 font-mono text-[24px]">4–8 Hours</p>
-            </div>
-        </div>
-
-        <!-- ========================= -->
         <!-- Action Buttons -->
         <!-- ========================= -->
-        <div class="mt-16 flex gap-6">
+        <div class="mt-8 flex gap-6">
             <button
                 class="flex-1 h-24 rounded-2xl bg-gray-200 text-gray-700 text-[26px] font-semibold transition active:scale-[0.97]"
                 @click="emit('back')"
@@ -348,7 +353,10 @@ function lockerStatus(n) {
                             : 'bg-gray-300 text-gray-400 cursor-not-allowed'
                     "
                     :disabled="selectedDuration < 4"
-                    @click="showCustomModal = false"
+                    @click="
+                        isCustomMode = true;
+                        showCustomModal = false;
+                    "
                 >
                     Confirm
                 </button>

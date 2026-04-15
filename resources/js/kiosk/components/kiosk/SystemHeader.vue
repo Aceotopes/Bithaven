@@ -58,10 +58,10 @@ onMounted(() => {
 
             <!-- End Session -->
             <button
-                class="px-5 py-3 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[15px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
+                class="px-5 py-3 rounded-xl border border-red-200 bg-red-50 backdrop-blur text-red-400 text-[23px] font-semibold transition hover:bg-red-400 hover:text-white active:scale-95 active:bg-gray-100 active:shadow-inner focus:outline-none"
                 @click.stop="emit('end-session')"
             >
-                End Session
+                Logout
             </button>
         </div>
     </header>

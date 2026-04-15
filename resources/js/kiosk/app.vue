@@ -924,6 +924,32 @@ async function handleRetryUnlock() {
     }
 }
 
+async function handleAccessLocker() {
+    const lockerNumber = session.state.locker?.number;
+    const rentalId = session.state.locker?.rentalId;
+
+    if (!lockerNumber || !rentalId) return;
+
+    try {
+        //STEP 1: Request access token
+        await fetch(`/api/kiosk/rentals/${rentalId}/access`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        //STEP 2: Perform unlock
+        const result = await performUnlockFlow(lockerNumber);
+
+        if (result === "SUCCESS") {
+            await hydrateGlobalState();
+        }
+    } catch (err) {
+        console.error("Access locker failed", err);
+    }
+}
+
 function handleUnlockFailureDone() {
     unlockStage.value = null;
 
@@ -1212,7 +1238,7 @@ watch(
 
             handlePaymentComplete();
         }
-    },
+    }
     // { deep: true }
 );
 
@@ -1287,6 +1313,7 @@ watch(
             :canEndRental="actions.canEndRental.value"
             :canSettlePenalty="actions.canSettlePenalty.value"
             :canEndSession="actions.canEndSession.value"
+            @access-locker="handleAccessLocker"
             @end-session="handlEndSession"
             @rent-locker="handleRentLocker"
             @end-rental="handleEndRental"

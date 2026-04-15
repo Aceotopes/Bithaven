@@ -3,17 +3,19 @@ import SystemHeader from "@/kiosk/components/kiosk/SystemHeader.vue";
 import StudentInfoCardV2 from "../components/kiosk/StudentInfoCardV2.vue";
 import LockerStatusCard from "../components/kiosk/LockerStatusCard.vue";
 import EndRentalConfirmModal from "@/kiosk/components/kiosk/EndRentalConfirmModal.vue";
+import AccessLockerModal from "@/kiosk/components/kiosk/AccessLockerModal.vue";
 import HowToUseLockerModal from "@/kiosk/components/kiosk/HowToUseLockerModal.vue";
 import EndSessionConfirmModal from "@/kiosk/components/kiosk/EndSessionConfirmModal.vue";
 import SystemFooter from "@/kiosk/components/kiosk/SystemFooter.vue";
 
 import ProcessingScreen from "@/kiosk/screens/ProcessingScreen.vue";
 import UnlockSuccessScreen from "@/kiosk/screens/UnlockSuccessScreen.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 const DEV_MODE = import.meta.env.DEV; // DEV TOOL FLAG
 
 const unlockStage = ref(null);
+const showAccessModal = ref(false);
 
 function handleEndRental() {
     showEndRentalConfirm.value = false;
@@ -26,8 +28,33 @@ function handleEndRental() {
     }, 5000);
 }
 
+function handleAccessLocker() {
+    showAccessModal.value = false;
+    unlockMode.value = "ACCESS";
+    emit("access-locker");
+}
+
 // ===================== End Session Modal Logic (TEMP) =====================
 const showEndSessionConfirm = ref(false); // to show/hide end session confirmation modal
+
+const actions = computed(() => {
+    if (props.rentalState === "NO_RENTAL") {
+        return ["RENT"];
+    }
+
+    if (props.rentalState === "ACTIVE_RENTAL") {
+        return ["ACCESS", "END"];
+    }
+
+    if (props.rentalState === "EXPIRED_RENTAL") {
+        return ["SETTLE"];
+    }
+
+    return [];
+});
+
+const unlockMode = ref(null);
+
 function openEndSessionConfirm() {
     showEndSessionConfirm.value = true;
 }
@@ -48,6 +75,7 @@ const emit = defineEmits([
     "end-rental",
     "settle-penalty",
     "dismiss-howto",
+    "access-locker",
 
     //DEV
     "dev-go-locker-select",
@@ -56,7 +84,7 @@ const emit = defineEmits([
 ]);
 const showEndRentalConfirm = ref(false);
 
-defineProps({
+const props = defineProps({
     student: {
         type: Object,
         required: true,
@@ -182,8 +210,8 @@ defineProps({
                 <div class="my-12 h-px bg-black/10"></div>
 
                 <!-- Action Buttons -->
-                <div class="grid grid-cols-3 gap-16">
-                    <!-- Rent Locker (Primary) -->
+                <!-- <div class="grid grid-cols-3 gap-16">
+                    Rent Locker (Primary)
                     <button
                         class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
@@ -197,7 +225,7 @@ defineProps({
                         Rent Locker
                     </button>
 
-                    <!-- End Rental (Secondary) -->
+                    End Rental (Secondary)
                     <button
                         class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
@@ -211,7 +239,7 @@ defineProps({
                         End Rental
                     </button>
 
-                    <!-- Settle Penalty (Attention) -->
+                    Settle Penalty (Attention)
                     <button
                         class="h-28 rounded-3xl text-[26px] font-semibold transition-all duration-150 border active:scale-[0.97]"
                         :class="
@@ -224,6 +252,51 @@ defineProps({
                     >
                         Settle Penalty
                     </button>
+                </div> -->
+
+                <div
+                    class="grid gap-16"
+                    :class="{
+                        'grid-cols-1 max-w-[400px] mx-auto':
+                            actions.length === 1,
+                        'grid-cols-2': actions.length === 2,
+                    }"
+                >
+                    <!-- RENT -->
+                    <button
+                        v-if="actions.includes('RENT')"
+                        class="h-28 rounded-3xl text-[26px] font-semibold bg-emerald-600 text-white border-emerald-600 shadow-[0_12px_30px_rgba(16,185,129,0.4)] active:scale-[0.97]"
+                        @click="emit('rent-locker')"
+                    >
+                        Rent Locker
+                    </button>
+
+                    <!-- ACCESS (NEW) -->
+                    <button
+                        v-if="actions.includes('ACCESS')"
+                        class="h-28 rounded-3xl text-[26px] font-semibold bg-emerald-600 text-white border-indigo-600 shadow-[0_12px_30px_rgba(79,70,229,0.4)] active:scale-[0.97]"
+                        @click="showAccessModal = true"
+                    >
+                        Quick Unlock
+                    </button>
+
+                    <!-- END RENTAL -->
+                    <button
+                        v-if="actions.includes('END')"
+                        class="h-28 rounded-3xl text-[26px] font-semibold bg-rose-600 text-white border-red-600 shadow-[0_12px_30px_rgba(220,38,38,0.4)] active:scale-[0.97]"
+                        @click="showEndRentalConfirm = true"
+                    >
+                        End Rental
+                    </button>
+
+                    <!-- SETTLE PENALTY -->
+                    <button
+                        v-if="actions.includes('SETTLE')"
+                        class="h-28 rounded-3xl text-[26px] font-semibold bg-amber-600 text-white border-amber-600 shadow-[0_12px_30px_rgba(217,119,6,0.4)] active:scale-[0.97]"
+                        @click="emit('settle-penalty')"
+                    >
+                        Settle Penalty
+                    </button>
                 </div>
             </section>
 
@@ -233,6 +306,12 @@ defineProps({
                 :lockerNumber="locker?.number"
                 @cancel="showEndRentalConfirm = false"
                 @confirm="emit('end-rental')"
+            />
+            <AccessLockerModal
+                :show="showAccessModal"
+                :lockerNumber="locker?.number"
+                @cancel="showAccessModal = false"
+                @confirm="handleAccessLocker"
             />
         </main>
         <SystemFooter />
@@ -273,11 +352,12 @@ defineProps({
             :locker="locker?.number"
         />
 
+        <!-- mode="END_RENTAL" -->
         <!-- SUCCESS SCREEN -->
         <UnlockSuccessScreen
             v-if="unlockStage === 'SUCCESS'"
             :locker="locker?.number"
-            mode="END_RENTAL"
+            :mode="unlockMode"
             @done="emit('end-session')"
         />
         <!-- ================= DEV PANEL ================= -->

@@ -50,6 +50,7 @@ Route::post('/kiosk/lockers/{locker}/authorize', [LockerController::class, 'auth
 Route::get('/kiosk/rentals/active', [RentalController::class, 'active']);
 Route::post('/kiosk/rentals/{rental}/end', [RentalController::class, 'end']);
 Route::post('/kiosk/rentals/{rental}/expire', [RentalController::class, 'expire']);
+Route::post('/kiosk/rentals/{rental}/access', [RentalController::class, 'access']);
 
 Route::get('/kiosk/penalties/active', [PenaltyController::class, 'active']);
 Route::get('/kiosk/penalties/{penalty}/live', [PenaltyController::class, 'live']);

@@ -9,7 +9,7 @@ from adapters.hardware import get_coin_reader
 import signal
 import sys
 
-API_BASE = "http://127.0.0.1/api/kiosk"
+API_BASE = "http://127.0.0.1:8000/api/kiosk"
 idle_interval = 1     # when no jobs
 max_idle_interval = 3
 # active_interval = 1   # when processing jobs

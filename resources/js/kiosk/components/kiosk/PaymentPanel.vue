@@ -212,7 +212,7 @@ onBeforeUnmount(() => {
 
         <div class="flex flex-col items-center text-center mb-8">
             <p class="text-[36px] font-semibold text-gray-800 tracking-wide">
-                INSERT COINS INTO THE SLOT
+                INSERT THE EXACT AMOUNT
             </p>
         </div>
         <!-- ========================= -->
@@ -231,8 +231,10 @@ onBeforeUnmount(() => {
                 </p>
 
                 <p class="mt-2 text-[28px] text-gray-500">
-                    {{ Math.ceil(remainingAmount) }} peso
-                    <span v-if="Math.ceil(remainingAmount) !== 1">s</span>
+                    {{ Math.ceil(remainingAmount) }} peso<span
+                        v-if="Math.ceil(remainingAmount) !== 1"
+                        >s</span
+                    >
                     remaining
                 </p>
             </div>
@@ -306,7 +308,7 @@ onBeforeUnmount(() => {
         <!-- ========================= -->
         <!-- COIN INPUT (SIMULATION) -->
         <!-- ========================= -->
-        <div class="mt-12 grid grid-cols-3 gap-6">
+        <!-- <div class="mt-12 grid grid-cols-3 gap-6">
             <button
                 class="h-20 rounded-2xl bg-gray-200 text-[22px] font-semibold active:scale-[0.97] transition"
                 @click="insertCoinUI(1)"
@@ -327,7 +329,7 @@ onBeforeUnmount(() => {
             >
                 +₱10
             </button>
-        </div>
+        </div> -->
 
         <!-- ========================= -->
         <!--           CANCEL          -->
@@ -377,7 +379,7 @@ onBeforeUnmount(() => {
         </div> -->
     </section>
 
-    <div style="color: red; font-size: 30px">
+    <!-- <div style="color: red; font-size: 30px">
         DIRECT: {{ props.amountPaid }}
     </div>
 
@@ -385,5 +387,5 @@ onBeforeUnmount(() => {
         mode={{ mode }} due={{ amountDue }} paid={{ amountPaid }} status={{
             paymentStatus
         }}
-    </div>
+    </div> -->
 </template>

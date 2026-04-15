@@ -12,8 +12,8 @@ const props = defineProps({
 
 const emit = defineEmits(["done"]);
 
-const countdown = ref(8);
-const totalTime = 8;
+const countdown = ref(5);
+const totalTime = 5;
 
 const title = computed(() => {
     return props.mode === "END_RENTAL" ? "Rental Ended" : "Locker Opened";

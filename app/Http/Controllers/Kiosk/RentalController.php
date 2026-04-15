@@ -179,6 +179,39 @@ class RentalController extends Controller
         ]);
     }
 
+    public function access($rentalId, LockerUnlockService $unlockService, KioskEventService $events)
+    {
+        $rental = Rental::findOrFail($rentalId);
+
+        if ($rental->status !== 'ACTIVE') {
+            return response()->json([
+                'error' => 'Rental not active'
+            ], 409);
+        }
+
+        $unlockService->issue([
+            'locker_id' => $rental->locker_id,
+            'reason' => 'RENTAL_ACCESS',
+            'rental_id' => $rental->id,
+        ]);
+
+        $events->log(
+            'LOCKER_ACCESSED',
+            [
+                'kiosk_id' => 'KIOSK_01',
+                'rental_id' => $rental->id,
+                'locker_id' => $rental->locker_id,
+                'student_id' => $rental->student_id,
+            ],
+            'INFO',
+            'Locker accessed without ending rental'
+        );
+
+        return response()->json([
+            'message' => 'Access token issued'
+        ]);
+    }
+
     public function expire(Rental $rental, KioskEventService $events)
     {
         $this->expireRental($rental, $events);

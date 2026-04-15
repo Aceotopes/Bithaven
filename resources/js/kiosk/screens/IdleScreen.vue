@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeMount, watch } from "vue";
 import idleVideo from "@/kiosk/assets/idle/BithavenIdleLoop.mp4";
 import StatusPopup from "@/kiosk/components/kiosk/StatusPopup.vue";
-import IdleImage from "@/kiosk/assets/idle/mainidle.png";
+import IdleImage from "@/kiosk/assets/idle/mainidle1.png";
 import { useRFIDService } from "@/kiosk/services/rfid.service";
 
 const emit = defineEmits(["start-scan", "success-complete"]);
@@ -245,7 +245,7 @@ onBeforeMount(() => {
         <img
             :src="IdleImage"
             alt="Idle Screen"
-            class="w-full h-full object-contain"
+            class="w-full h-full object-contain overflow-hidden"
         />
 
         <!-- Overlay -->

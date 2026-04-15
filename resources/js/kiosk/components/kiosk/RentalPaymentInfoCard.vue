@@ -92,6 +92,10 @@ defineProps({
                     while payment is in progress.
                 </li>
                 <li>
+                    • Please insert the
+                    <span class="font-semibold">exact</span> amount.
+                </li>
+                <li>
                     • Inserted coins
                     <span class="font-semibold">cannot be refunded</span>.
                 </li>
