@@ -249,12 +249,12 @@ onBeforeMount(() => {
         />
 
         <!-- Overlay -->
-        <div
+        <!-- <div
             class="relative z-10 w-full h-full flex flex-col items-center justify-end pb-24 bg-black/30"
         >
-            <!-- <p class="text-white text-3xl font-semibold tracking-wide">
+            <p class="text-white text-3xl font-semibold tracking-wide">
                 Tap your ID to begin
-            </p> -->
+            </p>
             <div class="flex gap-2">
                 <input
                     v-model="manualUid"
@@ -271,7 +271,7 @@ onBeforeMount(() => {
                     Scan
                 </button>
             </div>
-        </div>
+        </div> -->
 
         <!-- Status Popup -->
         <!-- <StatusPopup

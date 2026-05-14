@@ -1,5 +1,5 @@
 <script setup>
-import Card from "primevue/Card";
+import Card from "primevue/card";
 import AboutImg from "@/admin/assets/AboutUs.png";
 </script>
 
