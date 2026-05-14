@@ -59,20 +59,21 @@ const emit = defineEmits(["cancel", "confirm"]);
                         class="mt-8 px-8 py-6 rounded-2xl bg-rose-50 border border-rose-200"
                     >
                         <p class="text-[20px] font-semibold text-rose-700">
-                            This action is permanent
+                            Ending your rental will unlock the locker for item
+                            retrieval
                         </p>
 
                         <p
                             class="mt-2 text-[18px] text-rose-700/80 leading-relaxed"
                         >
-                            Please make sure all your belongings have been
-                            removed before proceeding.
+                            Please collect all your belongings before closing
+                            the locker.
                         </p>
                     </div>
 
                     <!-- SUPPORT TEXT -->
                     <p class="mt-6 text-[18px] text-gray-500">
-                        Once ended, your session cannot be restored.
+                        Once closed, you will lose access to this locker.
                     </p>
 
                     <!-- ACTIONS -->

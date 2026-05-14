@@ -8,6 +8,7 @@ import LiveOperationsView from "../views/LiveOperationsView.vue";
 import StudentsView from "../views/StudentsView.vue";
 import FinancialsView from "../views/FinancialsView.vue";
 import LogsEvents from "../views/LogsEvents.vue";
+import AboutUs from "../views/AboutUs.vue";
 
 const routes = [
     {
@@ -46,6 +47,10 @@ const routes = [
             {
                 path: "logs",
                 component: LogsEvents,
+            },
+            {
+                path: "aboutus",
+                component: AboutUs,
             },
         ],
     },

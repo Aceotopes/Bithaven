@@ -197,7 +197,7 @@ function lockerStatus(n) {
         <!-- Duration Selection -->
         <!-- ========================= -->
         <!-- PRESET BUTTONS -->
-        <div class="border-t border-black/30"></div>
+        <div class="border-t border-black/10"></div>
         <div class="mt-10 grid grid-cols-4 gap-8 text-center">
             <div
                 v-for="h in [1, 2, 3]"

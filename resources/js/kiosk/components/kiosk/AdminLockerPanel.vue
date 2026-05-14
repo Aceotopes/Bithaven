@@ -268,7 +268,7 @@ onUnmounted(() => {
                 class="relative h-56 rounded-2xl border-2 transition-all duration-150 select-none flex flex-col justify-between overflow-hidden cursor-pointer"
                 :class="[
                     selectedNumber === locker.locker_number
-                        ? 'ring-4 ring-cyan-400 border-cyan-500 shadow-[0_16px_40px_rgba(0,0,0,0.2)]'
+                        ? 'scale-[1.25] shadow-[0_30px_80px_rgba(0,0,0,0.35)] z-10'
                         : lockerVisual(locker).frame,
                 ]"
             >
@@ -462,7 +462,7 @@ onUnmounted(() => {
         <!-- ========================= -->
         <div class="mt-12 grid grid-cols-2 gap-6">
             <button
-                class="h-20 rounded-xl"
+                class="h-20 rounded-xl text-2xl"
                 :class="
                     canEndRental
                         ? 'bg-orange-600 text-white active:scale-[0.97]'
@@ -475,7 +475,7 @@ onUnmounted(() => {
             </button>
 
             <button
-                class="h-20 rounded-xl"
+                class="h-20 rounded-xl text-2xl"
                 :class="
                     canClearPenalty
                         ? 'bg-purple-600 text-white active:scale-[0.97]'
@@ -488,14 +488,14 @@ onUnmounted(() => {
             </button>
 
             <button
-                class="h-20 rounded-xl bg-red-600 text-white active:scale-[0.97]"
+                class="h-20 rounded-xl bg-red-600 text-white active:scale-[0.97] text-2xl"
                 @click="emit('force-unlock')"
             >
                 Force Unlock
             </button>
 
             <button
-                class="h-20 rounded-xl"
+                class="h-20 rounded-xl text-2xl"
                 :class="toggleClass"
                 :disabled="!canToggleLocker"
                 @click="handleToggleLocker"
@@ -504,7 +504,7 @@ onUnmounted(() => {
             </button>
 
             <button
-                class="col-span-2 h-20 rounded-xl flex items-center justify-center gap-3"
+                class="col-span-2 h-20 rounded-xl flex items-center justify-center gap-3 text-2xl"
                 :class="
                     isEmergencyUnlocking
                         ? 'bg-gray-400 text-white cursor-not-allowed'

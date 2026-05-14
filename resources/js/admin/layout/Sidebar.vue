@@ -97,11 +97,18 @@ const route = useRoute();
 
         <!-- Bottom -->
         <div class="mt-auto pt-8 border-t border-gray-200">
-            <button
-                class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+            <RouterLink
+                to="/admin/aboutus"
+                class="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200"
+                :class="
+                    route.path.startsWith('/admin/aboutus')
+                        ? 'bg-cyan-500 text-white shadow-lg'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700'
+                "
             >
-                Logout
-            </button>
+                <i class="pi pi-address-book text-lg"></i>
+                <span>About Us</span>
+            </RouterLink>
         </div>
     </aside>
 </template>

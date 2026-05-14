@@ -55,7 +55,7 @@ defineProps({
                         </p>
 
                         <p class="mt-2 text-[18px] text-emerald-700/80">
-                            The locker will open for a short time only.
+                            The locker will unlock temporarily.
                         </p>
                     </div>
 

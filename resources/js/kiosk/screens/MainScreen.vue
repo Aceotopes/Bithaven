@@ -361,7 +361,7 @@ const props = defineProps({
             @done="emit('end-session')"
         />
         <!-- ================= DEV PANEL ================= -->
-        <div
+        <!-- <div
             v-if="DEV_MODE"
             class="fixed bottom-20 right-6 z-[9999] w-[240px] rounded-2xl bg-black/80 backdrop-blur border border-white/10 shadow-xl px-5 py-4 text-white"
         >
@@ -391,7 +391,7 @@ const props = defineProps({
                     Reset Session
                 </button>
             </div>
-        </div>
+        </div> -->
         <!-- ============================================ -->
     </div>
 </template>
